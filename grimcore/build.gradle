@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'idea'
+    id 'net.neoforged.moddev' version '2.0.107'
 }
 
 group   = findProperty('core_mod_group_id') ?: 'com.doomspire'
@@ -18,14 +19,60 @@ java {
 
 repositories {
     mavenCentral()
-    mavenLocal()
     maven { url = 'https://maven.neoforged.net/releases' }
 }
 
+neoForge {
+    version = project.findProperty('neo_version') ?: '21.1.208'
+
+    parchment {
+        mappingsVersion  = project.findProperty('parchment_mappings_version') ?: '2024.11.17'
+        minecraftVersion = project.findProperty('parchment_minecraft_version') ?: '1.21.1'
+    }
+
+    // grimcore — мод-ядро, без run-конфигов
+    mods {
+        "${findProperty('core_mod_id') ?: 'grimcore'}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+/** === Генерация mods.toml для grimcore === */
+def coreProps = [
+        minecraft_version      : findProperty('minecraft_version'),
+        minecraft_version_range: findProperty('minecraft_version_range'),
+        neo_version            : findProperty('neo_version'),
+        loader_version_range   : findProperty('loader_version_range'),
+        core_mod_id            : findProperty('core_mod_id') ?: 'grimcore',
+        core_mod_name          : findProperty('core_mod_name') ?: 'Grimcore',
+        mod_license            : findProperty('mod_license') ?: 'All Rights Reserved',
+        core_mod_version       : findProperty('core_mod_version') ?: '0.1.0',
+        core_mod_authors       : findProperty('core_mod_authors') ?: 'Epilekt',
+        core_mod_description   : findProperty('core_mod_description') ?: 'Core library with shared RPG systems for Grimfate'
+]
+
+// алиасы на случай, если шаблон ожидает mod_*
+coreProps.mod_id          = coreProps.core_mod_id
+coreProps.mod_name        = coreProps.core_mod_name
+coreProps.mod_version     = coreProps.core_mod_version
+coreProps.mod_authors     = coreProps.core_mod_authors
+coreProps.mod_description = coreProps.core_mod_description
+
+def generateCoreModMetadata = tasks.register('generateCoreModMetadata', ProcessResources) {
+    inputs.properties(coreProps)
+    expand coreProps
+    from 'src/main/templates'
+    into 'build/generated/sources/modMetadata'
+}
+
+sourceSets.main.resources.srcDir(generateCoreModMetadata)
+neoForge.ideSyncTask(generateCoreModMetadata)
+
+
+
 dependencies {
-    // grimcore — библиотека, компилируемся против NeoForge API
-    def neo = findProperty('neo_version') ?: '21.1.208'
-    compileOnly "net.neoforged:neoforge:${neo}"
+    // moddev сам подтягивает Minecraft+NeoForge
 }
 
 publishing {
@@ -50,6 +97,3 @@ idea {
         downloadJavadoc = true
     }
 }
-
-
-
