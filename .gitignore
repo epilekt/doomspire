@@ -1,0 +1,20 @@
+# Gradle
+.gradle/
+**/build/
+run/
+out/
+
+# IntelliJ / Eclipse / VSCode
+.idea/
+*.iml
+*.ipr
+*.iws
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Datagen cache
+**/src/generated/resources/
+
