@@ -13,7 +13,7 @@
 ---
 ## 🛠️ Дорожная карта
 
-### Фаза 0 (ядро)
+### Фаза 0 (ядро) ✅
 
 * StatCalculator, DamageEngine, Attachments
 * Data Components (stat\_bonus, block\_bonus, restrictions)
@@ -59,41 +59,76 @@
 
 ```
 src/main/java/com/doomspire/
-  grimcore/                  # Ядро: серверная логика, API, данные
-    stat/                    # Атрибуты, урон, резисты, калькулятор статов
-    status/                  # Система статусов (Burn, Freeze, Shock, Poison)
-    combat/                  # DamageEngine и контекст урона
-    xp/                      # Система опыта и таблицы уровней
-    spell/api/               # Интерфейсы заклинаний и SpellContext
-    attach/                  # Attachments игрока/мобов (статы, прогресс, хотбар)
-    item/comp/               # Data Components (stat_bonus, block_bonus, restrictions)
-    datapack/                # Reload listeners и codecs для balance-json
-    command/                 # Команды (например, /grimfate exp give)
-    net/                     # Сетевые пакеты для синхронизации
+  grimcore/                        # Ядро: серверная логика, сеть, данные
+    attach/                        # Attachments игрока/мобов (статы, прогресс, лоадаут)
+      MobStatCalculator.java
+      MobStatsAttachment.java
+      PlayerLoadoutAttachment.java
+      PlayerProgressAttachment.java
+      PlayerStatsAttachment.java
+    combat/                        # Пайплайн урона и экология
+      DamageContext.java
+      DamageEngine.java
+      EnvironmentalDamage.java
+    commands/                      # Команды (выдача опыта и др.)
+      GrimfateCommands.java
+    config/
+      CoreCommonConfig.java
+    datapack/                      # Слушатели перезагрузки и кодеки баланса (заглушки готовы)
+      BalanceReloadListener.java
+      codec/
+        AttributesBalance.java
+        LevelsCurve.java
+        SpellTuning.java
+    events/                        # Игровые события
+      CoreDamageEvents.java
+      CorePlayerEvents.java
+      MobSpawnInit.java
+      MobTuning.java
+      RegenTicker.java
+      XpEvents.java
+    net/                           # Синхронизация клиент↔сервер
+      GrimcoreNetworking.java
+      ProgressNetworking.java
+      S2C_SyncStats.java
+    runtime/                       # Невалидируемые рантайм-данные (сервер)
+      PlayerRuntimeData.java
+      PlayerRuntimeManager.java
+    stat/                          # Атрибуты, урон, резисты, калькулятор статов
+      Attributes.java
+      DamageTypes.java
+      MobStatsProvider.java
+      ModAttachments.java
+      PlayerProgress.java
+      ResistTypes.java
+      StatCalculator.java
+      StatSnapshot.java
+    xp/                            # Кривые уровней/награды
+      LevelTable.java
+      Rewards.java
 
-  grimfate/                  # Контент: конкретные заклинания, предметы, GUI
+  grimfate/                        # Контент и клиент
+    client/
+      ClientEvents.java
+      CustomHudOverlay.java
+      HudOverlay.java
+      gui/
+        StatsHubScreen.java
+      input/
+        Keybinds.java
+      KeyBindings.java
+    config/
+      ClientConfig.java
+      ModConfig.java
+    core/
+      Config.java
+      Grimfate.java
+      GrimfateClient.java
+    network/
+      ModNetworking.java
     spell/
-      knight/                # Рыцарь — защитные и агро-умения
-      berserker/             # Берсерк — урон и ярость
-      assassin/              # Ассасин — мобильность, яд
-      hunter/                # Охотник — лук, ловушки
-      priest/
-        healing/             # Лечение
-        lightning/           # Молния
-      mage/
-        fire/                # Огонь
-        frost/               # Лёд
-      miner/                 # Ремесленные: горняк
-      fisherman/             # Ремесленные: рыбалка
-      farmer/                # Ремесленные: фермерство
-      shared/                # Общие умения (рывок, disengage)
+      FireboltEntity.java          # Заглушка под контент спеллов (продолжим на фазе 1)
 
-    registry/                # Регистрация предметов, блоков, мобов
-    client/gui/              # StatsHub, SkillTree, SpellLoadout
-    client/input/            # Keybinds
-    loot/                    # Global Loot Modifiers
-    data/grimfate/           # JSON: спеллы, предметы, рецепты, уровни, лут
-    assets/grimfate/         # Иконки, локализация, модели, анимации (GeckoLib)
 ```
 
 ---

@@ -1,17 +1,18 @@
-// src/main/java/com/doomspire/grimcore/events/CoreDamageEvents.java
 package com.doomspire.grimcore.events;
 
 import com.doomspire.grimcore.attach.MobStatsAttachment;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 import com.doomspire.grimcore.combat.DamageContext;
 import com.doomspire.grimcore.combat.DamageEngine;
 import com.doomspire.grimcore.combat.EnvironmentalDamage;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
 import com.doomspire.grimcore.stat.DamageTypes;
-import com.doomspire.grimcore.stats.ModAttachments;
+import com.doomspire.grimcore.stat.ModAttachments;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
@@ -38,20 +39,24 @@ public final class CoreDamageEvents {
         Float pct = EnvironmentalDamage.percentFor(event.getSource());
         if (pct != null) {
             if (living instanceof ServerPlayer sp) {
-                var ps = sp.getData(ModAttachments.PLAYER_STATS.get());
+                PlayerStatsAttachment ps = sp.getData(ModAttachments.PLAYER_STATS.get());
                 if (ps != null) {
                     int max = (int) Math.max(1, ps.getSnapshot().maxHealth);
-                    ps.setCurrentHealth(ps.getCurrentHealth() - Math.max(1, Math.round(max * pct)));
+                    int delta = Math.max(1, Math.round(max * pct));
+                    ps.setCurrentHealth(ps.getCurrentHealth() - delta);
                     ps.markDirty();
+                    // мгновенный синк HUD
+                    GrimcoreNetworking.syncPlayerStats(sp, ps);
                     event.setNewDamage(0f);
                     if (ps.getCurrentHealth() <= 0) killByGeneric(sp);
                 }
                 return;
             } else {
-                var ms = living.getData(ModAttachments.MOB_STATS.get());
+                MobStatsAttachment ms = living.getData(ModAttachments.MOB_STATS.get());
                 if (ms != null) {
                     int max = (int) Math.max(1, ms.getSnapshot().maxHealth);
-                    ms.setCurrentHealth(ms.getCurrentHealth() - Math.max(1, Math.round(max * pct)));
+                    int delta = Math.max(1, Math.round(max * pct));
+                    ms.setCurrentHealth(ms.getCurrentHealth() - delta);
                     ms.markDirty();
                     event.setNewDamage(0f);
                     if (ms.getCurrentHealth() <= 0) killByGeneric(living);
@@ -74,7 +79,7 @@ public final class CoreDamageEvents {
                 // если атакует моб с кастомными статами — берём его физический урон
                 MobStatsAttachment aStats = attacker.getData(ModAttachments.MOB_STATS.get());
                 if (aStats != null) {
-                    float phys = aStats.getSnapshot().damage.getOrDefault(DamageTypes.PHYS_MELEE, 0f);
+                    float phys = aStats.getSnapshot().damage.getOrDefault(DamageTypes.PHYS_MELEE, amountAfterContent);
                     ctx.add(DamageTypes.PHYS_MELEE, phys);
                 } else {
                     // иначе fallback на ванильное число
@@ -87,7 +92,7 @@ public final class CoreDamageEvents {
             DamageEngine.resolveAndApply(ctx);
             event.setNewDamage(0f);
 
-            var att = serverPlayer.getData(ModAttachments.PLAYER_STATS.get());
+            PlayerStatsAttachment att = serverPlayer.getData(ModAttachments.PLAYER_STATS.get());
             if (att != null && att.getCurrentHealth() <= 0) killByGeneric(serverPlayer);
             return;
         }
@@ -121,5 +126,3 @@ public final class CoreDamageEvents {
         entity.hurt(genericKill, Float.MAX_VALUE);
     }
 }
-
-

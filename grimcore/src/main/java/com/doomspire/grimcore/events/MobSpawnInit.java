@@ -1,7 +1,7 @@
 package com.doomspire.grimcore.events;
 
 import com.doomspire.grimcore.attach.MobStatsAttachment;
-import com.doomspire.grimcore.stats.ModAttachments;
+import com.doomspire.grimcore.stat.ModAttachments;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.SubscribeEvent;

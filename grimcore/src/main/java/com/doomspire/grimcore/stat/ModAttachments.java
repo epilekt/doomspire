@@ -1,7 +1,8 @@
-package com.doomspire.grimcore.stats;
+package com.doomspire.grimcore.stat;
 
 import com.doomspire.grimcore.Grimcore;
 import com.doomspire.grimcore.attach.MobStatsAttachment;
+import com.doomspire.grimcore.attach.PlayerProgressAttachment;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -27,5 +28,13 @@ public final class ModAttachments {
                     () -> AttachmentType.builder(MobStatsAttachment::new)
                             .sync(MobStatsAttachment.STREAM_CODEC) // можно выключить, если на клиенте не нужно
                             .build());
+
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<PlayerProgressAttachment>> PLAYER_PROGRESS =
+            ATTACHMENT_TYPES.register("player_progress", () ->
+                    AttachmentType.builder(PlayerProgressAttachment::new)
+                            .serialize(PlayerProgressAttachment.CODEC)        // автосейв в сейв игрока
+                            .sync(PlayerProgressAttachment.STREAM_CODEC)      // авто-синк при замене
+                            .build()
+            );
 }
 

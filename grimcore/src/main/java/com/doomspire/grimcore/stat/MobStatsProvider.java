@@ -3,7 +3,7 @@ package com.doomspire.grimcore.stat;
 
 import com.doomspire.grimcore.attach.MobStatsAttachment;
 
-import com.doomspire.grimcore.stats.ModAttachments;
+import com.doomspire.grimcore.stat.ModAttachments;
 import net.minecraft.world.entity.LivingEntity;
 
 public class MobStatsProvider {

@@ -1,7 +1,7 @@
 package com.doomspire.grimcore.net;
 
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
-import com.doomspire.grimcore.stats.ModAttachments;
+import com.doomspire.grimcore.stat.ModAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

@@ -1,10 +1,8 @@
 package com.doomspire.grimcore.events;
 
-import com.doomspire.grimcore.Grimcore;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 import com.doomspire.grimcore.net.GrimcoreNetworking;
-import com.doomspire.grimcore.net.S2C_SyncStats;
-import com.doomspire.grimcore.stats.ModAttachments;
+import com.doomspire.grimcore.stat.ModAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -23,13 +21,16 @@ public final class CorePlayerEvents {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
         PlayerStatsAttachment stats = player.getData(ModAttachments.PLAYER_STATS.get());
+        if (stats == null) return;
 
         // инициализация текущих ресурсов при первом входе
         var snap = stats.getSnapshot();
-        if (stats.getCurrentHealth() <= 0) stats.setCurrentHealth((int)snap.maxHealth);
-        if (stats.getCurrentMana()   <= 0) stats.setCurrentMana((int)snap.maxMana);
+        if (stats.getCurrentHealth() <= 0) stats.setCurrentHealth((int) snap.maxHealth);
+        if (stats.getCurrentMana()   <= 0) stats.setCurrentMana((int) snap.maxMana);
+        stats.markDirty();
 
-        GrimcoreNetworking.sendToPlayer(player, new S2C_SyncStats(stats));
+        // мгновенно синканём, чтобы HUD сразу показал актуальные полоски
+        GrimcoreNetworking.syncPlayerStats(player, stats);
     }
 }
 

@@ -1,4 +1,4 @@
-package com.doomspire.grimcore.stats;
+package com.doomspire.grimcore.stat;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
