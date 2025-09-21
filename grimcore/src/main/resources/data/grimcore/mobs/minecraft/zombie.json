@@ -1,0 +1,19 @@
+{
+  "attributes": {
+    "vitality": 3,
+    "strength": 2,
+    "dexterity": 0,
+    "intelligence": 0,
+    "evasion": 0
+  },
+  "resistances": {
+    "phys": 0.10,
+    "fire": 0.00,
+    "frost": 0.00,
+    "lightning": 0.00,
+    "poison": 0.00
+  },
+  "damage": {
+    "phys_melee": 25.0
+  }
+}

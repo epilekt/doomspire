@@ -1,11 +1,15 @@
+// src/main/java/com/doomspire/grimcore/events/CoreDamageEvents.java
 package com.doomspire.grimcore.events;
 
-import com.doomspire.grimcore.stats.*;
+import com.doomspire.grimcore.attach.MobStatsAttachment;
+import com.doomspire.grimcore.combat.DamageContext;
+import com.doomspire.grimcore.combat.DamageEngine;
+import com.doomspire.grimcore.combat.EnvironmentalDamage;
+import com.doomspire.grimcore.stat.DamageTypes;
+import com.doomspire.grimcore.stats.ModAttachments;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -16,86 +20,106 @@ public final class CoreDamageEvents {
 
     private CoreDamageEvents() {}
 
-    /** Регистрируй из инициализации (например, из Grimfate entrypoint): NeoForge.EVENT_BUS.register(CoreDamageEvents.class); */
+    /** Регистрируй из инициализации: NeoForge.EVENT_BUS.register(CoreDamageEvents.class); */
     public static void registerToBus() {
         NeoForge.EVENT_BUS.register(CoreDamageEvents.class);
     }
 
     /**
-     * Ядро обработки урона. Работает на LOWEST, чтобы контент мог скорректировать event.setNewDamage(...) раньше.
-     * Никакой предметной/спелл-логики здесь нет.
+     * Ядро обработки урона. Никакой предметной/спелл-логики здесь нет.
+     * Сначала экологический урон (% от MaxHP), затем боевой пайплайн.
      */
     @SubscribeEvent
     public static void onLivingDamage(LivingDamageEvent.Pre event) {
         LivingEntity living = event.getEntity();
+        if (living.level().isClientSide() || !living.isAlive()) return;
 
-        if (living.level().isClientSide()) return;
-        if (!living.isAlive()) return;
+        // ---------- Экологический урон как % MaxHP ----------
+        Float pct = EnvironmentalDamage.percentFor(event.getSource());
+        if (pct != null) {
+            if (living instanceof ServerPlayer sp) {
+                var ps = sp.getData(ModAttachments.PLAYER_STATS.get());
+                if (ps != null) {
+                    int max = (int) Math.max(1, ps.getSnapshot().maxHealth);
+                    ps.setCurrentHealth(ps.getCurrentHealth() - Math.max(1, Math.round(max * pct)));
+                    ps.markDirty();
+                    event.setNewDamage(0f);
+                    if (ps.getCurrentHealth() <= 0) killByGeneric(sp);
+                }
+                return;
+            } else {
+                var ms = living.getData(ModAttachments.MOB_STATS.get());
+                if (ms != null) {
+                    int max = (int) Math.max(1, ms.getSnapshot().maxHealth);
+                    ms.setCurrentHealth(ms.getCurrentHealth() - Math.max(1, Math.round(max * pct)));
+                    ms.markDirty();
+                    event.setNewDamage(0f);
+                    if (ms.getCurrentHealth() <= 0) killByGeneric(living);
+                }
+                return;
+            }
+        }
 
-        float amountAfterContent = event.getNewDamage(); // учитываем возможные правки контента
+        float amountAfterContent = event.getNewDamage();
         if (amountAfterContent <= 0f) return;
 
         Entity src = event.getSource() != null ? event.getSource().getEntity() : null;
 
-        // ===== Игрок как цель =====
+        // ---------- Цель — игрок: расчёт через DamageEngine ----------
         if (living instanceof ServerPlayer serverPlayer) {
-            PlayerStats stats = PlayerStatsProvider.get(serverPlayer);
-            if (stats == null) return;
+            LivingEntity attacker = (src instanceof LivingEntity le) ? le : null;
 
-            int damage = CoreDamageCalculator.calculateForPlayer(serverPlayer, event.getSource(), amountAfterContent, stats);
+            DamageContext ctx = new DamageContext(attacker, serverPlayer);
+            if (attacker != null) {
+                // если атакует моб с кастомными статами — берём его физический урон
+                MobStatsAttachment aStats = attacker.getData(ModAttachments.MOB_STATS.get());
+                if (aStats != null) {
+                    float phys = aStats.getSnapshot().damage.getOrDefault(DamageTypes.PHYS_MELEE, 0f);
+                    ctx.add(DamageTypes.PHYS_MELEE, phys);
+                } else {
+                    // иначе fallback на ванильное число
+                    ctx.add(DamageTypes.PHYS_MELEE, amountAfterContent);
+                }
+            } else {
+                ctx.add(DamageTypes.PHYS_MELEE, amountAfterContent);
+            }
 
-            var m = PlayerStatsProvider.getMutable(serverPlayer);
-            int newHp = Math.max(0, m.health - damage);
-            m.setHealth(newHp);
-
-            // Гасим ванильный урон
+            DamageEngine.resolveAndApply(ctx);
             event.setNewDamage(0f);
 
-            // Немедленный коммит, чтобы HUD увидел новое значение
-            PlayerStatsProvider.commitIfDirty(serverPlayer);
-
-            // (опционально) короткие системные сообщения — оставляем, но можно убрать/переключить в конфиг
-            PlayerStats afterStats = PlayerStatsProvider.get(serverPlayer);
-            if (afterStats != null) {
-                serverPlayer.sendSystemMessage(Component.literal(
-                        "⚡ Получено " + damage + " урона. HP: " +
-                                afterStats.health() + "/" + afterStats.maxHealth()
-                ));
-            }
-
-            // Смерть через ванильный механизм
-            if (m.health <= 0) {
-                killByGeneric(serverPlayer);
-            }
+            var att = serverPlayer.getData(ModAttachments.PLAYER_STATS.get());
+            if (att != null && att.getCurrentHealth() <= 0) killByGeneric(serverPlayer);
             return;
         }
 
-        // ===== Мобы =====
-        MobStats before = MobStatsProvider.get(living);
-        if (before == null) return;
-
-        int damage = CoreDamageCalculator.calculateForMob(living, event.getSource(), amountAfterContent, before);
-        MobStatsProvider.damage(living, damage);
-
-        // Гасим ванильный урон
-        event.setNewDamage(0f);
-
-        MobStats after = MobStatsProvider.get(living);
-
-        if (after != null && after.getCurrentHealth() <= 0) {
-            killByGeneric(living);
-            // ВАЖНО: выдача XP/лут — это контент. Делай это в grimfate через отдельный хук (например, LivingDeathEvent)
+        // ---------- Цель — моб: прямое применение к кастомному HP ----------
+        {
+            float base = amountAfterContent;
+            if (src instanceof LivingEntity le) {
+                MobStatsAttachment aStats = le.getData(ModAttachments.MOB_STATS.get());
+                if (aStats != null) {
+                    base = aStats.getSnapshot().damage.getOrDefault(DamageTypes.PHYS_MELEE, base);
+                }
+            }
+            MobStatsAttachment tStats = living.getData(ModAttachments.MOB_STATS.get());
+            if (tStats != null) {
+                tStats.setCurrentHealth(tStats.getCurrentHealth() - Math.round(base));
+                tStats.markDirty();
+                event.setNewDamage(0f);
+                if (tStats.getCurrentHealth() <= 0) killByGeneric(living);
+            }
         }
     }
 
     private static void killByGeneric(LivingEntity entity) {
         entity.setHealth(0f);
-        DamageSource outOfWorld = new DamageSource(
+        DamageSource genericKill = new DamageSource(
                 entity.level().registryAccess()
                         .registryOrThrow(Registries.DAMAGE_TYPE)
-                        .getHolderOrThrow(DamageTypes.GENERIC_KILL)
+                        .getHolderOrThrow(net.minecraft.world.damagesource.DamageTypes.GENERIC_KILL)
         );
-        entity.hurt(outOfWorld, Float.MAX_VALUE);
+        entity.hurt(genericKill, Float.MAX_VALUE);
     }
 }
+
 
