@@ -23,7 +23,7 @@ public class StatCalculator {
         snapshot.maxHealth = 100 + vit * 20;
         snapshot.regenHealth = 1 + vit * 1;
 
-        snapshot.maxMana = 50 + spirit * 30;
+        snapshot.maxMana = 100 + spirit * 30;
         snapshot.regenMana = 1 + spirit * 3;
 
         snapshot.damage.put(DamageTypes.PHYS_MELEE, str * 0.03f);

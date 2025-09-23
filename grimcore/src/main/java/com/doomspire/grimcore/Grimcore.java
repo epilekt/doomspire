@@ -1,5 +1,6 @@
 package com.doomspire.grimcore;
 
+import com.doomspire.grimcore.data.ModDataComponents;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -14,6 +15,7 @@ public final class Grimcore {
         // игровые события — на общий шина NeoForge
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(com.doomspire.grimcore.events.CoreDamageEvents.class);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(com.doomspire.grimcore.events.CorePlayerEvents.class);
+        ModDataComponents.init(modEventBus);
     }
 }
 

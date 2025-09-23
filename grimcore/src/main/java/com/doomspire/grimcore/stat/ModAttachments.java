@@ -36,5 +36,11 @@ public final class ModAttachments {
                             .sync(PlayerProgressAttachment.STREAM_CODEC)      // авто-синк при замене
                             .build()
             );
+
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<com.doomspire.grimcore.attach.PlayerLoadoutAttachment>> PLAYER_LOADOUT =
+            ATTACHMENT_TYPES.register("player_loadout", () -> AttachmentType
+                    .builder(com.doomspire.grimcore.attach.PlayerLoadoutAttachment::new)
+                    .serialize(com.doomspire.grimcore.attach.PlayerLoadoutAttachment.CODEC)
+                    .build());
 }
 

@@ -1,5 +1,7 @@
 package com.doomspire.grimcore.xp;
 
+import com.doomspire.grimcore.datapack.BalanceData;
+
 public final class LevelTable {
     private static final int MAX_LEVEL = 50; // временно, вынесем в конфиг
     private static final int BASE = 100;
@@ -23,7 +25,30 @@ public final class LevelTable {
     }
 
     public static int maxLevel() {
-        return MAX_LEVEL;
+        return Math.max(1, BalanceData.levels().maxLevel());
+    }
+
+    /** Сколько XP нужно, чтобы достичь уровня L (с начала прогрессии). */
+    public static long totalXpForLevel(int level) {
+        var lv = BalanceData.levels();
+        int L = Math.max(1, Math.min(level, lv.maxLevel()));
+        double base = lv.base();
+        double growth = lv.growth();
+        // Геометрическая прогрессия: base * growth^(L-1) суммой от 1..L-1
+        double sum = 0.0;
+        double term = base;
+        for (int i = 1; i < L; i++) {
+            sum += term;
+            term *= growth;
+        }
+        return Math.round(sum);
+    }
+
+    /** Сколько XP нужно от L до L+1 (инкрементальный шаг). */
+    public static int xpForNextLevel(int level) {
+        var lv = BalanceData.levels();
+        int L = Math.max(1, Math.min(level, lv.maxLevel()));
+        return (int)Math.round(lv.base() * Math.pow(lv.growth(), Math.max(0, L-1)));
     }
 }
 

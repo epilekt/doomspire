@@ -1,36 +1,33 @@
 package com.doomspire.grimcore.attach;
 
-import com.doomspire.grimcore.stat.*;
+import com.doomspire.grimcore.stat.Attributes;
+import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimcore.stat.StatCalculator;
+import com.doomspire.grimcore.stat.StatSnapshot;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-
+import net.minecraft.world.entity.player.Player;
+import com.doomspire.grimcore.datapack.BalanceData;
 import java.util.EnumMap;
+import java.util.Locale;
 
 /**
- * Attachment: хранит базовые атрибуты игрока и кэш статов.
+ * Attachment игрока: очки атрибутов, текущие ресурсы и кэш агрегированных статов.
+ * Без устаревших API. Для сети используем StreamCodec (NeoForge/Mojang 1.21.1).
  */
 public class PlayerStatsAttachment {
-    // текущее состояние ресурсов
+
+    // ---- Текущие ресурсы (кастомные полосы) ----
     private int currentHealth = 100;
     private int currentMana   = 100;
 
-    public int getCurrentHealth() { return currentHealth; }
-    public int getCurrentMana()   { return currentMana;   }
-
-    public void setCurrentHealth(int v) {
-        int max = (int)Math.max(1, getSnapshot().maxHealth);
-        currentHealth = Math.max(0, Math.min(v, max));
-    }
-
-    public void setCurrentMana(int v) {
-        int max = (int)Math.max(1, getSnapshot().maxMana);
-        currentMana = Math.max(0, Math.min(v, max));
-    }
-
-    public void markDirty() { this.dirty = true; }
+    // ---- Распределённые очки по атрибутам ----
     private final EnumMap<Attributes, Integer> attributes = new EnumMap<>(Attributes.class);
+
+    // ---- Очки, нераспределённые игроком ----
     private int unspentPoints = 0;
 
+    // ---- Кэш снапшота и грязный флаг ----
     private StatSnapshot snapshot = new StatSnapshot();
     private boolean dirty = true;
 
@@ -40,7 +37,22 @@ public class PlayerStatsAttachment {
         }
     }
 
-    // --- API ---
+    // ===================== API =====================
+
+    public int getCurrentHealth() { return currentHealth; }
+    public int getCurrentMana()   { return currentMana; }
+
+    public void setCurrentHealth(int v) {
+        int max = (int) Math.max(1, getSnapshot().maxHealth);
+        currentHealth = Math.max(0, Math.min(v, max));
+    }
+
+    public void setCurrentMana(int v) {
+        int max = (int) Math.max(1, getSnapshot().maxMana);
+        currentMana = Math.max(0, Math.min(v, max));
+    }
+
+    public void markDirty() { this.dirty = true; }
 
     public int getAttribute(Attributes attr) {
         return attributes.getOrDefault(attr, 0);
@@ -56,19 +68,24 @@ public class PlayerStatsAttachment {
         dirty = true;
     }
 
-    public int getUnspentPoints() {
-        return unspentPoints;
+    public int getUnspentPoints() { return unspentPoints; }
+    public void setUnspentPoints(int v) { unspentPoints = Math.max(0, v); }
+    public void addUnspentPoints(int amount) { if (amount > 0) unspentPoints += amount; }
+
+    public int hardCapFor(Attributes attr) {
+        return BalanceData.attrs().cap(attr);
     }
 
-    public void addUnspentPoints(int amount) {
-        unspentPoints += amount;
-    }
+    /** Потратить 1 очко в атрибут с проверкой капа. Возвращает true при успехе. */
+    public boolean tryAllocatePoint(Attributes attr) {
+        if (unspentPoints <= 0) return false;
+        int cap = hardCapFor(attr);
+        int cur = getAttribute(attr);
+        if (cur >= cap) return false;
 
-    public void spendPoint(Attributes attr) {
-        if (unspentPoints > 0) {
-            addAttribute(attr, 1);
-            unspentPoints--;
-        }
+        setAttribute(attr, cur + 1);
+        unspentPoints--;
+        return true;
     }
 
     public StatSnapshot getSnapshot() {
@@ -79,7 +96,7 @@ public class PlayerStatsAttachment {
         return snapshot;
     }
 
-    // --- Sync ---
+    // ===================== NET (StreamCodec) =====================
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerStatsAttachment> STREAM_CODEC =
             StreamCodec.of(PlayerStatsAttachment::encode, PlayerStatsAttachment::decode);
 
@@ -103,5 +120,21 @@ public class PlayerStatsAttachment {
         att.dirty = true;
         return att;
     }
-}
 
+    // ===================== Утилиты =====================
+
+    /** Достаёт аттачмент у игрока. */
+    public static PlayerStatsAttachment get(Player player) {
+        return player.getData(ModAttachments.PLAYER_STATS.get());
+    }
+
+    /** Пытается распарсить строковый id атрибута в enum (без краша). */
+    public static Attributes parseAttrId(String id) {
+        if (id == null) return null;
+        try {
+            return Attributes.valueOf(id.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+}
