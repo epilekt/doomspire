@@ -1,0 +1,30 @@
+{
+  "key.categories.grimfate": "GrimFate",
+  "key.grimfate.open_stats": "Открыть характеристики",
+
+  "key.grimfate.spellslot_1": "Слот умения 1",
+  "key.grimfate.spellslot_2": "Слот умения 2",
+  "key.grimfate.spellslot_3": "Слот умения 3",
+  "key.grimfate.spellslot_4": "Слот умения 4",
+  "key.grimfate.spellslot_5": "Слот умения 5",
+  "key.grimfate.spellslot_6": "Слот умения 6",
+
+  "screen.grimfate.stats_hub": "Attributes",
+  "screen.grimfate.unspent": "Unspent points: %s",
+
+  "attr.grimfate.vitality": "Vitality",
+  "attr.grimfate.strength": "Strength",
+  "attr.grimfate.intelligence": "Intelligence",
+  "attr.grimfate.spirit": "Spirit",
+  "attr.grimfate.dexterity": "Dexterity",
+  "attr.grimfate.evasion": "Evasion",
+
+  "attr.tip.vitality": "Increases health and regen.",
+  "attr.tip.strength": "Increases physical melee damage.",
+  "attr.tip.intelligence": "Increases spell power.",
+  "attr.tip.spirit": "Increases max mana and mana regen.",
+  "attr.tip.dexterity": "Increases physical ranged damage.",
+  "attr.tip.evasion": "Dodge chance.",
+
+  "item.grimfate.rusty_ring": "Rusty Ring"
+}

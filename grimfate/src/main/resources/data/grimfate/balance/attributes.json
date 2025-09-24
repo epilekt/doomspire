@@ -1,0 +1,11 @@
+{
+  "attributes": {
+    "vitality":     { "cap": 99, "max_health_per": 6.0, "regen_hp_per": 0.06 },
+    "strength":     { "cap": 99, "melee_damage_per": 0.7 },
+    "intelligence": { "cap": 99, "spell_power_per": 0.7 },
+    "spirit":       { "cap": 99, "max_mana_per": 10.0, "regen_mp_per": 0.08 },
+    "dexterity":    { "cap": 99, "cast_speed_per": 0.5 },
+    "evasion":      { "cap": 100, "evasion_per": 0.5 }
+  }
+}
+

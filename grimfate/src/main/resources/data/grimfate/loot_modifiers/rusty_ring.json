@@ -1,0 +1,7 @@
+{
+  "type": "grimfate:rusty_ring",
+  "chance": 0.95,
+  "conditions": [
+    { "condition": "random_chance", "chance": 1.0 }
+  ]
+}

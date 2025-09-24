@@ -1,0 +1,50 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"textures": {
+		"0": "grimfate:item/bolt_texture",
+		"particle": "grimfate:item/bolt_texture"
+	},
+	"elements": [
+		{
+			"from": [0, 0, 0],
+			"to": [3, 3, 3],
+			"rotation": {"angle": 0, "axis": "y", "origin": [1, 0, 0]},
+			"faces": {
+				"north": {"uv": [0, 0, 3, 3], "texture": "#0"},
+				"east": {"uv": [0, 3, 3, 6], "texture": "#0"},
+				"south": {"uv": [3, 0, 6, 3], "texture": "#0"},
+				"west": {"uv": [3, 3, 6, 6], "texture": "#0"},
+				"up": {"uv": [3, 9, 0, 6], "texture": "#0"},
+				"down": {"uv": [9, 0, 6, 3], "texture": "#0"}
+			}
+		}
+	],
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [5, 6.75, 6.25]
+		},
+		"thirdperson_lefthand": {
+			"translation": [-8, 6.75, 5.75]
+		},
+		"firstperson_righthand": {
+			"translation": [16, 4, 0]
+		},
+		"firstperson_lefthand": {
+			"translation": [4, 3.25, 0]
+		},
+		"ground": {
+			"translation": [5.75, 3, 7]
+		},
+		"gui": {
+			"translation": [26, 26, 0],
+			"scale": [4, 4, 4]
+		},
+		"head": {
+			"translation": [6.5, 13, 0]
+		},
+		"fixed": {
+			"translation": [6.5, 6.25, 6.5]
+		}
+	}
+}

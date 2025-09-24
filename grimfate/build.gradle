@@ -1,0 +1,97 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.107'
+}
+
+group = findProperty('mod_group_id') ?: 'com.doomspire'
+version = findProperty('mod_version')  ?: '0.0.1'
+base { archivesName = (findProperty('mod_id') ?: 'grimfate') }
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) }; withSourcesJar() }
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.neoforged.net/releases' }
+}
+
+neoForge {
+    version = project.findProperty('neo_version') ?: '21.1.208'
+
+    parchment {
+        mappingsVersion  = project.findProperty('parchment_mappings_version') ?: '2024.11.17'
+        minecraftVersion = project.findProperty('parchment_minecraft_version') ?: '1.21.1'
+    }
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', (findProperty('mod_id') ?: 'grimfate')
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', (findProperty('mod_id') ?: 'grimfate')
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+        data {
+            data()
+            programArguments.addAll '--mod', (findProperty('mod_id') ?: 'grimfate'), '--all',
+                    '--output', file('src/generated/resources/').absolutePath,
+                    '--existing', file('src/main/resources/').absolutePath
+            logLevel = org.slf4j.event.Level.INFO
+        }
+    }
+
+    mods {
+        "${findProperty('mod_id') ?: 'grimfate'}" {
+            sourceSet(sourceSets.main)
+        }
+        "grimcore" {
+            sourceSet(project(':grimcore').sourceSets.main)
+        }
+    }
+}
+
+configurations { runtimeClasspath.extendsFrom localRuntime }
+
+dependencies {
+    // grimfate компилируется против API grimcore, но jar на рантайм не нужен,
+    // т.к. grimcore уже подцеплён как мод через mods { ... }.
+    compileOnly project(':grimcore')
+}
+
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    def P = [
+            minecraft_version      : project.findProperty('minecraft_version'),
+            minecraft_version_range: project.findProperty('minecraft_version_range'),
+            neo_version            : project.findProperty('neo_version'),
+            loader_version_range   : project.findProperty('loader_version_range'),
+            mod_id                 : project.findProperty('mod_id'),
+            mod_name               : project.findProperty('mod_name'),
+            mod_license            : project.findProperty('mod_license'),
+            mod_version            : project.findProperty('mod_version'),
+            mod_authors            : project.findProperty('mod_authors'),
+            mod_description        : project.findProperty('mod_description')
+    ]
+    inputs.properties P
+    expand P
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir(generateModMetadata)
+neoForge.ideSyncTask(generateModMetadata)
+
+publishing {
+    publications { register('mavenJava', MavenPublication) { from components.java } }
+    repositories { maven { url = uri("file://${project.projectDir}/repo") } }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+
+idea { module { downloadSources = true; downloadJavadoc = true } }
+
+
