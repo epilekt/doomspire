@@ -2,6 +2,7 @@ package com.doomspire.grimcore.stat;
 
 import com.doomspire.grimcore.Grimcore;
 import com.doomspire.grimcore.attach.MobStatsAttachment;
+import com.doomspire.grimcore.attach.PlayerLoadoutAttachment;
 import com.doomspire.grimcore.attach.PlayerProgressAttachment;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
@@ -37,10 +38,11 @@ public final class ModAttachments {
                             .build()
             );
 
-    public static final DeferredHolder<AttachmentType<?>, AttachmentType<com.doomspire.grimcore.attach.PlayerLoadoutAttachment>> PLAYER_LOADOUT =
-            ATTACHMENT_TYPES.register("player_loadout", () -> AttachmentType
-                    .builder(com.doomspire.grimcore.attach.PlayerLoadoutAttachment::new)
-                    .serialize(com.doomspire.grimcore.attach.PlayerLoadoutAttachment.CODEC)
-                    .build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<PlayerLoadoutAttachment>> PLAYER_LOADOUT =
+            ATTACHMENT_TYPES.register("player_loadout",
+                    () -> AttachmentType.builder(PlayerLoadoutAttachment::new)
+                            .serialize(PlayerLoadoutAttachment.CODEC)      // хот-бар сохраняется
+                            .sync(PlayerLoadoutAttachment.STREAM_CODEC)     // ВАЖНО: клиент видит изменения
+                            .build());
 }
 

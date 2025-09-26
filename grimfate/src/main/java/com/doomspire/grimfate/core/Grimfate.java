@@ -56,8 +56,6 @@ public class Grimfate {
 
         // Игровые слушатели (Forge bus)
         StaffAttackEvents.register();
-        LoadoutTickEvents.register();
-        com.doomspire.grimfate.events.LoadoutTickEvents.register();
     }
 
     private void commonSetup(final FMLCommonSetupEvent e) { /* ... */ }

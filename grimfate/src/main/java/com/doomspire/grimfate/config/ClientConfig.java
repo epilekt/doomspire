@@ -15,7 +15,18 @@ public class ClientConfig {
     public static final ModConfigSpec.IntValue XP_ICON_X;
     public static final ModConfigSpec.IntValue XP_ICON_Y;
 
+    public static final ModConfigSpec.IntValue SPELLBAR_X;
+    public static final ModConfigSpec.IntValue SPELLBAR_Y;
+
     static {
+        SPELLBAR_X = BUILDER
+                .comment("Смещение спелбара по X")
+                .defineInRange("hud.spellbar_x", -60, -500, 500);
+
+        SPELLBAR_Y = BUILDER
+                .comment("Смещение спелбара по X")
+                .defineInRange("hud.spellbar_y", -78, -500, 500);
+
         HEALTH_BAR_X = BUILDER
                 .comment("Смещение полоски здоровья по X")
                 .defineInRange("hud.health_bar_x", -60, -500, 500);

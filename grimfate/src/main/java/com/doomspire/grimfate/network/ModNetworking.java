@@ -20,6 +20,7 @@ import com.doomspire.grimfate.network.payload.C2SCastStaffBoltPayload;
 import com.doomspire.grimfate.network.payload.S2CAllocateResultPayload;
 import com.doomspire.grimfate.registry.ModItems;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -133,43 +134,50 @@ public final class ModNetworking {
 
         });
     }
-    private static void handleCastSpellSlot(C2SCastSpellSlotPayload msg, net.neoforged.neoforge.network.handling.IPayloadContext ctx) {
+    private static void handleCastSpellSlot(C2SCastSpellSlotPayload msg, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            var sp = (net.minecraft.server.level.ServerPlayer) ctx.player();
+            ServerPlayer sp = (ServerPlayer) ctx.player();
             if (sp == null) return;
+
             int slot = msg.slot();
             if (slot < 0 || slot >= PlayerLoadoutAttachment.SLOTS) return;
 
-            var loadout = sp.getData(ModAttachments.PLAYER_LOADOUT.get());
+            PlayerLoadoutAttachment loadout = sp.getData(ModAttachments.PLAYER_LOADOUT.get());
             if (loadout == null) return;
-            // кд?
+
+            // уже на кд?
             if (loadout.getCooldown(slot) > 0) return;
 
-            var spellId = loadout.getSlot(slot);  // <-- было loadout.get(slot)
+            // ВАЖНО: берём через get(slot), не getSlot(...)
+            ResourceLocation spellId = loadout.get(slot);
             if (spellId == null) return;
 
             var spell = GrimSpells.get(spellId);
             if (spell == null) return;
 
-            // манакост и кд из самого спелла (позже подадим tuning в ctx)
+            // Готовим контекст спелла (у тебя именно так делается в дампе)
             var lvl = sp.serverLevel();
-            var entry = com.doomspire.grimcore.datapack.Balance.getSpellEntry(spellId);
-            var ctxSpell = new SpellContext(lvl, sp, slot, 0,0,0, null);
-            int cost = entry != null ? Math.max(0, entry.baseCost()) : Math.max(0, spell.manaCost(ctxSpell));
-            int cd   = entry != null ? Math.max(0, entry.baseCooldown()) : Math.max(0, spell.cooldownTicks(ctxSpell));
+            var ctxSpell = new SpellContext(lvl, sp, slot, 0, 0, 0, null);
+
+            // Стоимость и кулдаун — из тюнинга или из методов спелла
+            int cost = Math.max(0, spell.manaCost(ctxSpell));
+            int cd   = Math.max(0, spell.cooldownTicks(ctxSpell));
 
             var stats = sp.getData(com.doomspire.grimcore.stat.ModAttachments.PLAYER_STATS.get());
             if (stats == null) return;
-
             if (stats.getCurrentMana() < cost) return;
 
+            // Каст вызываем у спелла, не у SpellContext
             CastResult result = spell.cast(ctxSpell);
             if (result == CastResult.OK) {
+                // списываем ману + синк статов (как у тебя сделано в других местах)
                 stats.setCurrentMana(stats.getCurrentMana() - cost);
                 stats.markDirty();
                 com.doomspire.grimcore.net.GrimcoreNetworking.syncPlayerStats(sp, stats);
 
+                // ставим кд и ТУТ ЖЕ триггерим sync лоадаута
                 loadout.setCooldown(slot, cd);
+                sp.setData(ModAttachments.PLAYER_LOADOUT.get(), loadout);
             }
         });
     }
