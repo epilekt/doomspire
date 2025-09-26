@@ -38,6 +38,7 @@ public class StatCalculator {
         snapshot.lifesteal = 0f;
         snapshot.manasteal = 0f;
         snapshot.evasionChance = eva * 0.01f;
+        snapshot.moveSpeedPct = dex * 0.25D; // 0.25% за 1 DEX
 
         // TODO: сюда позже подключим бонусы предметов через StatAggregator
 

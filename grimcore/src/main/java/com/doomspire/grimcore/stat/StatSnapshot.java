@@ -25,6 +25,7 @@ public class StatSnapshot {
     public float lifesteal;
     public float manasteal;
     public float evasionChance;
+    public double moveSpeedPct; // бонус к скорости в процентах (например 7.5 = +7.5%)
 
     public StatSnapshot() {
         for (DamageTypes type : DamageTypes.values()) {

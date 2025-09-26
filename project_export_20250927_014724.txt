@@ -51,12 +51,14 @@
 .\grimcore\src\main\java\com\doomspire\grimcore\stat\PlayerProgress.java
 .\grimcore\src\main\java\com\doomspire\grimcore\stat\ResistTypes.java
 .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatCalculator.java
+.\grimcore\src\main\java\com\doomspire\grimcore\stat\StatEffects.java
 .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatSnapshot.java
 .\grimcore\src\main\java\com\doomspire\grimcore\xp\LevelTable.java
 .\grimcore\src\main\java\com\doomspire\grimcore\xp\Rewards.java
 .\grimcore\src\main\resources\data\grimcore\mobs\minecraft\zombie.json
 .\grimfate\src\main\java\com\doomspire\grimfate\client\CustomHudOverlay.java
-.\grimfate\src\main\java\com\doomspire\grimfate\client\gui\StatsHubScreen.java
+.\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryTabsButtons.java
+.\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryWithStatsScreen.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\Hotkeys.java
 .\grimfate\src\main\java\com\doomspire\grimfate\commands\AddSpellCommand.java
 .\grimfate\src\main\java\com\doomspire\grimfate\config\ClientConfig.java
@@ -1652,6 +1654,7 @@ package com.doomspire.grimcore.events;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 import com.doomspire.grimcore.net.GrimcoreNetworking;
 import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimcore.stat.StatEffects;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -1660,7 +1663,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 public final class CorePlayerEvents {
     private CorePlayerEvents() {}
 
-    /** Зарегистрируй где-то в инициализации: NeoForge.EVENT_BUS.register(CorePlayerEvents.class); */
+    /** Вызови из инициализации мода ядра (common): NeoForge.EVENT_BUS.register(CorePlayerEvents.class); */
     public static void registerToBus() {
         NeoForge.EVENT_BUS.register(CorePlayerEvents.class);
     }
@@ -1672,14 +1675,25 @@ public final class CorePlayerEvents {
         PlayerStatsAttachment stats = player.getData(ModAttachments.PLAYER_STATS.get());
         if (stats == null) return;
 
-        // инициализация текущих ресурсов при первом входе
+        // первичная инициализация «текущих» ресурсов
         var snap = stats.getSnapshot();
         if (stats.getCurrentHealth() <= 0) stats.setCurrentHealth((int) snap.maxHealth);
         if (stats.getCurrentMana()   <= 0) stats.setCurrentMana((int) snap.maxMana);
         stats.markDirty();
 
-        // мгновенно синканём, чтобы HUD сразу показал актуальные полоски
+        // синк клиенту, чтобы HUD сразу обновился
         GrimcoreNetworking.syncPlayerStats(player, stats);
+
+        // применяем ВСЕ эффекты статов к ванильным атрибутам (DEX→скорость и т.д.)
+        StatEffects.applyAll(player);
+    }
+
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+
+        // после респауна: повторно применяем эффекты (могли слететь с нового Entity)
+        StatEffects.applyAll(player);
     }
 }
 
@@ -2602,6 +2616,7 @@ public class StatCalculator {
         snapshot.lifesteal = 0f;
         snapshot.manasteal = 0f;
         snapshot.evasionChance = eva * 0.01f;
+        snapshot.moveSpeedPct = dex * 0.25D; // 0.25% за 1 DEX
 
         // TODO: сюда позже подключим бонусы предметов через StatAggregator
 
@@ -2611,6 +2626,64 @@ public class StatCalculator {
 
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatCalculator.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatEffects.java -----
+package com.doomspire.grimcore.stat;
+
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.stat.ModAttachments;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+
+/**
+ * Применяет эффекты из статов к ванильным атрибутам игрока.
+ * ЕДИНАЯ точка – тут же и снимаем/обновляем модификаторы.
+ */
+public final class StatEffects {
+    private StatEffects() {}
+
+    // Идентификаторы наших модификаторов (ResourceLocation в 1.21.1)
+    public static final ResourceLocation MOVE_SPEED_ID =
+            ResourceLocation.fromNamespaceAndPath("grimcore", "dex_move_speed");
+
+    /**
+     * Применяет все эффекты заново на основе текущего снапшота статов.
+     * Вызывать после любого изменения статов/экипировки и при логине/респауне.
+     */
+    public static void applyAll(ServerPlayer sp) {
+        PlayerStatsAttachment att = sp.getData(ModAttachments.PLAYER_STATS.get());
+        if (att == null) return;
+
+        var snap = att.getSnapshot();
+
+        // 1) Ловкость → скорость передвижения: +0.25% за 1 DEX
+        applyMoveSpeed(sp, snap.moveSpeedPct);
+        // 2) здесь же позже: сила → урон ближнего, интеллект → сила магии и т.п.
+    }
+
+    private static void applyMoveSpeed(ServerPlayer sp, double percent) {
+        AttributeInstance inst = sp.getAttribute(Attributes.MOVEMENT_SPEED);
+        if (inst == null) return;
+
+        // снимаем старый наш модификатор
+        inst.removeModifier(MOVE_SPEED_ID);
+
+        // +X% к ИТОГОВОЙ скорости → ADD_MULTIPLIED_TOTAL с долей (0.075 для +7.5%)
+        double addTotal = percent / 100.0;
+        if (addTotal == 0.0) return;
+
+        AttributeModifier mod = new AttributeModifier(
+                MOVE_SPEED_ID,
+                addTotal,
+                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+        );
+        inst.addPermanentModifier(mod);
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatEffects.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatSnapshot.java -----
 package com.doomspire.grimcore.stat;
 
@@ -2639,6 +2712,7 @@ public class StatSnapshot {
     public float lifesteal;
     public float manasteal;
     public float evasionChance;
+    public double moveSpeedPct; // бонус к скорости в процентах (например 7.5 = +7.5%)
 
     public StatSnapshot() {
         for (DamageTypes type : DamageTypes.values()) {
@@ -2783,6 +2857,9 @@ public final class CustomHudOverlay {
             ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/xp_background.png");
     private static final ResourceLocation XP_FILL =
             ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/xp_fill.png");
+
+    private static final ResourceLocation SPELL_CELL =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/spellbar/spell_bar_cell.png");
 
     // ---- плавные значения ----
     private static final Map<UUID, Float> DISPLAYED_HEALTH = new ConcurrentHashMap<>();
@@ -2930,193 +3007,439 @@ public final class CustomHudOverlay {
 
     private static void renderSpellHotbar(GuiGraphics gg, Minecraft mc, int sw, int sh) {
         var p = mc.player;
-        PlayerLoadoutAttachment loadout = p.getData(ModAttachments.PLAYER_LOADOUT.get());
+        var loadout = p.getData(ModAttachments.PLAYER_LOADOUT.get());
         if (loadout == null) return;
 
-        final int CELLS = PlayerLoadoutAttachment.SLOTS;
+        final int CELLS = PlayerLoadoutAttachment.SLOTS; // 6
+        final int CELL = 20; // 20x20, без отступов
 
-        boolean any = false;
+        // 1) ширина полосы
+        int totalW = CELLS * CELL;
+
+        // 2) дефолт по X: центр экрана; по Y: ровно между прицелом (sh/2) и ванильным хотбаром (~sh - 22)
+        int vanillaHotbarY = sh - 22;
+        int midY = (sh / 2 + vanillaHotbarY) / 2;
+
+        int x0 = (sw - totalW) / 2 + ClientConfig.SPELLBAR_X.get();
+        int y0 = midY + ClientConfig.SPELLBAR_Y.get();
+
+        // 3) рисуем все 6 ячеек
         for (int i = 0; i < CELLS; i++) {
-            if (loadout.get(i) != null) { any = true; break; }
-        }
-        if (!any) return;
-
-        int totalW = CELLS * SPELL_CELL_W + (CELLS - 1) * SPELL_CELL_PAD;
-        int x0 = (sw - totalW) / 2;
-        int y0 = sh - 60;
-
-        RenderSystem.enableBlend();
-
-        for (int i = 0; i < CELLS; i++) {
-            int x = x0 + i * (SPELL_CELL_W + SPELL_CELL_PAD);
+            int x = x0 + i * CELL;
             int y = y0;
 
-            gg.fill(x, y, x + SPELL_CELL_W, y + SPELL_CELL_H, 0x7F000000);
-            gg.fill(x + 1, y + 1, x + SPELL_CELL_W - 1, y + SPELL_CELL_H - 1, 0x3FA0A0A0);
+            // фон ячейки (твоя текстура 20x20)
+            gg.blit(SPELL_CELL, x, y, 0, 0, CELL, CELL, CELL, CELL);
 
             var rl = loadout.get(i);
-            if (rl != null) {
-                String shortId = rl.getPath();
-                if (shortId.length() > 8) shortId = shortId.substring(0, 8);
-                gg.drawString(mc.font, shortId, x + 3, y + 6, 0xFFFFFF, false);
-            } else {
-                gg.drawString(mc.font, "-", x + 8, y + 6, 0xFF999999, false);
-            }
 
-            String hk = Hotkeys.spellKeyName(i);
-            gg.drawString(mc.font, hk, x + SPELL_CELL_W - mc.font.width(hk) - 2,
-                    y + SPELL_CELL_H - 9, 0xFFE6DDAA, false);
+            // если слот пуст — ничего не пишем (ни хоткей, ни кд)
+            if (rl == null) continue;
 
+            // кулдаун
             int cd = loadout.getCooldown(i);
             if (cd > 0) {
-                gg.fill(x + 2, y + 2, x + SPELL_CELL_W - 2, y + SPELL_CELL_H - 2, 0x80000000);
+                // тёмная маска поверх (оставим как заливку; если захочешь — заменим на текстуру маски)
+                gg.fill(x + 1, y + 1, x + CELL - 1, y + CELL - 1, 0x80000000);
                 String s = String.valueOf(cd / 20);
-                gg.drawString(mc.font, s, x + (SPELL_CELL_W - mc.font.width(s)) / 2, y + 5, 0xFFFFFFFF, false);
+                gg.drawString(mc.font, s, x + (CELL - mc.font.width(s)) / 2, y + 5, 0xFFFFFFFF, false);
             }
-        }
 
-        RenderSystem.disableBlend();
+            // хоткей (буква/цифра) — только если слот не пуст
+            String hk = Hotkeys.spellKeyName(i);
+            // рисуем в правом нижнем углу, вписываемся в ~8x9px
+            int hkX = x + CELL - mc.font.width(hk) - 2;
+            int hkY = y + CELL - 9;
+            gg.drawString(mc.font, hk, hkX, hkY, 0xFFE6DDAA, false);
+        }
     }
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\CustomHudOverlay.java -----n
------ BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\StatsHubScreen.java -----
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryTabsButtons.java -----
+package com.doomspire.grimfate.client.gui;
+
+import com.doomspire.grimfate.core.Grimfate;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ScreenEvent;
+
+@EventBusSubscriber(modid = Grimfate.MODID, value = Dist.CLIENT)
+public final class InventoryTabsButtons {
+    private InventoryTabsButtons() {}
+
+    private static final ResourceLocation TAB_TEX =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/button_tab.png");
+    private static final ResourceLocation ICON_STATS =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/icon_stats.png");
+    private static final ResourceLocation ICON_SKILLS =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/icon_skills.png");
+
+    // Держим ссылки для лайв-репозиционирования
+    private static SpriteTabButton STATS_BTN;
+    private static SpriteTabButton SKILLS_BTN;
+
+    @SubscribeEvent
+    public static void onInit(ScreenEvent.Init.Post e) {
+        Screen screen = e.getScreen();
+        if (!(screen instanceof InventoryScreen inv)) return;
+
+        int left = inv.getGuiLeft();
+        int top  = inv.getGuiTop();
+        int w    = inv.getXSize();
+
+        int xStats  = left + w + 2;
+        int yStats  = top;
+        int xSkills = xStats;
+        int ySkills = yStats + 22;
+
+        STATS_BTN = new SpriteTabButton(
+                xStats, yStats,
+                TAB_TEX, 20, 20, 60,
+                ICON_STATS, 16, 48, 3, // 3 кадра у icon_stats
+                () -> Minecraft.getInstance().setScreen(new InventoryWithStatsScreen(Minecraft.getInstance().player)));
+        STATS_BTN.setTooltip(Tooltip.create(Component.translatable("grimfate.ui.stats.open")));
+
+        SKILLS_BTN = new SpriteTabButton(
+                xSkills, ySkills,
+                TAB_TEX, 20, 20, 60,
+                ICON_SKILLS, 16, 80, 5, // 5 кадров у icon_skills
+                () -> {
+                    var p = Minecraft.getInstance().player;
+                    if (p != null) p.displayClientMessage(Component.literal("Древо не нарисовано, но открылось бы и все работает"), true);
+                });
+
+        SKILLS_BTN.setTooltip(Tooltip.create(Component.literal("Дерево навыков (WIP)")));
+
+        e.addListener(STATS_BTN);
+        e.addListener(SKILLS_BTN);
+    }
+
+    // Двигаем кнопки каждый кадр — они «клеятся» к инвентарю и при книге рецептов
+    @SubscribeEvent
+    public static void onRender(ScreenEvent.Render.Post e) {
+        Screen screen = e.getScreen();
+        if (!(screen instanceof InventoryScreen inv)) return;
+        int left = inv.getGuiLeft();
+        int top  = inv.getGuiTop();
+        int w    = inv.getXSize();
+
+        if (STATS_BTN != null) {
+            STATS_BTN.setX(left + w + 2);
+            STATS_BTN.setY(top);
+        }
+        if (SKILLS_BTN != null) {
+            SKILLS_BTN.setX(left + w + 2);
+            SKILLS_BTN.setY(top + 22);
+        }
+    }
+
+    /** Кнопка-«таб»: фон 3 состояния, иконка — анимированный спрайт по времени. */
+    static final class SpriteTabButton extends AbstractButton {
+        private final ResourceLocation tabTex;
+        private final int tabFrameW, tabFrameH, tabTexH;
+
+        private final ResourceLocation iconTex;
+        private final int iconFrame;   // размер кадра иконки (обычно 16)
+        private final int iconTexH;    // высота текстуры иконки (для blit)
+        private final int iconFrames;  // сколько кадров у иконки
+
+        private boolean pressedVisual = false;
+        private final Runnable onPress;
+
+        SpriteTabButton(
+                int x, int y,
+                ResourceLocation tabTex, int tabFrameW, int tabFrameH, int tabTexH,
+                ResourceLocation iconTex, int iconFrame, int iconTexH, int iconFrames,
+                Runnable onPress
+        ) {
+            super(x, y, tabFrameW, tabFrameH, Component.empty());
+            this.tabTex = tabTex;
+            this.tabFrameW = tabFrameW;
+            this.tabFrameH = tabFrameH;
+            this.tabTexH = tabTexH;
+
+            this.iconTex = iconTex;
+            this.iconFrame = iconFrame;
+            this.iconTexH = iconTexH;
+            this.iconFrames = Math.max(1, iconFrames);
+
+            this.onPress = onPress;
+        }
+
+        @Override
+        protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+            // Фон — по состоянию
+            int state = this.isHovered() ? 1 : 0;
+            if (pressedVisual) state = 2; // 0/1/2 = normal/hover/pressed
+            int vTab = state * tabFrameH;
+            g.blit(tabTex, getX(), getY(), 0, vTab, tabFrameW, tabFrameH, tabFrameW, tabTexH);
+
+            // Иконка — анимируем по времени, независимо от состояния
+            long ms = System.currentTimeMillis();
+            int anim = (int)((ms / 200L) % iconFrames); // ~5 FPS
+            int vIcon = anim * iconFrame;
+
+            int ix = getX() + (tabFrameW - 16) / 2;
+            int iy = getY() + (tabFrameH - 16) / 2;
+            g.blit(iconTex, ix, iy, 0, vIcon, 16, 16, 16, iconTexH);
+        }
+
+        @Override
+        public void onPress() {
+            if (onPress != null) onPress.run();
+        }
+
+        @Override
+        public boolean mouseClicked(double mx, double my, int button) {
+            if (this.isMouseOver(mx, my)) pressedVisual = true;
+            return super.mouseClicked(mx, my, button);
+        }
+
+        @Override
+        public boolean mouseReleased(double mx, double my, int button) {
+            pressedVisual = false;
+            return super.mouseReleased(mx, my, button);
+        }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput narration) {
+            this.defaultButtonNarrationText(narration);
+        }
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryTabsButtons.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryWithStatsScreen.java -----
 package com.doomspire.grimfate.client.gui;
 
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 import com.doomspire.grimcore.stat.Attributes;
 import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimcore.stat.PlayerProgress;
+import com.doomspire.grimfate.core.Grimfate;
 import com.doomspire.grimfate.network.ModNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
-// import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 
-import java.util.ArrayList;
-import java.util.List;
+public class InventoryWithStatsScreen extends InventoryScreen {
+    private static final int PANEL_W = 240;
+    private static final int PANEL_H = 360;   // без скролла — делаем выше
+    private static final int INV_SHIFT = 140; // инвентарь уезжает влево не полностью
 
-public class StatsHubScreen extends Screen {
-    private static final int PAD = 8;
-    private static final int ROW_STEP = 18;
-    private static final int ROW_HEIGHT = 18;
+    private static final ResourceLocation PANEL_BG =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/stats_panel_bg.png");
+    private static final ResourceLocation CLOSE_TEX =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/close_btn.png");
 
-    private final List<Row> rows = new ArrayList<>();
-    private int unspent = 0;
+    private int panelX, panelY;
+    private int closeX, closeY;
 
-    // Если позже захочешь PNG-фон — раскомментируй:
-//    private static final ResourceLocation BG = ResourceLocation.fromNamespaceAndPath("grimfate", "textures/gui/stats_bg.png");
+    private boolean isMouseDown = false;
 
-    public StatsHubScreen() {
-        super(Component.translatable("screen.grimfate.stats_hub"));
-    }
+    // «+» кнопки для атрибутов
+    private java.util.List<PlusBtn> plusButtons = java.util.Collections.emptyList();
+
+    public InventoryWithStatsScreen(Player player) { super(player); }
 
     @Override
     protected void init() {
-        rows.clear();
-        PlayerStatsAttachment att = getClientAtt();
-        if (att == null) return;
+        super.init();
 
-        this.unspent = att.getUnspentPoints();
+        // сдвигаем инвентарь влево
+        this.leftPos -= INV_SHIFT;
 
-        int y = this.height / 6;
-        for (Attributes attr : Attributes.values()) {
-            String id = attr.name();
-            Component label = Component.translatable("attr.grimfate." + id.toLowerCase());
-            int allocated = att.getAttribute(attr);
+        // панель прижата к правому краю инвентаря
+        panelX = this.leftPos + this.imageWidth;
+        panelY = this.topPos;
 
-            Row r = new Row(id, label, allocated, y);
-            rows.add(r);
+        // закрыть (12×12)
+        closeX = panelX + PANEL_W - 12 - 4;
+        closeY = panelY + 4;
 
-            this.addRenderableWidget(
-                    Button.builder(Component.literal("+"), b -> onAddPoint(id))
-                            .bounds(this.width / 2 + 60, y, 18, 16)
-                            .build()
-            );
+        // строки атрибутов: аббревиатуры + «+»
+        plusButtons = new java.util.ArrayList<>();
+        int y = panelY + 30;
+        int xPlus = panelX + PANEL_W - 10 - 12; // 12px ширина «+»
 
-            y += ROW_STEP;
-        }
-    }
-
-    private void onAddPoint(String attributeId) {
-        if (unspent <= 0) return;
-        ModNetworking.sendAllocatePoint(attributeId);
-        unspent--;
-        for (Row r : rows) {
-            if (r.id.equals(attributeId)) { r.allocated++; break; }
+        AttrRow[] rows = new AttrRow[] {
+                new AttrRow(Attributes.STRENGTH,     "СИЛ"),
+                new AttrRow(Attributes.VITALITY,     "СТК"),
+                new AttrRow(Attributes.INTELLIGENCE, "ИНТ"),
+                new AttrRow(Attributes.SPIRIT,       "ДУХ"),
+                new AttrRow(Attributes.DEXTERITY,    "ЛВК"),
+                new AttrRow(Attributes.EVASION,      "УКЛ")
+        };
+        for (AttrRow r : rows) {
+            PlusBtn btn = new PlusBtn(xPlus, y, () -> ModNetworking.sendAllocatePoint(r.id.name()));
+            this.addRenderableWidget(btn);
+            plusButtons.add(btn);
+            y += (this.font.lineHeight + 6);
         }
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTicks) {
-        // 1) Рисуем собственный фон (без блюра)
-        // Вариант A: плёнка
-        g.fill(0, 0, this.width, this.height, 0xC0000000);
+    public void render(GuiGraphics g, int mouseX, int mouseY, float pt) {
+        // фон
+        this.renderBackground(g, mouseX, mouseY, pt);
 
-        // Вариант B: картинка (PNG). Просто раскомментируй строки ниже и положи файл в assets/grimfate/textures/gui/stats_bg.png
-//        int bgW = 256, bgH = 180; // реальные размеры текстуры
-//        int x = (this.width - bgW) / 2;
-//        int y = (this.height - bgH) / 2;
-//        g.blit(BG, x, y, 0, 0, bgW, bgH, bgW, bgH);
+        // инвентарь (уже сдвинут)
+        super.render(g, mouseX, mouseY, pt);
 
-        // 2) Даём кнопкам отрисоваться (они будут чёткими)
-        super.render(g, mouseX, mouseY, partialTicks);
+        // фон панели (240×360)
+        g.blit(PANEL_BG, panelX, panelY, 0, 0, PANEL_W, PANEL_H, PANEL_W, PANEL_H);
 
-        // 3) После этого рисуем весь наш текст — он тоже останется чётким
-        Component title = this.title.copy()
-                .append("  ")
-                .append(Component.translatable("screen.grimfate.unspent", unspent));
-        g.drawString(this.font, title, PAD, PAD, 0xFFFFFF, false);
+        // закрыть
+        boolean overClose = mouseX >= closeX && mouseX <= closeX + 12 && mouseY >= closeY && mouseY <= closeY + 12;
+        int v = overClose ? (isMouseDown ? 24 : 12) : 0;
+        g.blit(CLOSE_TEX, closeX, closeY, 0, v, 12, 12, 12, 36);
 
-        int xName = this.width / 2 - 120;
-        int xVal  = this.width / 2 + 40;
+        // данные игрока
+        var p = this.minecraft.player;
+        var progressAtt = p.getData(ModAttachments.PLAYER_PROGRESS.get());
+        var statsAtt    = p.getData(ModAttachments.PLAYER_STATS.get());
 
-        for (Row r : rows) {
-            g.drawString(this.font, r.label, xName, r.y + 4, 0xE0E0E0, false);
-            g.drawString(this.font, Component.literal(String.valueOf(r.allocated)), xVal, r.y + 4, 0xA0FFA0, false);
+        PlayerProgress prog = progressAtt != null ? progressAtt.toSnapshot() : PlayerProgress.DEFAULT;
+        int unspent = statsAtt != null ? statsAtt.getUnspentPoints() : 0;
 
-            if (isMouseOverRow(mouseX, mouseY, r)) {
-                g.renderTooltip(this.font, Component.translatable("attr.tip." + r.id.toLowerCase()), mouseX, mouseY);
+        // шапка
+        g.drawString(this.font, "Lv." + prog.level(), panelX + 10, panelY + 10, 0xFFE6DDAA, false);
+        g.drawString(this.font, "Unspent: " + unspent, panelX + 110, panelY + 10, 0xFFFFFF, false);
+
+        // атрибуты (аббревиатуры слева, значения справа; «+» уже нарисованы как виджеты)
+        int xLabel = panelX + 10;
+        int xValue = panelX + PANEL_W - 10 - 12 - 6 - 24; // справа от значений остаётся место под «+»
+        int y = panelY + 30;
+
+        if (statsAtt != null) {
+            // порядок в точности как у кнопок
+            AttrRow[] rows = new AttrRow[] {
+                    new AttrRow(Attributes.STRENGTH,     "СИЛ"),
+                    new AttrRow(Attributes.VITALITY,     "СТК"),
+                    new AttrRow(Attributes.INTELLIGENCE, "ИНТ"),
+                    new AttrRow(Attributes.SPIRIT,       "ДУХ"),
+                    new AttrRow(Attributes.DEXTERITY,    "ЛВК"),
+                    new AttrRow(Attributes.EVASION,      "УКЛ")
+            };
+            for (AttrRow r : rows) {
+                int val = statsAtt.getAttribute(r.id);
+                g.drawString(this.font, r.label, xLabel, y, 0xFFFFFF, false);
+                g.drawString(this.font, String.valueOf(val), xValue, y, 0xFFFFFF, false);
+                y += (this.font.lineHeight + 6);
+            }
+        } else {
+            g.drawString(this.font, "No stats data", xLabel, y, 0xFFFFFF, false);
+            y += (this.font.lineHeight + 6);
+        }
+
+        // разделитель
+        y += 4;
+        g.fill(panelX + 10, y, panelX + PANEL_W - 10, y + 1, 0x44FFFFFF);
+        y += 6;
+
+        // Характеристики (готовые значения из snapshot)
+        g.drawString(this.font, "Характеристики", xLabel, y, 0xFFE6DDAA, false);
+        y += (this.font.lineHeight + 4);
+
+        if (statsAtt != null) {
+            var s = statsAtt.getSnapshot();
+
+            y = statLine(g, xLabel, y, "Max HP", String.valueOf((int) s.maxHealth));
+            y = statLine(g, xLabel, y, "Max MP", String.valueOf((int) s.maxMana));
+            y = statLine(g, xLabel, y, "Regen HP/s", String.valueOf((int) s.regenHealth));
+            y = statLine(g, xLabel, y, "Regen MP/s", String.valueOf((int) s.regenMana));
+            y = statLine(g, xLabel, y, "Speed", String.format("+%.2f%%", s.moveSpeedPct)); // <— НОВОЕ
+
+            // резисты
+            for (var e : s.resistances.entrySet()) {
+                y = statLine(g, xLabel, y, "Res " + e.getKey().name(), Math.round(e.getValue() * 100) + "%");
+                if (y > panelY + PANEL_H - 20) break;
+            }
+            // урон
+            for (var e : s.damage.entrySet()) {
+                y = statLine(g, xLabel, y, "Dmg " + e.getKey().name(), String.format("%.1f", e.getValue()));
+                if (y > panelY + PANEL_H - 20) break;
             }
         }
+
+        this.renderTooltip(g, mouseX, mouseY);
     }
 
-    private boolean isMouseOverRow(int mx, int my, Row r) {
-        int x0 = this.width / 2 - 130, y0 = r.y, w = 220, h = ROW_HEIGHT;
-        return mx >= x0 && my >= y0 && mx < x0 + w && my < y0 + h;
+    private int statLine(GuiGraphics g, int x, int y, String label, String value) {
+        g.drawString(this.font, label, x, y, 0xFFFFFF, false);
+        int vx = panelX + PANEL_W - 10 - this.font.width(value);
+        g.drawString(this.font, value, vx, y, 0xFFFFFF, false);
+        return y + this.font.lineHeight + 2;
     }
 
-    private PlayerStatsAttachment getClientAtt() {
-        var p = Minecraft.getInstance().player;
-        return p != null ? p.getData(ModAttachments.PLAYER_STATS.get()) : null;
-    }
-
-    /** Вызывается из S2C-обработчика для мягкого обновления UI. */
-    public void applyServerResult(String attrId, int newAllocated, int newUnspent) {
-        this.unspent = newUnspent;
-        for (Row r : rows) {
-            if (r.id.equals(attrId)) { r.allocated = newAllocated; break; }
+    @Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        isMouseDown = true;
+        if (mx >= closeX && mx <= closeX + 12 && my >= closeY && my <= closeY + 12) {
+            this.minecraft.setScreen(new InventoryScreen(this.minecraft.player));
+            return true;
         }
+        return super.mouseClicked(mx, my, button);
     }
 
-    private static final class Row {
-        final String id;
-        final Component label;
-        final int y;
-        int allocated;
-        Row(String id, Component label, int allocated, int y) {
-            this.id = id; this.label = label; this.allocated = allocated; this.y = y;
+    @Override
+    public boolean mouseReleased(double mx, double my, int button) {
+        isMouseDown = false;
+        return super.mouseReleased(mx, my, button);
+    }
+
+    private record AttrRow(Attributes id, String label) {}
+
+    /** маленькая квадратная кнопка «+» 12×12 */
+    private static final class PlusBtn extends AbstractButton {
+        private final Runnable onPress;
+
+        PlusBtn(int x, int y, Runnable onPress) {
+            super(x, y, 12, 12, Component.empty());
+            this.onPress = onPress;
+        }
+
+        @Override
+        protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float pt) {
+            int col = this.isHovered() ? 0xAAFFFFFF : 0x66FFFFFF;
+            // полупрозрачный фон
+            g.fill(getX(), getY(), getX() + 12, getY() + 12, 0x33000000 | (col & 0x00FFFFFF));
+            // плюсик
+            g.drawString(Minecraft.getInstance().font, "+", getX() + 3, getY() + 1, 0xFFFFFFFF, false);
+        }
+
+        @Override
+        public void onPress() {
+            if (onPress != null) onPress.run();
+        }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput narration) {
+            this.defaultButtonNarrationText(narration);
         }
     }
 }
 
-n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\StatsHubScreen.java -----n
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryWithStatsScreen.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\Hotkeys.java -----
 package com.doomspire.grimfate.client;
 
-import com.doomspire.grimfate.client.gui.StatsHubScreen;
-import com.doomspire.grimfate.core.Grimfate;
 import com.doomspire.grimfate.network.ModNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -3130,7 +3453,7 @@ public final class Hotkeys {
 
     private static final String CAT = "key.categories.grimfate";
 
-    // Используем только новые ID, чтобы исключить любые пересечения:
+    // Только слоты спеллов
     private static final String[] SPELL_IDS = {
             "key.grimfate.spellslot_1",
             "key.grimfate.spellslot_2",
@@ -3144,7 +3467,6 @@ public final class Hotkeys {
             GLFW.GLFW_KEY_V, GLFW.GLFW_KEY_B, GLFW.GLFW_KEY_N
     };
 
-    public static KeyMapping OPEN_STATS;
     private static final KeyMapping[] SPELL_KEYS = new KeyMapping[6];
 
     private static boolean CREATED = false;
@@ -3154,7 +3476,6 @@ public final class Hotkeys {
         if (CREATED) return;
         CREATED = true;
 
-        OPEN_STATS = new KeyMapping("key.grimfate.open_stats", GLFW.GLFW_KEY_H, CAT);
         for (int i = 0; i < SPELL_KEYS.length; i++) {
             SPELL_KEYS[i] = new KeyMapping(SPELL_IDS[i], DEFAULTS[i], CAT);
         }
@@ -3164,24 +3485,20 @@ public final class Hotkeys {
     public static void onRegisterKeys(RegisterKeyMappingsEvent e) {
         ensureCreated();
         if (REGISTERED) {
-            Grimfate.LOGGER.warn("[GF] Key mappings already registered — skip.");
+            // уже зарегистрировано
             return;
         }
         REGISTERED = true;
 
-        e.register(OPEN_STATS);
         for (KeyMapping km : SPELL_KEYS) e.register(km);
     }
 
-    /** Forge-bus: обработка нажатий. Вешается из client-setup. */
+    /** NeoForge-bus: обработка нажатий. */
     public static void onClientTick(ClientTickEvent.Post e) {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer p = mc.player;
         if (p == null) return;
 
-        if (OPEN_STATS != null && OPEN_STATS.consumeClick() && mc.screen == null) {
-            mc.setScreen(new StatsHubScreen());
-        }
         for (int i = 0; i < SPELL_KEYS.length; i++) {
             KeyMapping km = SPELL_KEYS[i];
             if (km != null && km.consumeClick()) {
@@ -3195,7 +3512,6 @@ public final class Hotkeys {
         return SPELL_KEYS[idx].getTranslatedKeyMessage().getString();
     }
 }
-
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\Hotkeys.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\commands\AddSpellCommand.java -----
@@ -3302,7 +3618,18 @@ public class ClientConfig {
     public static final ModConfigSpec.IntValue XP_ICON_X;
     public static final ModConfigSpec.IntValue XP_ICON_Y;
 
+    public static final ModConfigSpec.IntValue SPELLBAR_X;
+    public static final ModConfigSpec.IntValue SPELLBAR_Y;
+
     static {
+        SPELLBAR_X = BUILDER
+                .comment("Смещение спелбара по X")
+                .defineInRange("hud.spellbar_x", -60, -500, 500);
+
+        SPELLBAR_Y = BUILDER
+                .comment("Смещение спелбара по X")
+                .defineInRange("hud.spellbar_y", -78, -500, 500);
+
         HEALTH_BAR_X = BUILDER
                 .comment("Смещение полоски здоровья по X")
                 .defineInRange("hud.health_bar_x", -60, -500, 500);
@@ -3855,10 +4182,6 @@ n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\RustyRingD
 package com.doomspire.grimfate.network;
 
 import com.doomspire.grimcore.attach.PlayerLoadoutAttachment;
-import com.doomspire.grimcore.spell.GrimSpells;
-import com.doomspire.grimcore.spell.api.*;
-import com.doomspire.grimcore.stat.ModAttachments;
-import com.doomspire.grimfate.network.payload.C2SCastSpellSlotPayload;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 import com.doomspire.grimcore.net.GrimcoreNetworking;
 import com.doomspire.grimcore.spell.GrimSpells;
@@ -3866,7 +4189,7 @@ import com.doomspire.grimcore.spell.api.CastResult;
 import com.doomspire.grimcore.spell.api.SpellContext;
 import com.doomspire.grimcore.stat.Attributes;
 import com.doomspire.grimcore.stat.ModAttachments;
-import com.doomspire.grimfate.client.gui.StatsHubScreen;
+import com.doomspire.grimcore.stat.StatEffects;
 import com.doomspire.grimfate.entity.BoltProjectileEntity;
 import com.doomspire.grimfate.network.payload.C2SAllocatePointPayload;
 import com.doomspire.grimfate.network.payload.C2SCastSpellSlotPayload;
@@ -3881,6 +4204,8 @@ import net.minecraft.sounds.SoundSource;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import java.util.UUID;
 
 public final class ModNetworking {
     private ModNetworking() {}
@@ -3931,6 +4256,9 @@ public final class ModNetworking {
 
             att.markDirty();
             GrimcoreNetworking.syncPlayerStats(sp, att);
+
+            // ⬇️ ТОЛЬКО вызов ядра — никаких модификаторов в ModNetworking
+            StatEffects.applyAll(sp);
         });
     }
 
@@ -3948,10 +4276,7 @@ public final class ModNetworking {
                 att.setUnspentPoints(msg.unspent());
                 att.markDirty();
             }
-
-            if (mc.screen instanceof StatsHubScreen s) {
-                s.applyServerResult(msg.attributeId(), msg.newAllocated(), msg.unspent());
-            }
+            // UI обновится сам — экран читает свежие данные из Attachment.
         });
     }
 
@@ -3963,31 +4288,27 @@ public final class ModNetworking {
             var stack = sp.getMainHandItem();
             if (!stack.is(ModItems.STAFF.get())) return;
 
-            // кулдаун на сервере
             if (sp.getCooldowns().isOnCooldown(ModItems.STAFF.get())) return;
 
             var att = sp.getData(ModAttachments.PLAYER_STATS.get());
             if (att == null) return;
 
-            // мана
             if (att.getCurrentMana() < 2) return;
 
             att.setCurrentMana(att.getCurrentMana() - 2);
             att.markDirty();
             GrimcoreNetworking.syncPlayerStats(sp, att);
 
-            // спавн болта
             var bolt = new BoltProjectileEntity(sp.level(), sp);
             bolt.shootForward(sp, 1.8f);
             sp.level().addFreshEntity(bolt);
 
-            // кулдаун и звук — только при успешном касте
             sp.getCooldowns().addCooldown(ModItems.STAFF.get(), 20);
             sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                     SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 0.6f, 1.0f);
-
         });
     }
+
     private static void handleCastSpellSlot(C2SCastSpellSlotPayload msg, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             ServerPlayer sp = (ServerPlayer) ctx.player();
@@ -3999,46 +4320,39 @@ public final class ModNetworking {
             PlayerLoadoutAttachment loadout = sp.getData(ModAttachments.PLAYER_LOADOUT.get());
             if (loadout == null) return;
 
-            // уже на кд?
             if (loadout.getCooldown(slot) > 0) return;
 
-            // ВАЖНО: берём через get(slot), не getSlot(...)
             ResourceLocation spellId = loadout.get(slot);
             if (spellId == null) return;
 
             var spell = GrimSpells.get(spellId);
             if (spell == null) return;
 
-            // Готовим контекст спелла (у тебя именно так делается в дампе)
             var lvl = sp.serverLevel();
             var ctxSpell = new SpellContext(lvl, sp, slot, 0, 0, 0, null);
 
-            // Стоимость и кулдаун — из тюнинга или из методов спелла
             int cost = Math.max(0, spell.manaCost(ctxSpell));
             int cd   = Math.max(0, spell.cooldownTicks(ctxSpell));
 
-            var stats = sp.getData(com.doomspire.grimcore.stat.ModAttachments.PLAYER_STATS.get());
+            var stats = sp.getData(ModAttachments.PLAYER_STATS.get());
             if (stats == null) return;
             if (stats.getCurrentMana() < cost) return;
 
-            // Каст вызываем у спелла, не у SpellContext
             CastResult result = spell.cast(ctxSpell);
             if (result == CastResult.OK) {
-                // списываем ману + синк статов (как у тебя сделано в других местах)
                 stats.setCurrentMana(stats.getCurrentMana() - cost);
                 stats.markDirty();
-                com.doomspire.grimcore.net.GrimcoreNetworking.syncPlayerStats(sp, stats);
+                GrimcoreNetworking.syncPlayerStats(sp, stats);
 
-                // ставим кд и ТУТ ЖЕ триггерим sync лоадаута
                 loadout.setCooldown(slot, cd);
                 sp.setData(ModAttachments.PLAYER_LOADOUT.get(), loadout);
             }
         });
     }
-    public static void sendCastSpellSlot(int slot) {
-        net.neoforged.neoforge.network.PacketDistributor.sendToServer(new C2SCastSpellSlotPayload(slot));
-    }
 
+    public static void sendCastSpellSlot(int slot) {
+        PacketDistributor.sendToServer(new C2SCastSpellSlotPayload(slot));
+    }
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\network\ModNetworking.java -----n
@@ -4270,7 +4584,9 @@ n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\spell\FireboltE
   "attr.tip.dexterity": "Increases physical ranged damage.",
   "attr.tip.evasion": "Dodge chance.",
 
-  "item.grimfate.rusty_ring": "Rusty Ring"
+  "grimfate.ui.stats.open": "Open Attributes",
+
+"item.grimfate.rusty_ring": "Rusty Ring"
 }
 
 
@@ -4303,6 +4619,8 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\lang\en_us.json -
   "attr.tip.spirit": "Increases max mana and mana regen.",
   "attr.tip.dexterity": "Increases physical ranged damage.",
   "attr.tip.evasion": "Dodge chance.",
+
+  "grimfate.ui.stats.open": "Открыть атрибуты",
 
   "item.grimfate.rusty_ring": "Rusty Ring"
 }

@@ -26,5 +26,7 @@
   "attr.tip.dexterity": "Increases physical ranged damage.",
   "attr.tip.evasion": "Dodge chance.",
 
+  "grimfate.ui.stats.open": "Открыть атрибуты",
+
   "item.grimfate.rusty_ring": "Rusty Ring"
 }

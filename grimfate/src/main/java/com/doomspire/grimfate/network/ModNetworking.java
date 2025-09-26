@@ -1,10 +1,6 @@
 package com.doomspire.grimfate.network;
 
 import com.doomspire.grimcore.attach.PlayerLoadoutAttachment;
-import com.doomspire.grimcore.spell.GrimSpells;
-import com.doomspire.grimcore.spell.api.*;
-import com.doomspire.grimcore.stat.ModAttachments;
-import com.doomspire.grimfate.network.payload.C2SCastSpellSlotPayload;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 import com.doomspire.grimcore.net.GrimcoreNetworking;
 import com.doomspire.grimcore.spell.GrimSpells;
@@ -12,7 +8,7 @@ import com.doomspire.grimcore.spell.api.CastResult;
 import com.doomspire.grimcore.spell.api.SpellContext;
 import com.doomspire.grimcore.stat.Attributes;
 import com.doomspire.grimcore.stat.ModAttachments;
-import com.doomspire.grimfate.client.gui.StatsHubScreen;
+import com.doomspire.grimcore.stat.StatEffects;
 import com.doomspire.grimfate.entity.BoltProjectileEntity;
 import com.doomspire.grimfate.network.payload.C2SAllocatePointPayload;
 import com.doomspire.grimfate.network.payload.C2SCastSpellSlotPayload;
@@ -27,6 +23,8 @@ import net.minecraft.sounds.SoundSource;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import java.util.UUID;
 
 public final class ModNetworking {
     private ModNetworking() {}
@@ -77,6 +75,9 @@ public final class ModNetworking {
 
             att.markDirty();
             GrimcoreNetworking.syncPlayerStats(sp, att);
+
+            // ⬇️ ТОЛЬКО вызов ядра — никаких модификаторов в ModNetworking
+            StatEffects.applyAll(sp);
         });
     }
 
@@ -94,10 +95,7 @@ public final class ModNetworking {
                 att.setUnspentPoints(msg.unspent());
                 att.markDirty();
             }
-
-            if (mc.screen instanceof StatsHubScreen s) {
-                s.applyServerResult(msg.attributeId(), msg.newAllocated(), msg.unspent());
-            }
+            // UI обновится сам — экран читает свежие данные из Attachment.
         });
     }
 
@@ -109,31 +107,27 @@ public final class ModNetworking {
             var stack = sp.getMainHandItem();
             if (!stack.is(ModItems.STAFF.get())) return;
 
-            // кулдаун на сервере
             if (sp.getCooldowns().isOnCooldown(ModItems.STAFF.get())) return;
 
             var att = sp.getData(ModAttachments.PLAYER_STATS.get());
             if (att == null) return;
 
-            // мана
             if (att.getCurrentMana() < 2) return;
 
             att.setCurrentMana(att.getCurrentMana() - 2);
             att.markDirty();
             GrimcoreNetworking.syncPlayerStats(sp, att);
 
-            // спавн болта
             var bolt = new BoltProjectileEntity(sp.level(), sp);
             bolt.shootForward(sp, 1.8f);
             sp.level().addFreshEntity(bolt);
 
-            // кулдаун и звук — только при успешном касте
             sp.getCooldowns().addCooldown(ModItems.STAFF.get(), 20);
             sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                     SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 0.6f, 1.0f);
-
         });
     }
+
     private static void handleCastSpellSlot(C2SCastSpellSlotPayload msg, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             ServerPlayer sp = (ServerPlayer) ctx.player();
@@ -145,44 +139,37 @@ public final class ModNetworking {
             PlayerLoadoutAttachment loadout = sp.getData(ModAttachments.PLAYER_LOADOUT.get());
             if (loadout == null) return;
 
-            // уже на кд?
             if (loadout.getCooldown(slot) > 0) return;
 
-            // ВАЖНО: берём через get(slot), не getSlot(...)
             ResourceLocation spellId = loadout.get(slot);
             if (spellId == null) return;
 
             var spell = GrimSpells.get(spellId);
             if (spell == null) return;
 
-            // Готовим контекст спелла (у тебя именно так делается в дампе)
             var lvl = sp.serverLevel();
             var ctxSpell = new SpellContext(lvl, sp, slot, 0, 0, 0, null);
 
-            // Стоимость и кулдаун — из тюнинга или из методов спелла
             int cost = Math.max(0, spell.manaCost(ctxSpell));
             int cd   = Math.max(0, spell.cooldownTicks(ctxSpell));
 
-            var stats = sp.getData(com.doomspire.grimcore.stat.ModAttachments.PLAYER_STATS.get());
+            var stats = sp.getData(ModAttachments.PLAYER_STATS.get());
             if (stats == null) return;
             if (stats.getCurrentMana() < cost) return;
 
-            // Каст вызываем у спелла, не у SpellContext
             CastResult result = spell.cast(ctxSpell);
             if (result == CastResult.OK) {
-                // списываем ману + синк статов (как у тебя сделано в других местах)
                 stats.setCurrentMana(stats.getCurrentMana() - cost);
                 stats.markDirty();
-                com.doomspire.grimcore.net.GrimcoreNetworking.syncPlayerStats(sp, stats);
+                GrimcoreNetworking.syncPlayerStats(sp, stats);
 
-                // ставим кд и ТУТ ЖЕ триггерим sync лоадаута
                 loadout.setCooldown(slot, cd);
                 sp.setData(ModAttachments.PLAYER_LOADOUT.get(), loadout);
             }
         });
     }
-    public static void sendCastSpellSlot(int slot) {
-        net.neoforged.neoforge.network.PacketDistributor.sendToServer(new C2SCastSpellSlotPayload(slot));
-    }
 
+    public static void sendCastSpellSlot(int slot) {
+        PacketDistributor.sendToServer(new C2SCastSpellSlotPayload(slot));
+    }
 }
