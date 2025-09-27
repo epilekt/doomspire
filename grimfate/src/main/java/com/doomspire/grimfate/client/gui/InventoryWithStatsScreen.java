@@ -8,84 +8,85 @@ import com.doomspire.grimfate.core.Grimfate;
 import com.doomspire.grimfate.network.ModNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractButton;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class InventoryWithStatsScreen extends InventoryScreen {
-    private static final int PANEL_W = 240;
-    private static final int PANEL_H = 360;   // без скролла — делаем выше
-    private static final int INV_SHIFT = 140; // инвентарь уезжает влево не полностью
+
+    // === Твой фон панели 160×224 ===
+    private static final int PANEL_W = 160;
+    private static final int PANEL_H = 224;
+    // Насколько уезжает инвентарь влево, чтобы справа поместилась панель
+    private static final int INV_SHIFT = 120;
 
     private static final ResourceLocation PANEL_BG =
             ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/stats_panel_bg.png");
-    private static final ResourceLocation CLOSE_TEX =
-            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/close_btn.png");
 
+    // Иконки характеристик-атласа (подключатся, когда положишь PNG)
+    private static final ResourceLocation ICONS_TEX =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/stats_icons.png");
+
+    // Панель прижата к правому краю инвентаря
     private int panelX, panelY;
-    private int closeX, closeY;
 
-    private boolean isMouseDown = false;
+    // Прямоугольные кликабельные зоны «+»
+    private final List<AttrBtn> attrButtons = new ArrayList<>();
 
-    // «+» кнопки для атрибутов
-    private java.util.List<PlusBtn> plusButtons = java.util.Collections.emptyList();
-
-    public InventoryWithStatsScreen(Player player) { super(player); }
+    public InventoryWithStatsScreen(Player player) {
+        super(player);
+    }
 
     @Override
     protected void init() {
         super.init();
 
-        // сдвигаем инвентарь влево
+        // Сдвигаем инвентарь влево, чтобы справа было место под панель
         this.leftPos -= INV_SHIFT;
 
-        // панель прижата к правому краю инвентаря
-        panelX = this.leftPos + this.imageWidth;
-        panelY = this.topPos;
+        // Инициализируем прямоугольники «+» по макету (координаты внутри панели)
+        attrButtons.clear();
+        // СТК
+        attrButtons.add(makeAttrBtn(Attributes.VITALITY,     34, 22, 54, 22));
+        // СИЛ
+        attrButtons.add(makeAttrBtn(Attributes.STRENGTH,     34, 35, 54, 35));
+        // ДУХ (SPIRIT)
+        attrButtons.add(makeAttrBtn(Attributes.SPIRIT,       69, 22, 89, 22));
+        // ИНТ
+        attrButtons.add(makeAttrBtn(Attributes.INTELLIGENCE, 69, 35, 89, 35));
+        // ЛВК
+        attrButtons.add(makeAttrBtn(Attributes.DEXTERITY,   105, 22,125, 22));
+        // УКЛ
+        attrButtons.add(makeAttrBtn(Attributes.EVASION,     105, 35,125, 35));
+    }
 
-        // закрыть (12×12)
-        closeX = panelX + PANEL_W - 12 - 4;
-        closeY = panelY + 4;
-
-        // строки атрибутов: аббревиатуры + «+»
-        plusButtons = new java.util.ArrayList<>();
-        int y = panelY + 30;
-        int xPlus = panelX + PANEL_W - 10 - 12; // 12px ширина «+»
-
-        AttrRow[] rows = new AttrRow[] {
-                new AttrRow(Attributes.STRENGTH,     "СИЛ"),
-                new AttrRow(Attributes.VITALITY,     "СТК"),
-                new AttrRow(Attributes.INTELLIGENCE, "ИНТ"),
-                new AttrRow(Attributes.SPIRIT,       "ДУХ"),
-                new AttrRow(Attributes.DEXTERITY,    "ЛВК"),
-                new AttrRow(Attributes.EVASION,      "УКЛ")
-        };
-        for (AttrRow r : rows) {
-            PlusBtn btn = new PlusBtn(xPlus, y, () -> ModNetworking.sendAllocatePoint(r.id.name()));
-            this.addRenderableWidget(btn);
-            plusButtons.add(btn);
-            y += (this.font.lineHeight + 6);
-        }
+    private AttrBtn makeAttrBtn(Attributes id, int labelX, int labelY, int valueX, int valueY) {
+        // ширина: от (labelX - 2) до valueX, высота 10, по Y прямо под надписью (labelY + 10)
+        int x = labelX - 2;
+        int y = labelY + 10;
+        int w = valueX - x;
+        int h = 10;
+        return new AttrBtn(id, x, y, w, h);
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float pt) {
-        // фон
+        // ВАЖНО: каждый кадр привязываем панель к актуальному положению инвентаря
+        panelX = this.leftPos + this.imageWidth + 2;
+        panelY = this.topPos;
+
+        // фон экрана
         this.renderBackground(g, mouseX, mouseY, pt);
 
-        // инвентарь (уже сдвинут)
+        // отрисовка инвентаря
         super.render(g, mouseX, mouseY, pt);
 
-        // фон панели (240×360)
+        // фон панели 160×224
         g.blit(PANEL_BG, panelX, panelY, 0, 0, PANEL_W, PANEL_H, PANEL_W, PANEL_H);
-
-        // закрыть
-        boolean overClose = mouseX >= closeX && mouseX <= closeX + 12 && mouseY >= closeY && mouseY <= closeY + 12;
-        int v = overClose ? (isMouseDown ? 24 : 12) : 0;
-        g.blit(CLOSE_TEX, closeX, closeY, 0, v, 12, 12, 12, 36);
 
         // данные игрока
         var p = this.minecraft.player;
@@ -95,120 +96,182 @@ public class InventoryWithStatsScreen extends InventoryScreen {
         PlayerProgress prog = progressAtt != null ? progressAtt.toSnapshot() : PlayerProgress.DEFAULT;
         int unspent = statsAtt != null ? statsAtt.getUnspentPoints() : 0;
 
-        // шапка
-        g.drawString(this.font, "Lv." + prog.level(), panelX + 10, panelY + 10, 0xFFE6DDAA, false);
-        g.drawString(this.font, "Unspent: " + unspent, panelX + 110, panelY + 10, 0xFFFFFF, false);
+        // === Шапка (твои координаты) ===
+        // "Уровень: X" (мы выводим "Уровень: N" одной строкой)
+        String lvlText = "Уровень: " + prog.level();
+        g.drawString(this.font, lvlText, panelX + 49, panelY + 7, 0xFFE6DDAA, false);
 
-        // атрибуты (аббревиатуры слева, значения справа; «+» уже нарисованы как виджеты)
-        int xLabel = panelX + 10;
-        int xValue = panelX + PANEL_W - 10 - 12 - 6 - 24; // справа от значений остаётся место под «+»
-        int y = panelY + 30;
+        // Нераспределённые очки — только число
+        g.drawString(this.font, String.valueOf(unspent), panelX + 107, panelY + 7, 0xFFFFFF, false);
 
-        if (statsAtt != null) {
-            // порядок в точности как у кнопок
-            AttrRow[] rows = new AttrRow[] {
-                    new AttrRow(Attributes.STRENGTH,     "СИЛ"),
-                    new AttrRow(Attributes.VITALITY,     "СТК"),
-                    new AttrRow(Attributes.INTELLIGENCE, "ИНТ"),
-                    new AttrRow(Attributes.SPIRIT,       "ДУХ"),
-                    new AttrRow(Attributes.DEXTERITY,    "ЛВК"),
-                    new AttrRow(Attributes.EVASION,      "УКЛ")
-            };
-            for (AttrRow r : rows) {
-                int val = statsAtt.getAttribute(r.id);
-                g.drawString(this.font, r.label, xLabel, y, 0xFFFFFF, false);
-                g.drawString(this.font, String.valueOf(val), xValue, y, 0xFFFFFF, false);
-                y += (this.font.lineHeight + 6);
-            }
-        } else {
-            g.drawString(this.font, "No stats data", xLabel, y, 0xFFFFFF, false);
-            y += (this.font.lineHeight + 6);
+        // === Атрибуты (аббревиатуры и значения) ===
+        // порядок: СТК, СИЛ, ДУХ, ИНТ, ЛВК, УКЛ
+        AttrLine[] lines = new AttrLine[] {
+                new AttrLine("СТК", Attributes.VITALITY,     34, 22, 54, 22),
+                new AttrLine("СИЛ", Attributes.STRENGTH,     34, 35, 54, 35),
+                new AttrLine("ДУХ", Attributes.SPIRIT,       69, 22, 89, 22),
+                new AttrLine("ИНТ", Attributes.INTELLIGENCE, 69, 35, 89, 35),
+                new AttrLine("ЛВК", Attributes.DEXTERITY,   105, 22,125, 22),
+                new AttrLine("УКЛ", Attributes.EVASION,     105, 35,125, 35)
+        };
+        for (AttrLine L : lines) {
+            g.drawString(this.font, L.label, panelX + L.labelX, panelY + L.labelY, 0xFFFFFF, false);
+            int val = (statsAtt != null) ? statsAtt.getAttribute(L.id) : 0;
+            g.drawString(this.font, String.valueOf(val), panelX + L.valueX, panelY + L.valueY, 0xFFFFFF, false);
         }
 
-        // разделитель
-        y += 4;
-        g.fill(panelX + 10, y, panelX + PANEL_W - 10, y + 1, 0x44FFFFFF);
-        y += 6;
+        // === Кнопки «+» под атрибутами (прямоугольники) ===
+        for (AttrBtn b : attrButtons) {
+            int ax = panelX + b.x;
+            int ay = panelY + b.y;
+            boolean hover = mouseX >= ax && mouseX < ax + b.w && mouseY >= ay && mouseY < ay + b.h;
+            int bg = hover ? 0x66FFFFFF : 0x33FFFFFF; // подсветка на hover
+            g.fill(ax, ay, ax + b.w, ay + b.h, (bg & 0x00FFFFFF) | 0x33000000);
+            // тень верх-низ для псевдокнопки
+            g.fill(ax, ay, ax + b.w, ay + 1, 0x55FFFFFF);
+            g.fill(ax, ay + b.h - 1, ax + b.w, ay + b.h, 0x22000000);
+            // маленький плюсик по центру
+            int px = ax + (b.w - this.font.width("+")) / 2;
+            int py = ay + (b.h - this.font.lineHeight) / 2 + 1;
+            g.drawString(this.font, "+", px, py, 0xFFFFFFFF, false);
+        }
 
-        // Характеристики (готовые значения из snapshot)
-        g.drawString(this.font, "Характеристики", xLabel, y, 0xFFE6DDAA, false);
-        y += (this.font.lineHeight + 4);
+        // === Заголовок "Характеристики" по центру в (80, 55) ===
+        String hdr = "Характеристики";
+        int hdrX = panelX + 80 - this.font.width(hdr) / 2;
+        int hdrY = panelY + 55;
+        g.drawString(this.font, hdr, hdrX, hdrY, 0xFFE6DDAA, false);
+
+        // === Три колонки: иконка + значение (числа). Иконки подключу, когда положишь PNG. ===
+        // Сетка колонок: левый 10px отступ, равные колонки
+        final int col1L = panelX + 10,  col1R = panelX + 56;
+        final int col2L = panelX + 60,  col2R = panelX + 106;
+        final int col3L = panelX + 110, col3R = panelX + 156;
+        final int firstY = panelY + 70;
+        final int rowStep = 14;
 
         if (statsAtt != null) {
             var s = statsAtt.getSnapshot();
 
-            y = statLine(g, xLabel, y, "Max HP", String.valueOf((int) s.maxHealth));
-            y = statLine(g, xLabel, y, "Max MP", String.valueOf((int) s.maxMana));
-            y = statLine(g, xLabel, y, "Regen HP/s", String.valueOf((int) s.regenHealth));
-            y = statLine(g, xLabel, y, "Regen MP/s", String.valueOf((int) s.regenMana));
-            y = statLine(g, xLabel, y, "Speed", String.format("+%.2f%%", s.moveSpeedPct)); // <— НОВОЕ
+            // Колонка 1 (базовые): HP, HP/s, MP, MP/s, Speed, AttackSpeed(=0 пока)
+            drawStatIconRow(g, "hp_max",        s.maxHealth,       col1L, col1R, firstY + rowStep * 0, ValueFmt.INT);
+            drawStatIconRow(g, "hp_regen",      s.regenHealth,     col1L, col1R, firstY + rowStep * 1, ValueFmt.INT);
+            drawStatIconRow(g, "mp_max",        s.maxMana,         col1L, col1R, firstY + rowStep * 2, ValueFmt.INT);
+            drawStatIconRow(g, "mp_regen",      s.regenMana,       col1L, col1R, firstY + rowStep * 3, ValueFmt.INT);
+            drawStatIconRow(g, "move_speed",    s.moveSpeedPct,    col1L, col1R, firstY + rowStep * 4, ValueFmt.PCT);
+            drawStatIconRow(g, "attack_speed",  0.0,               col1L, col1R, firstY + rowStep * 5, ValueFmt.INT);
 
-            // резисты
-            for (var e : s.resistances.entrySet()) {
-                y = statLine(g, xLabel, y, "Res " + e.getKey().name(), Math.round(e.getValue() * 100) + "%");
-                if (y > panelY + PANEL_H - 20) break;
-            }
-            // урон
-            for (var e : s.damage.entrySet()) {
-                y = statLine(g, xLabel, y, "Dmg " + e.getKey().name(), String.format("%.1f", e.getValue()));
-                if (y > panelY + PANEL_H - 20) break;
-            }
+            // Колонка 2 (резисты): phys, fire, frost, lightning, poison, armor(=0 пока)
+            drawStatIconRow(g, "res_phys",      s.resistances.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.PHYS_MELEE, 0f) * 100.0, col2L, col2R, firstY + rowStep * 0, ValueFmt.PCT_RAW);
+            drawStatIconRow(g, "res_fire",      s.resistances.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.FIRE, 0f) * 100.0,       col2L, col2R, firstY + rowStep * 1, ValueFmt.PCT_RAW);
+            drawStatIconRow(g, "res_frost",     s.resistances.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.FROST, 0f) * 100.0,      col2L, col2R, firstY + rowStep * 2, ValueFmt.PCT_RAW);
+            drawStatIconRow(g, "res_lightning", s.resistances.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.LIGHTNING, 0f) * 100.0,  col2L, col2R, firstY + rowStep * 3, ValueFmt.PCT_RAW);
+            drawStatIconRow(g, "res_poison",    s.resistances.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.POISON, 0f) * 100.0,     col2L, col2R, firstY + rowStep * 4, ValueFmt.PCT_RAW);
+            drawStatIconRow(g, "armor",         0.0,               col2L, col2R, firstY + rowStep * 5, ValueFmt.INT);
+
+            // Колонка 3 (уроны)
+            drawStatIconRow(g, "dmg_melee",     s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.PHYS_MELEE, 0f),  col3L, col3R, firstY + rowStep * 0, ValueFmt.F1);
+            drawStatIconRow(g, "dmg_ranged",    s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.PHYS_RANGED, 0f), col3L, col3R, firstY + rowStep * 1, ValueFmt.F1);
+            drawStatIconRow(g, "dmg_fire",      s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.FIRE, 0f),        col3L, col3R, firstY + rowStep * 2, ValueFmt.F1);
+            drawStatIconRow(g, "dmg_frost",     s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.FROST, 0f),       col3L, col3R, firstY + rowStep * 3, ValueFmt.F1);
+            drawStatIconRow(g, "dmg_lightning", s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.LIGHTNING, 0f),   col3L, col3R, firstY + rowStep * 4, ValueFmt.F1);
+            drawStatIconRow(g, "dmg_poison",    s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.POISON, 0f),      col3L, col3R, firstY + rowStep * 5, ValueFmt.F1);
         }
 
+        // тултипы можно будет добавить по наведению на области иконок/значений
         this.renderTooltip(g, mouseX, mouseY);
     }
 
-    private int statLine(GuiGraphics g, int x, int y, String label, String value) {
-        g.drawString(this.font, label, x, y, 0xFFFFFF, false);
-        int vx = panelX + PANEL_W - 10 - this.font.width(value);
-        g.drawString(this.font, value, vx, y, 0xFFFFFF, false);
-        return y + this.font.lineHeight + 2;
+    // Рисуем (пока только число; иконку подключу, когда добавишь PNG)
+    private void drawStatIconRow(GuiGraphics g, String iconName, double value,
+                                 int colL, int colR, int y, ValueFmt fmt) {
+        // Иконка (16×16) слева; если текстуры ещё нет — просто пропустим blit
+        int iconX = colL;
+        int valRight = colR; // правое выравнивание числа
+        try {
+            // расчёт кадра анимации: кадр вверх-вниз 16 px
+            IconDef def = Icons.get(iconName);
+            if (def != null) {
+                int frame = def.frames > 1 ? (int)((System.currentTimeMillis() / def.frameMs) % def.frames) : 0;
+                int u = def.u;
+                int v = def.v + frame * def.h;
+                g.blit(ICONS_TEX, iconX, y - 3, u, v, def.w, def.h);
+            }
+        } catch (Throwable ignored) {
+            // если текстуры нет — тихо не рисуем
+        }
+
+        String txt = switch (fmt) {
+            case INT     -> String.valueOf((int)Math.round(value));
+            case F1      -> String.format(java.util.Locale.ROOT, "%.1f", value);
+            case PCT     -> String.format(java.util.Locale.ROOT, "+%.2f%%", value);
+            case PCT_RAW -> String.format(java.util.Locale.ROOT, "%.0f%%", value);
+        };
+        int vx = valRight - this.font.width(txt);
+        g.drawString(this.font, txt, vx, y, 0xFFFFFF, false);
     }
 
+    private enum ValueFmt { INT, F1, PCT, PCT_RAW }
+
+    // === Клики по «плюсам» ===
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
-        isMouseDown = true;
-        if (mx >= closeX && mx <= closeX + 12 && my >= closeY && my <= closeY + 12) {
-            this.minecraft.setScreen(new InventoryScreen(this.minecraft.player));
-            return true;
+        // клики по прямоугольникам «+»
+        for (AttrBtn b : attrButtons) {
+            int ax = panelX + b.x;
+            int ay = panelY + b.y;
+            if (mx >= ax && mx < ax + b.w && my >= ay && my < ay + b.h) {
+                ModNetworking.sendAllocatePoint(b.id.name());
+                return true;
+            }
         }
         return super.mouseClicked(mx, my, button);
     }
 
-    @Override
-    public boolean mouseReleased(double mx, double my, int button) {
-        isMouseDown = false;
-        return super.mouseReleased(mx, my, button);
+    // ===== Вспомогательные структуры =====
+
+    private record AttrLine(String label, Attributes id, int labelX, int labelY, int valueX, int valueY) {}
+
+    private static final class AttrBtn {
+        final Attributes id;
+        final int x, y, w, h;
+        AttrBtn(Attributes id, int x, int y, int w, int h) {
+            this.id = id; this.x = x; this.y = y; this.w = w; this.h = h;
+        }
     }
 
-    private record AttrRow(Attributes id, String label) {}
-
-    /** маленькая квадратная кнопка «+» 12×12 */
-    private static final class PlusBtn extends AbstractButton {
-        private final Runnable onPress;
-
-        PlusBtn(int x, int y, Runnable onPress) {
-            super(x, y, 12, 12, Component.empty());
-            this.onPress = onPress;
+    // ——— Иконки (подключатся, когда добавишь stats_icons.png) ———
+    private static final class IconDef {
+        final int u, v, w, h, frames, frameMs;
+        IconDef(int u, int v, int w, int h, int frames, int frameMs) {
+            this.u = u; this.v = v; this.w = w; this.h = h; this.frames = frames; this.frameMs = Math.max(frameMs, 1);
         }
-
-        @Override
-        protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float pt) {
-            int col = this.isHovered() ? 0xAAFFFFFF : 0x66FFFFFF;
-            // полупрозрачный фон
-            g.fill(getX(), getY(), getX() + 12, getY() + 12, 0x33000000 | (col & 0x00FFFFFF));
-            // плюсик
-            g.drawString(Minecraft.getInstance().font, "+", getX() + 3, getY() + 1, 0xFFFFFFFF, false);
+    }
+    private static final class Icons {
+        private static final java.util.Map<String, IconDef> MAP = new java.util.HashMap<>();
+        static {
+            // колонка 1
+            MAP.put("hp_max",       new IconDef(  0, 0,16,16, 2,120));
+            MAP.put("hp_regen",     new IconDef( 16, 0,16,16, 6, 60));
+            MAP.put("mp_max",       new IconDef( 32, 0,16,16, 8, 60));
+            MAP.put("mp_regen",     new IconDef( 48, 0,16,16, 8, 60));
+            MAP.put("move_speed",   new IconDef( 64, 0,16,16, 7,120));
+            MAP.put("attack_speed", new IconDef( 80, 0,16,16,10, 20));
+            // колонка 2
+            MAP.put("res_phys",     new IconDef( 96, 0,16,16, 8, 60));
+            MAP.put("res_fire",     new IconDef(112, 0,16,16, 6, 60));
+            MAP.put("res_frost",    new IconDef(128, 0,16,16, 6, 60));
+            MAP.put("res_lightning",new IconDef(144, 0,16,16, 6, 20));
+            MAP.put("res_poison",   new IconDef(160, 0,16,16, 6, 60));
+            MAP.put("armor",        new IconDef(176, 0,16,16, 1,  0));
+            // колонка 3
+            MAP.put("dmg_melee",    new IconDef(192, 0,16,16, 1,  0));
+            MAP.put("dmg_ranged",   new IconDef(208, 0,16,16, 1,  0));
+            MAP.put("dmg_fire",     new IconDef(224, 0,16,16, 1,  0));
+            MAP.put("dmg_frost",    new IconDef(240, 0,16,16, 1,  0));
+            MAP.put("dmg_lightning",new IconDef(256, 0,16,16, 1,  0));
+            MAP.put("dmg_poison",   new IconDef(272, 0,16,16, 1,  0));
         }
-
-        @Override
-        public void onPress() {
-            if (onPress != null) onPress.run();
-        }
-
-        @Override
-        protected void updateWidgetNarration(NarrationElementOutput narration) {
-            this.defaultButtonNarrationText(narration);
-        }
+        static IconDef get(String key) { return MAP.get(key); }
     }
 }

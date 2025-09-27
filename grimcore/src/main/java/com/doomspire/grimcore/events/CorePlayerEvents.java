@@ -12,11 +12,6 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 public final class CorePlayerEvents {
     private CorePlayerEvents() {}
 
-    /** Вызови из инициализации мода ядра (common): NeoForge.EVENT_BUS.register(CorePlayerEvents.class); */
-    public static void registerToBus() {
-        NeoForge.EVENT_BUS.register(CorePlayerEvents.class);
-    }
-
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;

@@ -18,7 +18,6 @@ public final class GrimSpells {
 
     public static void register(Spell spell) {
         REGISTRY.put(spell.id(), spell);
-        new com.doomspire.grimcore.spell.impl.FireBoltSpell();
     }
 
     public static Spell get(ResourceLocation id) {

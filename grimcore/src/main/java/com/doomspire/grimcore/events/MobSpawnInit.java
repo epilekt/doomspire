@@ -11,8 +11,6 @@ import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 public final class MobSpawnInit {
     private MobSpawnInit(){}
 
-    public static void registerToBus() { NeoForge.EVENT_BUS.register(MobSpawnInit.class); }
-
     @SubscribeEvent
     public static void onJoin(EntityJoinLevelEvent event) {
         if (event.getLevel().isClientSide()) return;

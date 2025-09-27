@@ -23,10 +23,6 @@ import java.util.UUID;
 public final class RegenTicker {
     private RegenTicker(){}
 
-    public static void registerToBus() {
-        NeoForge.EVENT_BUS.register(RegenTicker.class);
-    }
-
     private static final class Accum {
         double hpFrac = 0.0;
         double mpFrac = 0.0;

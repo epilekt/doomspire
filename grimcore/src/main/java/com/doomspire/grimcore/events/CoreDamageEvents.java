@@ -20,12 +20,6 @@ import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 public final class CoreDamageEvents {
 
     private CoreDamageEvents() {}
-
-    /** Регистрируй из инициализации: NeoForge.EVENT_BUS.register(CoreDamageEvents.class); */
-    public static void registerToBus() {
-        NeoForge.EVENT_BUS.register(CoreDamageEvents.class);
-    }
-
     /**
      * Ядро обработки урона. Никакой предметной/спелл-логики здесь нет.
      * Сначала экологический урон (% от MaxHP), затем боевой пайплайн.
