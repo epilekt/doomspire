@@ -251,7 +251,7 @@ public class InventoryWithStatsScreen extends InventoryScreen {
         private static final java.util.Map<String, IconDef> MAP = new java.util.HashMap<>();
         static {
             // колонка 1
-            MAP.put("hp_max",       new IconDef(  0, 0,16,16, 2,120));
+            MAP.put("hp_max",       new IconDef(  0, 0,14,14, 1,0));
             MAP.put("hp_regen",     new IconDef( 16, 0,16,16, 6, 60));
             MAP.put("mp_max",       new IconDef( 32, 0,16,16, 8, 60));
             MAP.put("mp_regen",     new IconDef( 48, 0,16,16, 8, 60));

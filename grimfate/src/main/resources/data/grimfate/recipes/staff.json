@@ -1,9 +1,0 @@
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": ["  S", " S ", "W  "],
-  "key": {
-    "S": { "item": "minecraft:stick" },
-    "W": { "tag": "minecraft:planks" }
-  },
-  "result": { "id": "grimfate:staff", "count": 1 }
-}

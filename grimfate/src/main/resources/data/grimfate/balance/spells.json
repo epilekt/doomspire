@@ -1,33 +1,14 @@
 {
-  "spells": {
-    "grimfate:staff_bolt": {
-      "school": "TECHNIQUE",
-      "tags": ["PROJECTILE", "RANGED", "WEAPON_SKILL"],
-      "base_cost": 2,
-      "base_cooldown": 20,
-      "scaling": { "dexterity": 0.25, "spirit": 0.10 }
-    },
-    "grimfate:warcry_shout": {
-      "school": "WARCRY",
-      "tags": ["BUFF", "AREA"],
-      "base_cost": 10,
-      "base_cooldown": 200,
-      "scaling": { "strength": 0.6, "spirit": 0.2 }
-    },
-    "grimfate:knight_dash": {
-      "school": "TECHNIQUE",
-      "tags": ["MOVEMENT"],
-      "base_cost": 8,
-      "base_cooldown": 60,
-      "scaling": { "dexterity": 0.7 }
-    },
-    "grimfate:fire_bolt": {
-      "school": "FIRE",
-      "tags": ["PROJECTILE", "RANGED"],
-      "base_cost": 20,
-      "base_cooldown": 20,
-      "scaling": { "intelligence": 0.8 }
-    }
+  "auto_bolt_staff": {
+    "type": "projectile",
+    "damage_type": "phys_ranged",
+    "base_damage": 22,
+    "mana_cost": 8,
+    "cooldown_ticks": 40,
+    "speed": 1.6,
+    "range": 32,
+    "requires_type": "STAFF",
+    "scaling": {"INT": 0.25}
   }
 }
 

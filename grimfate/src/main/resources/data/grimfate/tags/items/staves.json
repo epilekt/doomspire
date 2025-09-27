@@ -1,4 +1,8 @@
 {
   "replace": false,
-  "values": ["grimfate:staff"]
+  "values": [
+    "grimfate:weathered_staff",
+    "grimfate:apprentice_staff"
+  ]
 }
+

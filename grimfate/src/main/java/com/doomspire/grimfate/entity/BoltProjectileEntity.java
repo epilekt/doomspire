@@ -27,7 +27,8 @@ public class BoltProjectileEntity extends ThrowableItemProjectile {
     /** Отдаём клиенту предмет для ThrownItemRenderer. */
     @Override
     protected Item getDefaultItem() {
-        return com.doomspire.grimfate.registry.ModItems.BOLT_ITEM.get();
+        // TODO: заменить на собственный bolt_item для посоха
+        return net.minecraft.world.item.Items.AIR;
     }
 
     /** Старт с небольшим смещением от глаз + задание скорости. */

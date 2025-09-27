@@ -2,9 +2,8 @@ package com.doomspire.grimfate.core;
 
 import com.doomspire.grimfate.commands.AddSpellCommand;
 import com.doomspire.grimfate.config.ClientConfig;
-import com.doomspire.grimfate.events.LoadoutTickEvents;
-import com.doomspire.grimfate.events.StaffAttackEvents;
 import com.doomspire.grimfate.network.ModNetworking;
+import com.doomspire.grimfate.registry.ModDataComponents;
 import com.doomspire.grimfate.registry.ModEntityTypes;
 import com.doomspire.grimfate.registry.ModItems;
 import com.mojang.logging.LogUtils;
@@ -44,6 +43,7 @@ public class Grimfate {
         ModItems.init(modEventBus);
         ModEntityTypes.init(modEventBus);
         com.doomspire.grimfate.loot.ModLootModifiers.init(modEventBus);
+        ModDataComponents.DATA_COMPONENT_TYPES.register(modEventBus);
 
         // Фазы
         modEventBus.addListener(this::commonSetup);
@@ -53,9 +53,6 @@ public class Grimfate {
         if (FMLEnvironment.dist.isClient()) {
                 GrimfateClient.registerModBusListeners(modEventBus);
             }
-
-        // Игровые слушатели (Forge bus)
-        StaffAttackEvents.register();
     }
 
     private void commonSetup(final FMLCommonSetupEvent e) { /* ... */ }

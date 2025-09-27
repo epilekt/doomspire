@@ -10,10 +10,7 @@ import com.doomspire.grimcore.stat.Attributes;
 import com.doomspire.grimcore.stat.ModAttachments;
 import com.doomspire.grimcore.stat.StatEffects;
 import com.doomspire.grimfate.entity.BoltProjectileEntity;
-import com.doomspire.grimfate.network.payload.C2SAllocatePointPayload;
-import com.doomspire.grimfate.network.payload.C2SCastSpellSlotPayload;
-import com.doomspire.grimfate.network.payload.C2SCastStaffBoltPayload;
-import com.doomspire.grimfate.network.payload.S2CAllocateResultPayload;
+import com.doomspire.grimfate.network.payload.*;
 import com.doomspire.grimfate.registry.ModItems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -28,8 +25,10 @@ import java.util.UUID;
 
 public final class ModNetworking {
     private ModNetworking() {}
-
+    private static boolean REGISTERED = false;
     public static void register(RegisterPayloadHandlersEvent e) {
+        if (REGISTERED) return;      // ← защита от повтора (кстати нихуя не помогает никогда)
+        REGISTERED = true;
         var reg = e.registrar("grimfate");
 
         reg.playToServer(C2SAllocatePointPayload.TYPE, C2SAllocatePointPayload.STREAM_CODEC,
@@ -38,16 +37,40 @@ public final class ModNetworking {
         reg.playToClient(S2CAllocateResultPayload.TYPE, S2CAllocateResultPayload.STREAM_CODEC,
                 ModNetworking::handleAllocateResult);
 
-        reg.playToServer(C2SCastStaffBoltPayload.TYPE, C2SCastStaffBoltPayload.STREAM_CODEC,
-                ModNetworking::handleCastStaffBolt);
-
         reg.playToServer(C2SCastSpellSlotPayload.TYPE, C2SCastSpellSlotPayload.STREAM_CODEC,
                 ModNetworking::handleCastSpellSlot);
-    }
 
-    /** Клиентский хелпер для отправки каста болта. */
-    public static void sendCastStaffBolt() {
-        PacketDistributor.sendToServer(new C2SCastStaffBoltPayload());
+        reg.playToServer(C2SCastAutoBoltPayload.TYPE, C2SCastAutoBoltPayload.STREAM_CODEC,
+                (msg, ctx) -> {
+                    ctx.enqueueWork(() -> {
+                        var sp = (net.minecraft.server.level.ServerPlayer) ctx.player();
+                        if (sp == null) return;
+
+                        // 1) Определяем в какой руке посох (серверная валидация)
+                        var stack = (msg.hand() == net.minecraft.world.InteractionHand.MAIN_HAND)
+                                ? sp.getMainHandItem() : sp.getOffhandItem();
+
+                        if (stack.isEmpty()) return;
+                        if (!com.doomspire.grimfate.combat.WeaponPredicates.isStaff(stack)) return;
+
+                        // 2) Ядро: посчитать и списать ресурсы (мана/скейлы/кд/скорость)
+                        var result = com.doomspire.grimcore.spell.autobolt.AutoBoltService.computeAndConsume(sp, stack);
+                        if (!result.ok()) return;
+
+                        // 3) Контент: спавним снаряд с указанной скоростью
+                        var proj = new com.doomspire.grimfate.entity.BoltProjectileEntity(sp.level(), sp);
+                        proj.shootForward(sp, result.projectileSpeed());
+                        sp.level().addFreshEntity(proj);
+
+                        // 4) Презентация/звук (контент)
+                        sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                                net.minecraft.sounds.SoundEvents.WITHER_SHOOT,
+                                net.minecraft.sounds.SoundSource.PLAYERS, 0.6f, 1.0f);
+
+                        // 5) КД — ставим НА КОНКРЕТНЫЙ ПОСОХ (пер-айтем)
+                        sp.getCooldowns().addCooldown(stack.getItem(), result.cooldownTicks());
+                    });
+                });
     }
 
     public static void sendAllocatePoint(String attrId) {
@@ -99,32 +122,11 @@ public final class ModNetworking {
         });
     }
 
-    private static void handleCastStaffBolt(C2SCastStaffBoltPayload msg, IPayloadContext ctx) {
+    private static void handleCastAutoBolt(IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             ServerPlayer sp = (ServerPlayer) ctx.player();
             if (sp == null) return;
-
-            var stack = sp.getMainHandItem();
-            if (!stack.is(ModItems.STAFF.get())) return;
-
-            if (sp.getCooldowns().isOnCooldown(ModItems.STAFF.get())) return;
-
-            var att = sp.getData(ModAttachments.PLAYER_STATS.get());
-            if (att == null) return;
-
-            if (att.getCurrentMana() < 2) return;
-
-            att.setCurrentMana(att.getCurrentMana() - 2);
-            att.markDirty();
-            GrimcoreNetworking.syncPlayerStats(sp, att);
-
-            var bolt = new BoltProjectileEntity(sp.level(), sp);
-            bolt.shootForward(sp, 1.8f);
-            sp.level().addFreshEntity(bolt);
-
-            sp.getCooldowns().addCooldown(ModItems.STAFF.get(), 20);
-            sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                    SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 0.6f, 1.0f);
+            AutoBoltServer.tryCast(sp); // общая точка для ПКМ-автоатаки
         });
     }
 
