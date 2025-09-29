@@ -3,6 +3,7 @@ package com.doomspire.grimfate.core;
 import com.doomspire.grimfate.commands.AddSpellCommand;
 import com.doomspire.grimfate.config.ClientConfig;
 import com.doomspire.grimfate.network.ModNetworking;
+import com.doomspire.grimfate.registry.ModArmorMaterials;
 import com.doomspire.grimfate.registry.ModDataComponents;
 import com.doomspire.grimfate.registry.ModEntityTypes;
 import com.doomspire.grimfate.registry.ModItems;
@@ -42,6 +43,7 @@ public class Grimfate {
         CREATIVE_MODE_TABS.register(modEventBus);
         ModItems.init(modEventBus);
         ModEntityTypes.init(modEventBus);
+        ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         com.doomspire.grimfate.loot.ModLootModifiers.init(modEventBus);
         ModDataComponents.DATA_COMPONENT_TYPES.register(modEventBus);
 

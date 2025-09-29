@@ -8,7 +8,18 @@
     "speed": 1.6,
     "range": 32,
     "requires_type": "STAFF",
-    "scaling": {"INT": 0.25}
+    "scaling": {
+      "INT": 0.25
+    }
+  },
+  "spells": {
+    "grimfate:knight_dash": {
+      "school": "TECHNIQUE",
+      "tags": ["MOVEMENT"],
+      "base_cost": 8,
+      "base_cooldown": 60,
+      "scaling": { "dexterity": 0.7 }
+    }
   }
 }
 

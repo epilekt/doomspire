@@ -20,6 +20,7 @@ java {
 repositories {
     mavenCentral()
     maven { url = 'https://maven.neoforged.net/releases' }
+    maven { url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
 }
 
 neoForge {
@@ -75,8 +76,9 @@ configurations {
 dependencies {
     // сюда добавляй зависимости под JEI, Curios и т.п.
     implementation project(":grimcore")
-    // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
-    // localRuntime "mezz.jei:jei-${mc_version}-neoforge:${jei_version}"
+    implementation "software.bernie.geckolib:geckolib-neoforge-1.21.1:4.7.7"
+    runtimeOnly files("${rootDir}/run/mods/curios-neoforge-9.5.1+1.21.1.jar")
+    compileOnly files('libs/curios-neoforge-9.5.1+1.21.1-api.jar')
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

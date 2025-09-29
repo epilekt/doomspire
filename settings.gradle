@@ -11,4 +11,3 @@ plugins {
 
 rootProject.name = "doomspire"
 include("grimfate", "grimcore")
-
