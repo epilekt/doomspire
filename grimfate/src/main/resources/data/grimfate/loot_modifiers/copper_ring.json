@@ -1,5 +1,5 @@
 {
-  "type": "grimfate:rusty_ring",
+  "type": "grimfate:copper_ring",
   "chance": 0.95,
   "conditions": [
     { "condition": "random_chance", "chance": 1.0 }

@@ -1,8 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": ["S  ", " R ", "W  "],
+  "pattern": [
+    " S  ",
+    " R ",
+    "W  "],
   "key": {
-    "S": {"item": "grimfate:linen_cloth"},
+    "S": {"item": "minecraft:copper_ingot"},
     "R": {"item": "grimfate:copper_rivet"},
     "W": {"item": "grimfate:hardwood_shaft"}
   },

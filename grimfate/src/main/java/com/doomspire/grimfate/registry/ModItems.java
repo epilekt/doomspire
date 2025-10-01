@@ -81,19 +81,6 @@ public final class ModItems {
                             new StatBonusComponent(Map.of(Attributes.VITALITY, 1)))
             ));
 
-    public static final DeferredItem<Item> TOTEM_SHARD = ITEMS.register("totem_shard",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.RESIST_BONUS.get(),
-                            // см. компонент ниже: +5% ко всем резистам как старт
-                            new ResistBonusComponent(Map.of(
-                                    DamageTypes.FIRE, 0.05f,
-                                    DamageTypes.FROST, 0.05f,
-                                    DamageTypes.LIGHTNING, 0.05f,
-                                    DamageTypes.POISON, 0.05f,
-                                    DamageTypes.PHYS_MELEE, 0.05f)))
-            ));
-
     // Броня (каждый предмет — Item с humanoidArmor + GeckoLib визуалом)
     public static final DeferredHolder<Item, Item> COPPER_HELMET = ITEMS.register("copper_helmet",
             () -> new GenericGeoArmorItem(ModArmorMaterials.copperHolder(), ArmorItem.Type.HELMET, new Item.Properties(), copperVisual()));
