@@ -1,5 +1,7 @@
 package com.doomspire.grimfate.core;
 
+import com.doomspire.grimcore.affix.AffixAggregator;
+import com.doomspire.grimcore.affix.ModAffixes;
 import com.doomspire.grimfate.commands.AddSpellCommand;
 import com.doomspire.grimfate.config.ClientConfig;
 import com.doomspire.grimfate.network.ModNetworking;
@@ -51,13 +53,23 @@ public class Grimfate {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::addCreative);
 
-        // Клиент — все клиентские MOD-бус листенеры (вместе с Hotkeys onRegisterKeys)
+        // Клиент — все клиентские MOD-бус листенеры
         if (FMLEnvironment.dist.isClient()) {
-                GrimfateClient.registerModBusListeners(modEventBus);
-            }
+            GrimfateClient.registerModBusListeners(modEventBus);
+        }
     }
 
-    private void commonSetup(final FMLCommonSetupEvent e) { /* ... */ }
+    private void commonSetup(final FMLCommonSetupEvent e) {
+        e.enqueueWork(() -> {
+            // 1) Базовые аффиксы ядра (dr_all, max_mana_flat, fire_resist и т.д.)
+            ModAffixes.bootstrap();
+
+            // 2) Подключаем экстрактор аффиксов со стороны контента
+            AffixAggregator.setExtractor(com.doomspire.grimfate.affix.GrimfateAffixExtraction::extractFromEntity);
+
+            LOGGER.info("[Grimfate] AffixAggregator hooked and ModAffixes bootstrapped.");
+        });
+    }
 
     private void addCreative(final BuildCreativeModeTabContentsEvent e) { /* ... */ }
 
