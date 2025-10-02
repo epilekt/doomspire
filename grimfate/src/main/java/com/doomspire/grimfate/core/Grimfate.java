@@ -5,10 +5,7 @@ import com.doomspire.grimcore.affix.ModAffixes;
 import com.doomspire.grimfate.commands.AddSpellCommand;
 import com.doomspire.grimfate.config.ClientConfig;
 import com.doomspire.grimfate.network.ModNetworking;
-import com.doomspire.grimfate.registry.ModArmorMaterials;
-import com.doomspire.grimfate.registry.ModDataComponents;
-import com.doomspire.grimfate.registry.ModEntityTypes;
-import com.doomspire.grimfate.registry.ModItems;
+import com.doomspire.grimfate.registry.*;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -60,10 +57,10 @@ public class Grimfate {
     }
 
     private void commonSetup(final FMLCommonSetupEvent e) {
+        e.enqueueWork(com.doomspire.grimfate.registry.ModCurios::init);
         e.enqueueWork(() -> {
             // 1) Базовые аффиксы ядра (dr_all, max_mana_flat, fire_resist и т.д.)
             ModAffixes.bootstrap();
-
             // 2) Подключаем экстрактор аффиксов со стороны контента
             AffixAggregator.setExtractor(com.doomspire.grimfate.affix.GrimfateAffixExtraction::extractFromEntity);
 

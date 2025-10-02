@@ -1,8 +1,8 @@
 {
-  "name": "necklace",
+  "name": "belt",
   "size": 1,
-  "order": 20,
-  "icon": "curios:slot/necklace",
+  "order": 30,
+  "icon": "curios:slot/belt",
   "cosmetic": false,
   "entities": ["curios:player_like"]
 }
