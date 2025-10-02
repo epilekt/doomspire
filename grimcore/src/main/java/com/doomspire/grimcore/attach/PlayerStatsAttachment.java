@@ -8,18 +8,24 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.player.Player;
 import com.doomspire.grimcore.datapack.BalanceData;
+
 import java.util.EnumMap;
 import java.util.Locale;
 
-/**
- * Attachment игрока: очки атрибутов, текущие ресурсы и кэш агрегированных статов.
- * Без устаревших API. Для сети используем StreamCodec (NeoForge/Mojang 1.21.1).
- */
+//NOTE: Attachment игрока: очки атрибутов, текущие ресурсы и кэш агрегированных статов.
+
 public class PlayerStatsAttachment {
 
     // ---- Текущие ресурсы (кастомные полосы) ----
     private int currentHealth = 100;
     private int currentMana   = 100;
+
+    /**
+     * Текущая «сверхщит» полоса (overshield).
+     * Списывается ПЕРВОЙ при получении урона, затем уже здоровье.
+     * Значение не входит в StatSnapshot, это runtime-ресурс (как временные бафы/щит).
+     */
+    private int overshield = 0;
 
     // ---- Распределённые очки по атрибутам ----
     private final EnumMap<Attributes, Integer> attributes = new EnumMap<>(Attributes.class);
@@ -41,6 +47,7 @@ public class PlayerStatsAttachment {
 
     public int getCurrentHealth() { return currentHealth; }
     public int getCurrentMana()   { return currentMana; }
+    public int getOvershield()    { return overshield; }
 
     public void setCurrentHealth(int v) {
         int max = (int) Math.max(1, getSnapshot().maxHealth);
@@ -50,6 +57,40 @@ public class PlayerStatsAttachment {
     public void setCurrentMana(int v) {
         int max = (int) Math.max(1, getSnapshot().maxMana);
         currentMana = Math.max(0, Math.min(v, max));
+    }
+
+    /**
+     * Установить текущий overshield с учётом верхней границы.
+     * Верхнюю границу можно задавать через снапшот (например, статы/аффиксы),
+     * иначе — ограничиваем «разумным» максимумом по здоровью.
+     */
+    public void setOvershield(int v) {
+        int maxOs = estimateMaxOvershield();
+        overshield = Math.max(0, Math.min(v, maxOs));
+    }
+
+    /** Увеличить overshield (для способностей/аффиксов), с клампом. */
+    public void addOvershield(int delta) {
+        if (delta <= 0) return;
+        setOvershield(overshield + delta);
+    }
+
+    /**
+     * Списать часть overshield, вернуть сколько НЕ покрылось (остаток урона).
+     * Удобно вызывать из DamageEngine перед уроном по здоровью.
+     */
+    public int consumeOvershield(int amount) {
+        if (amount <= 0 || overshield <= 0) return amount;
+        int used = Math.min(amount, overshield);
+        overshield -= used;
+        return amount - used; // остаток, который пойдёт в здоровье/дальше по пайплайну
+    }
+
+    /** Оценка верхней границы overshield. Позже можно читать из снапшота (maxOvershield). */
+    private int estimateMaxOvershield() {
+        // Пока используем максимум равный текущему максимальному здоровью.
+        // Если в StatCalculator появится отдельный stat maxOvershield — читать оттуда.
+        return (int) Math.max(1, getSnapshot().maxHealth);
     }
 
     public void markDirty() { this.dirty = true; }
@@ -104,6 +145,7 @@ public class PlayerStatsAttachment {
         buf.writeVarInt(att.unspentPoints);
         buf.writeVarInt(att.currentHealth);
         buf.writeVarInt(att.currentMana);
+        buf.writeVarInt(att.overshield); // <<< нове поле
         for (Attributes a : Attributes.values()) {
             buf.writeVarInt(att.getAttribute(a));
         }
@@ -114,6 +156,7 @@ public class PlayerStatsAttachment {
         att.unspentPoints = buf.readVarInt();
         att.currentHealth = buf.readVarInt();
         att.currentMana   = buf.readVarInt();
+        att.overshield    = buf.readVarInt(); // <<< читаем в том же порядке
         for (Attributes a : Attributes.values()) {
             att.attributes.put(a, buf.readVarInt());
         }

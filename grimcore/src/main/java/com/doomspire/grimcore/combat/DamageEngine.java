@@ -4,13 +4,15 @@ import com.doomspire.grimcore.attach.MobStatsAttachment;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 import com.doomspire.grimcore.net.GrimcoreNetworking;
 import com.doomspire.grimcore.stat.DamageTypes;
+import com.doomspire.grimcore.stat.ModAttachments;
 import com.doomspire.grimcore.stat.ResistTypes;
 import com.doomspire.grimcore.stat.StatSnapshot;
-import com.doomspire.grimcore.stat.ModAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 
 import java.util.concurrent.ThreadLocalRandom;
+
+//NOTE: Централизованный пайплайн урона - задаем игре последовательность расчета урона от каждого hit
 
 public final class DamageEngine {
     private DamageEngine() {}
@@ -49,8 +51,8 @@ public final class DamageEngine {
             }
         }
 
+        // --- базовый расчёт по типам: крит -> резисты ---
         float total = 0f;
-
         for (var entry : ctx.damageMap.entrySet()) {
             DamageTypes type = entry.getKey();
             float dmg = entry.getValue();
@@ -78,10 +80,51 @@ public final class DamageEngine {
             total += Math.max(0f, dmg);
         }
 
-        // lifesteal/manasteal по суммарному урону
-        if (aSnap != null && total > 0f && ctx.attacker instanceof LivingEntity attackerLe) {
-            int heal = Math.round(total * Math.max(0f, aSnap.lifesteal));
-            int mana = Math.round(total * Math.max(0f, aSnap.manasteal));
+        int applied; // фактически нанесённый урон (после overshield и DR_all)
+
+        // --- overshield (только у игрока) -> затем damage_reduction_all ---
+        if (targetIsPlayer) {
+            PlayerStatsAttachment tAtt = target.getData(ModAttachments.PLAYER_STATS.get());
+            int incoming = Math.max(0, Math.round(total));
+
+            // 1) Снять overshield ПЕРВЫМ
+            int afterOS = tAtt.consumeOvershield(incoming);
+            boolean osChanged = (afterOS != incoming);
+
+            // 2) Применить глобальную редукцию
+            float drAll = clamp01(readDamageReductionAll(tSnap), 0.90f);
+            float afterDR = afterOS * (1f - drAll);
+
+            applied = Math.max(0, Math.round(afterDR));
+
+            // 3) Урон по здоровью
+            if (applied > 0) {
+                tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
+            }
+
+            if (osChanged || applied > 0) {
+                tAtt.markDirty();
+                if (target instanceof ServerPlayer spT) {
+                    GrimcoreNetworking.syncPlayerStats(spT, tAtt); // мгновенный HUD-синк цели
+                }
+            }
+        } else {
+            // Мобы: только DR_all (если в снапшоте есть), без overshield
+            float drAll = clamp01(readDamageReductionAll(tSnap), 0.90f);
+            float afterDR = total * (1f - drAll);
+            applied = Math.max(0, Math.round(afterDR));
+
+            if (applied > 0) {
+                MobStatsAttachment tAtt = target.getData(ModAttachments.MOB_STATS.get());
+                tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
+                tAtt.markDirty();
+            }
+        }
+
+        // --- lifesteal/manasteal по фактически нанесённому урону ---
+        if (aSnap != null && applied > 0 && ctx.attacker instanceof LivingEntity attackerLe) {
+            int heal = Math.round(applied * Math.max(0f, aSnap.lifesteal));
+            int mana = Math.round(applied * Math.max(0f, aSnap.manasteal));
 
             var aPlayer = attackerLe.getData(ModAttachments.PLAYER_STATS.get());
             if (aPlayer != null) {
@@ -109,23 +152,37 @@ public final class DamageEngine {
             }
         }
 
-        // применяем к цели
-        int applied = Math.max(0, Math.round(total));
-        if (applied > 0) {
-            if (targetIsPlayer) {
-                PlayerStatsAttachment tAtt = target.getData(ModAttachments.PLAYER_STATS.get());
-                tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
-                tAtt.markDirty();
-                if (target instanceof ServerPlayer spT) {
-                    GrimcoreNetworking.syncPlayerStats(spT, tAtt); // мгновенный HUD-синк цели
-                }
-            } else {
-                MobStatsAttachment tAtt = target.getData(ModAttachments.MOB_STATS.get());
-                tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
-                tAtt.markDirty();
+        return applied;
+    }
+
+    // ===== helpers =====
+
+    /**
+     * Чтение глобальной редукции урона. До того как поле появится в StatSnapshot,
+     * метод вернёт 0f, чтобы не ломать компиляцию.
+     */
+    private static float readDamageReductionAll(StatSnapshot snap) {
+        try {
+            // Публичное поле
+            var f = snap.getClass().getField("damageReductionAll");
+            Object v = f.get(snap);
+            if (v instanceof Number n) return n.floatValue();
+        } catch (Throwable ignored) {
+            // попробуем геттер
+            try {
+                var m = snap.getClass().getMethod("damageReductionAll");
+                Object v = m.invoke(snap);
+                if (v instanceof Number n) return n.floatValue();
+            } catch (Throwable ignored2) {
+                // поля нет — используем 0
             }
         }
+        return 0f;
+    }
 
-        return applied;
+    private static float clamp01(float v, float hardCap) {
+        if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
+        if (hardCap <= 0f) hardCap = 1f;
+        return Math.max(0f, Math.min(v, hardCap));
     }
 }
