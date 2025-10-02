@@ -14,8 +14,6 @@ public final class ModLootModifiers {
     public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> GLM_SERIALIZERS =
             DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, Grimfate.MODID);
 
-    public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<RustyRingDropModifier>> RUSTY_RING =
-            GLM_SERIALIZERS.register("rusty_ring", () -> RustyRingDropModifier.CODEC);
 
     public static void init(net.neoforged.bus.api.IEventBus modBus) {
         GLM_SERIALIZERS.register(modBus);

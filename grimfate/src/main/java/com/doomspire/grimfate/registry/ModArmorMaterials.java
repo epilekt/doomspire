@@ -63,10 +63,13 @@ public final class ModArmorMaterials {
                     /* knockback  */ 0.0f
             ));
 
-    // Возвращаем Holder<ArmorMaterial> для humanoidArmor(...)
     public static Holder<ArmorMaterial> copperHolder() {
-        // В NeoForge 21.1 это Holder.Reference<T>
         return COPPER.getDelegate();
-        // Если у вас есть getHolder(): return COPPER.getHolder().orElseThrow();
+    }
+    public static Holder<ArmorMaterial> linenHolder() {
+        return LINEN.getDelegate();
+    }
+    public static Holder<ArmorMaterial> rawhideHolder() {
+        return RAWHIDE.getDelegate();
     }
 }

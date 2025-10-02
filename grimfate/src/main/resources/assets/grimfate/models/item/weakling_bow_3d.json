@@ -1,0 +1,9 @@
+{
+  "parent": "item/handheld",
+  "textures": { "layer0": "grimfate:item/weakling_bow_3d" },
+  "overrides": [
+    { "predicate": { "pulling": 1 },                 "model": "grimfate:item/weakling_bow_3dpull2" },
+    { "predicate": { "pull": 0.65, "pulling": 1 },   "model": "grimfate:item/weakling_bow_3dpull1" },
+    { "predicate": { "pull": 0.1,  "pulling": 1 },   "model": "grimfate:item/weakling_bow_3dpull0" }
+  ]
+}

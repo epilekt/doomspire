@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   { "parent": "grimfate:item/weakling_bow_3d" },
+  "gui":    { "parent": "grimfate:item/weakling_bow_2d" },
+  "fixed":  { "parent": "grimfate:item/weakling_bow_2d" },
+  "ground": { "parent": "grimfate:item/weakling_bow_2d" },
+  "head":   { "parent": "grimfate:item/weakling_bow_2d" }
+}

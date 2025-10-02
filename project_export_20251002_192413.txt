@@ -1,5 +1,8 @@
 ﻿=== FILE STRUCTURE (relative to D:\doomspire) ===
 .\gradle.properties
+.\grimcore\src\main\java\com\doomspire\grimcore\affix\Affix.java
+.\grimcore\src\main\java\com\doomspire\grimcore\affix\AffixAggregator.java
+.\grimcore\src\main\java\com\doomspire\grimcore\affix\ModAffixes.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatCalculator.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatsAttachment.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerLoadoutAttachment.java
@@ -42,6 +45,8 @@
 .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\SpellContext.java
 .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\SpellSchool.java
 .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\SpellTag.java
+.\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponGate.java
+.\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponRequirement.java
 .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltResult.java
 .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltService.java
 .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltTuning.java
@@ -57,6 +62,7 @@
 .\grimcore\src\main\java\com\doomspire\grimcore\xp\LevelTable.java
 .\grimcore\src\main\java\com\doomspire\grimcore\xp\Rewards.java
 .\grimcore\src\main\resources\data\grimcore\mobs\minecraft\zombie.json
+.\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\CustomHudOverlay.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryTabsButtons.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryWithStatsScreen.java
@@ -66,6 +72,7 @@
 .\grimfate\src\main\java\com\doomspire\grimfate\combat\WeaponPredicates.java
 .\grimfate\src\main\java\com\doomspire\grimfate\combat\WeaponType.java
 .\grimfate\src\main\java\com\doomspire\grimfate\commands\AddSpellCommand.java
+.\grimfate\src\main\java\com\doomspire\grimfate\compat\bettercombat\BetterCombatBridge.java
 .\grimfate\src\main\java\com\doomspire\grimfate\compat\curios\CuriosCompat.java
 .\grimfate\src\main\java\com\doomspire\grimfate\config\ClientConfig.java
 .\grimfate\src\main\java\com\doomspire\grimfate\config\ModConfig.java
@@ -75,6 +82,7 @@
 .\grimfate\src\main\java\com\doomspire\grimfate\entity\BoltProjectileEntity.java
 .\grimfate\src\main\java\com\doomspire\grimfate\events\LoadoutTickEvents.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\GenericGeoArmorItem.java
+.\grimfate\src\main\java\com\doomspire\grimfate\item\BaseBowItem.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListComponent.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\WeaponProfileComponent.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\StaffItem.java
@@ -88,6 +96,7 @@
 .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\S2CAllocateResultPayload.java
 .\grimfate\src\main\java\com\doomspire\grimfate\network\SpellCastClient.java
 .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModArmorMaterials.java
+.\grimfate\src\main\java\com\doomspire\grimfate\registry\ModCurios.java
 .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModDataComponents.java
 .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModEntityTypes.java
 .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItems.java
@@ -113,8 +122,25 @@
 .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_hood.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_jacket.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_wraps.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_2d.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3d.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull0.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull1.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull2.json
+.\grimfate\src\main\resources\data\bettercombat\tags\items\axes.json
+.\grimfate\src\main\resources\data\bettercombat\tags\items\bows.json
+.\grimfate\src\main\resources\data\bettercombat\tags\items\crossbows.json
+.\grimfate\src\main\resources\data\bettercombat\tags\items\daggers.json
+.\grimfate\src\main\resources\data\bettercombat\tags\items\greataxes.json
+.\grimfate\src\main\resources\data\bettercombat\tags\items\greatswords.json
+.\grimfate\src\main\resources\data\bettercombat\tags\items\hammers.json
+.\grimfate\src\main\resources\data\bettercombat\tags\items\staves.json
+.\grimfate\src\main\resources\data\bettercombat\tags\items\swords.json
+.\grimfate\src\main\resources\data\curios\slot_types\belt.json
 .\grimfate\src\main\resources\data\curios\slot_types\necklace.json
 .\grimfate\src\main\resources\data\curios\slot_types\ring.json
+.\grimfate\src\main\resources\data\curios\tags\items\belt.json
 .\grimfate\src\main\resources\data\curios\tags\items\necklace.json
 .\grimfate\src\main\resources\data\curios\tags\items\ring.json
 .\grimfate\src\main\resources\data\grimfate\balance\attributes.json
@@ -131,15 +157,18 @@
 .\grimfate\src\main\resources\data\grimfate\tags\items\armor\leather.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\armor\legs.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\armor\plate.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\axes.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\bows.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\crossbows.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\daggers.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\melee_weapons.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\ranged_weapons.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\greataxes.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\greatswords.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\hammers.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\role\archer.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\role\mage.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\role\melee.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\shields.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\staves.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\two_handed.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\swords.json
 .\grimfate\src\main\resources\data\neoforge\loot_modifiers\global_loot_modifiers.json
 n=== CONCATENATED CONTENTS ===n
 ----- BEGIN FILE: .\gradle.properties -----
@@ -190,6 +219,277 @@ core_mod_description=Core library with shared RPG systems for Grimfate
 geckolib_version=4.7.7
 
 n----- END FILE: .\gradle.properties -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\Affix.java -----
+package com.doomspire.grimcore.affix;
+
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+
+//NOTE: Базовый контракт аффикса.
+/**
+ * Ядро (grimcore) не знает, как хранятся аффиксы на предметах — это задача контент-модуля.
+ * Здесь — только применение к StatSnapshot и метаданные.
+ *
+ * Допущения:
+ * - "magnitude" — числовая сила/вес аффикса, уже нормализованная контентом (например, 0.12f для +12%).
+ * - "source" — откуда пришёл аффикс (броня, оружие, бижутерия/curios) — на случай разных формул.
+ * - Применение идемпотентно и НЕ должно читать/менять состояние предметов, только модифицировать снапшот.
+ */
+public interface Affix {
+
+    /**
+     * Уникальный идентификатор аффикса (например, grimcore:dr_all, grimcore:fire_resist).
+     */
+    ResourceLocation id();
+
+    /**
+     * Применить эффект аффикса к снапшоту.
+     *
+     * @param outSnapshot целевой снапшот, в который суммируются эффекты
+     * @param magnitude   сила аффикса (уже приведённая в доли/единицы)
+     * @param source      источник (тип носителя аффикса)
+     */
+    void apply(StatSnapshot outSnapshot, float magnitude, Source source);
+
+    /**
+     * Короткий человекочитаемый ключ для тултипа/логов (без локализации).
+     * Полноценный локализованный текст делаем на стороне клиента в grimfate.
+     */
+    default String tooltipKey() {
+        return id().toString();
+    }
+
+    /**
+     * Источник аффикса — может влиять на формулу (например, бонусы с оружия чаще «оффенсивные»).
+     */
+    enum Source {
+        WEAPON,
+        ARMOR,
+        JEWELRY,   // кольца/амулеты (включая Curios)
+        SHIELD,
+        OTHER
+    }
+}
+
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\Affix.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\AffixAggregator.java -----
+package com.doomspire.grimcore.affix;
+
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+//NOTE: Сборщик эффектов аффиксов в общий StatSnapshot
+/**
+ * ВАЖНО:
+ *  - grimcore НЕ знает, где хранятся аффиксы (компоненты предметов, Curios, теги и т.д.).
+ *  - Контент-модуль (grimfate) обязан предоставить экстрактор через {@link #setExtractor(Extractor)}.
+ *  - Экстрактор возвращает список "AffixEntry" (id, сила, источник) для КОНКРЕТНОЙ сущности.
+ *
+ * Алгоритм:
+ *  1) Вызываем внешний Extractor → получаем список аффиксов сущности.
+ *  2) Для каждого id резолвим Affix из {@link ModAffixes} и вызываем {@link Affix#apply}.
+ *  3) Все эффекты суммируются в переданный снапшот.
+ *
+ * Безопасность:
+ *  - Пустые/неизвестные id пропускаются молча.
+ *  - Неверные или NaN величины "magnitude" приводятся к 0.
+ */
+public final class AffixAggregator {
+
+    private AffixAggregator() {}
+
+    /** Внешний экстрактор аффиксов (grimfate должен установить его на старте). */
+    private static volatile Extractor EXTRACTOR = entity -> Collections.emptyList();
+
+    /**
+     * Установить внешний экстрактор аффиксов.
+     * Вызывайте из grimfate при common-инициализации, когда готов чтение компонентов.
+     */
+    public static void setExtractor(Extractor extractor) {
+        EXTRACTOR = Objects.requireNonNull(extractor, "AffixAggregator extractor");
+    }
+
+    /**
+     * Собрать и применить ВСЕ аффиксы сущности к снапшоту.
+     * Снапшот должен быть уже частично посчитан (атрибуты и т.п.) — аффиксы добавятся поверх.
+     */
+    public static void applyAll(StatSnapshot outSnapshot, LivingEntity entity) {
+        if (outSnapshot == null || entity == null) return;
+
+        List<AffixEntry> list;
+        try {
+            list = EXTRACTOR.extract(entity);
+        } catch (Throwable t) {
+            // Любая ошибка экстрактора не должна падать на ядро: просто игнорируем.
+            list = Collections.emptyList();
+        }
+
+        if (list.isEmpty()) return;
+
+        for (AffixEntry entry : list) {
+            if (entry == null || entry.id() == null) continue;
+
+            Affix affix = ModAffixes.get(entry.id());
+            if (affix == null) continue; // неизвестный аффикс — пропускаем
+
+            float mag = sanitize(entry.magnitude());
+            if (mag == 0f) continue;
+
+            try {
+                affix.apply(outSnapshot, mag, entry.source());
+            } catch (Throwable ignored) {
+                // аффикс не должен ломать расчёт статов
+            }
+        }
+    }
+
+    private static float sanitize(float v) {
+        if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
+        // тут можно добавить клампы по типам аффиксов, но это ответственность конкретного Affix.apply
+        return v;
+    }
+
+    // ===================== Контракт экстрактора и запись аффикса =====================
+
+    /**
+     * Экстрактор аффиксов для конкретной сущности.
+     * ДОЛЖЕН собрать аффиксы со всей экипировки/бафов/Curios/компонентов и вернуть список.
+     *
+     * Пример реализации в grimfate:
+     *  - обойти main/offhand + armor слоты,
+     *  - если Curios загружен — обойти их слоты,
+     *  - из каждого ItemStack прочитать AffixListComponent и собрать пары (id, magnitude, source).
+     */
+    @FunctionalInterface
+    public interface Extractor {
+        List<AffixEntry> extract(LivingEntity entity);
+    }
+
+    /**
+     * Единичная запись аффикса.
+     *
+     * @param id        уникальный id аффикса (например, grimcore:damage_reduction_all)
+     * @param magnitude числовая сила (уже нормализована, например 0.12f для +12%)
+     * @param source    источник (оружие/броня/бижутерия/щит/прочее)
+     */
+    public record AffixEntry(ResourceLocation id, float magnitude, Affix.Source source) {
+        public AffixEntry {
+            if (source == null) source = Affix.Source.OTHER;
+        }
+    }
+
+    // ===================== Утилита для сборки списков (необязательная) =====================
+
+    /**
+     * Удобный builder для внешнего экстрактора.
+     * Позволяет накапливать аффиксы с валидацией, а затем получить immutable-список.
+     */
+    public static final class ListBuilder {
+        private final List<AffixEntry> data = new ArrayList<>();
+
+        public ListBuilder add(ResourceLocation id, float magnitude, Affix.Source source) {
+            if (id != null && !Float.isNaN(magnitude) && !Float.isInfinite(magnitude)) {
+                data.add(new AffixEntry(id, magnitude, source));
+            }
+            return this;
+        }
+
+        public List<AffixEntry> build() {
+            return Collections.unmodifiableList(new ArrayList<>(data));
+        }
+    }
+}
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\AffixAggregator.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\ModAffixes.java -----
+package com.doomspire.grimcore.affix;
+
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+//NOTE: Глобальный реестр всех доступных аффиксов.
+/**
+ * Grimcore не знает, какие предметы их содержат — только предоставляет фабрики и реализацию.
+ * Контент-модуль (grimfate) может расширять реестр через register().
+ */
+public final class ModAffixes {
+
+    private static final Map<ResourceLocation, Affix> REGISTRY = new HashMap<>();
+
+    private ModAffixes() {}
+
+    // ------------------- API -------------------
+
+    public static void register(Affix affix) {
+        if (REGISTRY.containsKey(affix.id())) {
+            throw new IllegalStateException("Affix id already registered: " + affix.id());
+        }
+        REGISTRY.put(affix.id(), affix);
+    }
+
+    public static Affix get(ResourceLocation id) {
+        return REGISTRY.get(id);
+    }
+
+    public static Map<ResourceLocation, Affix> all() {
+        return Collections.unmodifiableMap(REGISTRY);
+    }
+
+    /**
+     * Вызвать один раз при старте мода (например, в common-инициализации).
+     * Регистрирует базовые аффиксы ядра.
+     * Контент может добавить свои дополнительно.
+     */
+    public static void bootstrap() {
+        // Примеры: эти аффиксы базовые и нужны ядру для работы
+        register(new SimpleAffix(
+                ResourceLocation.fromNamespaceAndPath("grimcore", "damage_reduction_all"),
+                (snap, mag, src) -> snap.damageReductionAll += mag
+        ));
+
+        register(new SimpleAffix(
+                ResourceLocation.fromNamespaceAndPath("grimcore", "max_mana_flat"),
+                (snap, mag, src) -> snap.maxMana += mag
+        ));
+
+        register(new SimpleAffix(
+                ResourceLocation.fromNamespaceAndPath("grimcore", "fire_resist"),
+                (snap, mag, src) -> snap.resistances.merge(
+                        com.doomspire.grimcore.stat.ResistTypes.FIRE,
+                        mag, Float::sum)
+        ));
+    }
+
+    // ------------------- Реализация базового простого аффикса -------------------
+
+    /**
+     * Упрощённый аффикс, для случаев где достаточно «применить лямбду».
+     */
+    private record SimpleAffix(ResourceLocation id, Applier fn) implements Affix {
+        @Override
+        public void apply(StatSnapshot outSnapshot, float magnitude, Source source) {
+            fn.apply(outSnapshot, magnitude, source);
+        }
+
+        @FunctionalInterface
+        private interface Applier {
+            void apply(StatSnapshot out, float mag, Source src);
+        }
+    }
+}
+
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\ModAffixes.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatCalculator.java -----
 package com.doomspire.grimcore.attach;
 
@@ -520,18 +820,24 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.player.Player;
 import com.doomspire.grimcore.datapack.BalanceData;
+
 import java.util.EnumMap;
 import java.util.Locale;
 
-/**
- * Attachment игрока: очки атрибутов, текущие ресурсы и кэш агрегированных статов.
- * Без устаревших API. Для сети используем StreamCodec (NeoForge/Mojang 1.21.1).
- */
+//NOTE: Attachment игрока: очки атрибутов, текущие ресурсы и кэш агрегированных статов.
+
 public class PlayerStatsAttachment {
 
     // ---- Текущие ресурсы (кастомные полосы) ----
     private int currentHealth = 100;
     private int currentMana   = 100;
+
+    /**
+     * Текущая «сверхщит» полоса (overshield).
+     * Списывается ПЕРВОЙ при получении урона, затем уже здоровье.
+     * Значение не входит в StatSnapshot, это runtime-ресурс (как временные бафы/щит).
+     */
+    private int overshield = 0;
 
     // ---- Распределённые очки по атрибутам ----
     private final EnumMap<Attributes, Integer> attributes = new EnumMap<>(Attributes.class);
@@ -553,6 +859,7 @@ public class PlayerStatsAttachment {
 
     public int getCurrentHealth() { return currentHealth; }
     public int getCurrentMana()   { return currentMana; }
+    public int getOvershield()    { return overshield; }
 
     public void setCurrentHealth(int v) {
         int max = (int) Math.max(1, getSnapshot().maxHealth);
@@ -562,6 +869,40 @@ public class PlayerStatsAttachment {
     public void setCurrentMana(int v) {
         int max = (int) Math.max(1, getSnapshot().maxMana);
         currentMana = Math.max(0, Math.min(v, max));
+    }
+
+    /**
+     * Установить текущий overshield с учётом верхней границы.
+     * Верхнюю границу можно задавать через снапшот (например, статы/аффиксы),
+     * иначе — ограничиваем «разумным» максимумом по здоровью.
+     */
+    public void setOvershield(int v) {
+        int maxOs = estimateMaxOvershield();
+        overshield = Math.max(0, Math.min(v, maxOs));
+    }
+
+    /** Увеличить overshield (для способностей/аффиксов), с клампом. */
+    public void addOvershield(int delta) {
+        if (delta <= 0) return;
+        setOvershield(overshield + delta);
+    }
+
+    /**
+     * Списать часть overshield, вернуть сколько НЕ покрылось (остаток урона).
+     * Удобно вызывать из DamageEngine перед уроном по здоровью.
+     */
+    public int consumeOvershield(int amount) {
+        if (amount <= 0 || overshield <= 0) return amount;
+        int used = Math.min(amount, overshield);
+        overshield -= used;
+        return amount - used; // остаток, который пойдёт в здоровье/дальше по пайплайну
+    }
+
+    /** Оценка верхней границы overshield. Позже можно читать из снапшота (maxOvershield). */
+    private int estimateMaxOvershield() {
+        // Пока используем максимум равный текущему максимальному здоровью.
+        // Если в StatCalculator появится отдельный stat maxOvershield — читать оттуда.
+        return (int) Math.max(1, getSnapshot().maxHealth);
     }
 
     public void markDirty() { this.dirty = true; }
@@ -616,6 +957,7 @@ public class PlayerStatsAttachment {
         buf.writeVarInt(att.unspentPoints);
         buf.writeVarInt(att.currentHealth);
         buf.writeVarInt(att.currentMana);
+        buf.writeVarInt(att.overshield); // <<< нове поле
         for (Attributes a : Attributes.values()) {
             buf.writeVarInt(att.getAttribute(a));
         }
@@ -626,6 +968,7 @@ public class PlayerStatsAttachment {
         att.unspentPoints = buf.readVarInt();
         att.currentHealth = buf.readVarInt();
         att.currentMana   = buf.readVarInt();
+        att.overshield    = buf.readVarInt(); // <<< читаем в том же порядке
         for (Attributes a : Attributes.values()) {
             att.attributes.put(a, buf.readVarInt());
         }
@@ -691,13 +1034,15 @@ import com.doomspire.grimcore.attach.MobStatsAttachment;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 import com.doomspire.grimcore.net.GrimcoreNetworking;
 import com.doomspire.grimcore.stat.DamageTypes;
+import com.doomspire.grimcore.stat.ModAttachments;
 import com.doomspire.grimcore.stat.ResistTypes;
 import com.doomspire.grimcore.stat.StatSnapshot;
-import com.doomspire.grimcore.stat.ModAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 
 import java.util.concurrent.ThreadLocalRandom;
+
+//NOTE: Централизованный пайплайн урона - задаем игре последовательность расчета урона от каждого hit
 
 public final class DamageEngine {
     private DamageEngine() {}
@@ -736,8 +1081,8 @@ public final class DamageEngine {
             }
         }
 
+        // --- базовый расчёт по типам: крит -> резисты ---
         float total = 0f;
-
         for (var entry : ctx.damageMap.entrySet()) {
             DamageTypes type = entry.getKey();
             float dmg = entry.getValue();
@@ -765,10 +1110,51 @@ public final class DamageEngine {
             total += Math.max(0f, dmg);
         }
 
-        // lifesteal/manasteal по суммарному урону
-        if (aSnap != null && total > 0f && ctx.attacker instanceof LivingEntity attackerLe) {
-            int heal = Math.round(total * Math.max(0f, aSnap.lifesteal));
-            int mana = Math.round(total * Math.max(0f, aSnap.manasteal));
+        int applied; // фактически нанесённый урон (после overshield и DR_all)
+
+        // --- overshield (только у игрока) -> затем damage_reduction_all ---
+        if (targetIsPlayer) {
+            PlayerStatsAttachment tAtt = target.getData(ModAttachments.PLAYER_STATS.get());
+            int incoming = Math.max(0, Math.round(total));
+
+            // 1) Снять overshield ПЕРВЫМ
+            int afterOS = tAtt.consumeOvershield(incoming);
+            boolean osChanged = (afterOS != incoming);
+
+            // 2) Применить глобальную редукцию
+            float drAll = clamp01(readDamageReductionAll(tSnap), 0.90f);
+            float afterDR = afterOS * (1f - drAll);
+
+            applied = Math.max(0, Math.round(afterDR));
+
+            // 3) Урон по здоровью
+            if (applied > 0) {
+                tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
+            }
+
+            if (osChanged || applied > 0) {
+                tAtt.markDirty();
+                if (target instanceof ServerPlayer spT) {
+                    GrimcoreNetworking.syncPlayerStats(spT, tAtt); // мгновенный HUD-синк цели
+                }
+            }
+        } else {
+            // Мобы: только DR_all (если в снапшоте есть), без overshield
+            float drAll = clamp01(readDamageReductionAll(tSnap), 0.90f);
+            float afterDR = total * (1f - drAll);
+            applied = Math.max(0, Math.round(afterDR));
+
+            if (applied > 0) {
+                MobStatsAttachment tAtt = target.getData(ModAttachments.MOB_STATS.get());
+                tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
+                tAtt.markDirty();
+            }
+        }
+
+        // --- lifesteal/manasteal по фактически нанесённому урону ---
+        if (aSnap != null && applied > 0 && ctx.attacker instanceof LivingEntity attackerLe) {
+            int heal = Math.round(applied * Math.max(0f, aSnap.lifesteal));
+            int mana = Math.round(applied * Math.max(0f, aSnap.manasteal));
 
             var aPlayer = attackerLe.getData(ModAttachments.PLAYER_STATS.get());
             if (aPlayer != null) {
@@ -796,24 +1182,38 @@ public final class DamageEngine {
             }
         }
 
-        // применяем к цели
-        int applied = Math.max(0, Math.round(total));
-        if (applied > 0) {
-            if (targetIsPlayer) {
-                PlayerStatsAttachment tAtt = target.getData(ModAttachments.PLAYER_STATS.get());
-                tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
-                tAtt.markDirty();
-                if (target instanceof ServerPlayer spT) {
-                    GrimcoreNetworking.syncPlayerStats(spT, tAtt); // мгновенный HUD-синк цели
-                }
-            } else {
-                MobStatsAttachment tAtt = target.getData(ModAttachments.MOB_STATS.get());
-                tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
-                tAtt.markDirty();
+        return applied;
+    }
+
+    // ===== helpers =====
+
+    /**
+     * Чтение глобальной редукции урона. До того как поле появится в StatSnapshot,
+     * метод вернёт 0f, чтобы не ломать компиляцию.
+     */
+    private static float readDamageReductionAll(StatSnapshot snap) {
+        try {
+            // Публичное поле
+            var f = snap.getClass().getField("damageReductionAll");
+            Object v = f.get(snap);
+            if (v instanceof Number n) return n.floatValue();
+        } catch (Throwable ignored) {
+            // попробуем геттер
+            try {
+                var m = snap.getClass().getMethod("damageReductionAll");
+                Object v = m.invoke(snap);
+                if (v instanceof Number n) return n.floatValue();
+            } catch (Throwable ignored2) {
+                // поля нет — используем 0
             }
         }
+        return 0f;
+    }
 
-        return applied;
+    private static float clamp01(float v, float hardCap) {
+        if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
+        if (hardCap <= 0f) hardCap = 1f;
+        return Math.max(0f, Math.min(v, hardCap));
     }
 }
 
@@ -2349,6 +2749,353 @@ public enum SpellTag {
 }
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\SpellTag.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponGate.java -----
+package com.doomspire.grimcore.spell.api;
+
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiFunction;
+
+//NOTE: Утилита проверки оружия в руках игрока по {@link WeaponRequirement}.
+/**
+ * Основана на тегах предметов и (опционально) внешнем резолвере двуручности.
+ * Спроектирована так, чтобы:
+ *  - работать только на NeoForge / ванильных API 1.21.1;
+ *  - не иметь жёстких зависимостей на grimfate/контент;
+ *  - легко расшириться профилем оружия позже (WeaponProfileComponent).
+ *
+ * Как работает:
+ *  1) Проверяем main hand: теги any/all/none.
+ *  2) Если требование не выполнено — пробуем offhand (для кинжалов и т.п., где каста
+ *     может быть "из левой руки"). Это поведение можно отключить, если нужно — на уровне вызова.
+ *  3) Если requirement.twoHandedOnly() == true:
+ *      - предмет обязан иметь тег TWO_HANDED (по умолчанию grimfate:two_handed)
+ *        или вернёт true внешний резолвер двуручности;
+ *      - если offhand НЕ пуст и предмет двуручный — отказ (блок оффхенда).
+ *
+ * Внешний резолвер двуручности:
+ *  Можно (необязательно) установить через {@link #setTwoHandedResolver(BiFunction)},
+ *  например, чтобы читать ваш WeaponProfileComponent без прямой зависимости.
+ */
+
+public final class WeaponGate {
+
+    /** Глобальный тег «двуручное» — по умолчанию grimfate:two_handed. */
+    public static final TagKey<Item> TWO_HANDED =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("grimfate", "two_handed"));
+
+    /** Необязательный внешний резолвер двуручности (например, из WeaponProfileComponent). */
+    private static volatile BiFunction<ItemStack, Player, Boolean> TWO_HANDED_RESOLVER = null;
+
+    private WeaponGate() {}
+
+    /**
+     * Основная проверка: смотрим main hand, затем offhand.
+     * Возвращает объект-результат с причиной отказа (для UX) либо OK.
+     */
+    public static Result check(Player player, WeaponRequirement req) {
+        Objects.requireNonNull(player, "player");
+        Objects.requireNonNull(req, "requirement");
+
+        // 1) Пытаемся удовлетворить требование предметом из main hand
+        ItemStack main = player.getMainHandItem();
+        Result mainRes = checkStackAgainstRequirement(main, player, req, InteractionHand.MAIN_HAND, true);
+        if (mainRes.ok) return mainRes;
+
+        // 2) Если не прошло — пробуем offhand (некоторые умения могут кастоваться из левой руки)
+        ItemStack off = player.getOffhandItem();
+        Result offRes = checkStackAgainstRequirement(off, player, req, InteractionHand.OFF_HAND, true);
+        if (offRes.ok) return offRes;
+
+        // 3) Оба варианта не подошли — вернём более «информативную» причину
+        //    (предпочтительно с main hand, чтобы игрок сначала проверил основной слот)
+        return preferInformative(mainRes, offRes);
+    }
+
+    /**
+     * Точечная проверка конкретного стака и руки.
+     * @param enforceOffhandBlock если true, при двуручности запретим занятый offhand.
+     */
+    public static Result checkStackAgainstRequirement(ItemStack stack,
+                                                      Player player,
+                                                      WeaponRequirement req,
+                                                      InteractionHand hand,
+                                                      boolean enforceOffhandBlock) {
+        if (stack.isEmpty()) {
+            return Result.fail("Требуется подходящее оружие в " + prettyHand(hand) + ".");
+        }
+
+        // Быстрые проверки тегов
+        if (!matchesAny(stack, req.anyOfTags())) {
+            return Result.fail("Оружие в " + prettyHand(hand) + " не подходит (нет нужной категории).");
+        }
+        if (!matchesAll(stack, req.allOfTags())) {
+            return Result.fail("Оружие в " + prettyHand(hand) + " не подходит (не все требования выполнены).");
+        }
+        if (!matchesNone(stack, req.noneOfTags())) {
+            return Result.fail("Оружие в " + prettyHand(hand) + " запрещено для этого умения.");
+        }
+
+        // Двуручность — отдельной проверкой (часто встречается и влияет на оффхенд/анимации)
+        if (req.twoHandedOnly()) {
+            boolean isTwoHanded = isTwoHanded(stack, player);
+            if (!isTwoHanded) {
+                return Result.fail("Нужно двуручное оружие.");
+            }
+            if (enforceOffhandBlock && !player.getOffhandItem().isEmpty()) {
+                // Блокировка использования оффхенда с реальным двуручным оружием.
+                return Result.fail("Освободите вторую руку для двуручного оружия.");
+            }
+        }
+
+        return Result.ok(hand);
+    }
+
+    // ---------- Внешняя интеграция (настраиваемые хуки) ----------
+
+    /**
+     * Установить внешний резолвер двуручности (например, чтобы читать WeaponProfileComponent).
+     * Возвращайте TRUE, если предмет двуручный по вашему профилю.
+     */
+    public static void setTwoHandedResolver(BiFunction<ItemStack, Player, Boolean> resolver) {
+        TWO_HANDED_RESOLVER = resolver;
+    }
+
+    // ---------- Внутренняя логика ----------
+
+    private static boolean isTwoHanded(ItemStack stack, Player player) {
+        // 1) Наш общий тег two_handed (grimfate:two_handed)
+        if (stack.is(TWO_HANDED)) return true;
+
+        // 2) Внешний резолвер (например, WeaponProfileComponent из grimfate)
+        BiFunction<ItemStack, Player, Boolean> resolver = TWO_HANDED_RESOLVER;
+        if (resolver != null) {
+            try {
+                Boolean r = resolver.apply(stack, player);
+                if (Boolean.TRUE.equals(r)) return true;
+            } catch (Throwable ignored) {
+                // Безопасность: внешняя интеграция не должна ломать гейт
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean matchesAny(ItemStack stack, Set<TagKey<Item>> tags) {
+        if (tags == null || tags.isEmpty()) return true; // нет требований — проходим
+        for (TagKey<Item> t : tags) if (stack.is(t)) return true;
+        return false;
+    }
+
+    private static boolean matchesAll(ItemStack stack, Set<TagKey<Item>> tags) {
+        if (tags == null || tags.isEmpty()) return true;
+        for (TagKey<Item> t : tags) if (!stack.is(t)) return false;
+        return true;
+    }
+
+    private static boolean matchesNone(ItemStack stack, Set<TagKey<Item>> tags) {
+        if (tags == null || tags.isEmpty()) return true;
+        for (TagKey<Item> t : tags) if (stack.is(t)) return false;
+        return true;
+    }
+
+    private static String prettyHand(InteractionHand hand) {
+        return hand == InteractionHand.MAIN_HAND ? "основной руке" : "второй руке";
+    }
+
+    private static Result preferInformative(Result a, Result b) {
+        // Если одна из причин более конкретна — вернём её.
+        // На практике причина с двуручностью/оффхендом полезнее, чем просто "нет тега".
+        String ra = a.reason == null ? "" : a.reason;
+        String rb = b.reason == null ? "" : b.reason;
+        // Очень простая эвристика: более длинное сообщение считаем информативнее.
+        return (ra.length() >= rb.length()) ? a : b;
+    }
+
+    // ---------- Результат проверки ----------
+
+    public static final class Result {
+        public final boolean ok;
+        public final String reason;              // для UX: почему отказано (локализуем позже)
+        public final InteractionHand usedHand;   // какой рукой можно кастовать (если ok)
+
+        private Result(boolean ok, String reason, InteractionHand usedHand) {
+            this.ok = ok;
+            this.reason = reason;
+            this.usedHand = usedHand;
+        }
+
+        public static Result ok(InteractionHand hand) {
+            return new Result(true, null, hand);
+        }
+
+        public static Result fail(String reason) {
+            return new Result(false, reason, null);
+        }
+
+        @Override
+        public String toString() {
+            return ok ? "OK(" + usedHand + ")" : "FAIL(" + reason + ")";
+        }
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponGate.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponRequirement.java -----
+package com.doomspire.grimcore.spell.api;
+
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+
+//NOTE: DTO c требованиями к оружию для кастов/навыков.* Опираемся на теги предметов (data/*/tags/items/...) и флаг двуручности.
+//Использование
+// - Зафиксировать нужные теги (anyOf / allOf / noneOf) через фабрики или Builder
+// - Флаг twoHandedOnly=true — требуем, чтобы оружие относилось к группе "двуручное" +
+//   (проверяется в WeaponGate по нашему тегу items/two_handed или по профилю оружия)" +
+//Важно: класс — чистый перенос данных (без логики проверки)" +
+//Проверка выполняется в {@code WeaponGate}" +
+
+        public final class WeaponRequirement {
+
+            /** Должен совпасть ХОТЯ БЫ один тег из набора. */
+            private final Set<TagKey<Item>> anyOfTags;
+
+            /** Должны совпасть ВСЕ теги из набора. */
+            private final Set<TagKey<Item>> allOfTags;
+
+            /** НЕЛЬЗЯ, чтобы совпал ЛЮБОЙ из этих тегов. */
+            private final Set<TagKey<Item>> noneOfTags;
+
+            /** Требуется ли строго двуручное оружие (по тегу/профилю). */
+            private final boolean twoHandedOnly;
+
+            private WeaponRequirement(Set<TagKey<Item>> anyOfTags,
+                                      Set<TagKey<Item>> allOfTags,
+                                      Set<TagKey<Item>> noneOfTags,
+                                      boolean twoHandedOnly) {
+                this.anyOfTags = unmodifiableCopy(anyOfTags);
+                this.allOfTags = unmodifiableCopy(allOfTags);
+                this.noneOfTags = unmodifiableCopy(noneOfTags);
+                this.twoHandedOnly = twoHandedOnly;
+            }
+
+            private static <T> Set<T> unmodifiableCopy(Set<T> in) {
+                if (in == null || in.isEmpty()) return Collections.emptySet();
+                return Collections.unmodifiableSet(new LinkedHashSet<>(in));
+                // LinkedHashSet — предсказуемый порядок для дебага/тултипов
+            }
+
+            public Set<TagKey<Item>> anyOfTags()     { return anyOfTags; }
+            public Set<TagKey<Item>> allOfTags()     { return allOfTags; }
+            public Set<TagKey<Item>> noneOfTags()    { return noneOfTags; }
+            public boolean twoHandedOnly()           { return twoHandedOnly; }
+
+            // ---------- Фабрики для удобства ----------
+
+            /** Требуется совпасть хотя бы с одним из тегов. */
+            @SafeVarargs
+            public static WeaponRequirement anyOf(TagKey<Item>... any) {
+                return new Builder().anyOf(any).build();
+            }
+
+            /** Требуется совпасть по всем указанным тегам. */
+            @SafeVarargs
+            public static WeaponRequirement allOf(TagKey<Item>... all) {
+                return new Builder().allOf(all).build();
+            }
+
+            /** Запрет по тегам (blacklist). */
+            @SafeVarargs
+            public static WeaponRequirement noneOf(TagKey<Item>... none) {
+                return new Builder().noneOf(none).build();
+            }
+
+            /** Чистый билдер без предзаданных тегов. */
+            public static Builder builder() {
+                return new Builder();
+            }
+
+            // ---------- Builder ----------
+
+            public static final class Builder {
+                private final Set<TagKey<Item>> any = new LinkedHashSet<>();
+                private final Set<TagKey<Item>> all = new LinkedHashSet<>();
+                private final Set<TagKey<Item>> none = new LinkedHashSet<>();
+                private boolean twoHandedOnly = false;
+
+                @SafeVarargs
+                public final Builder anyOf(TagKey<Item>... tags) {
+                    if (tags != null) any.addAll(Arrays.asList(tags));
+                    return this;
+                }
+
+                @SafeVarargs
+                public final Builder allOf(TagKey<Item>... tags) {
+                    if (tags != null) all.addAll(Arrays.asList(tags));
+                    return this;
+                }
+
+                @SafeVarargs
+                public final Builder noneOf(TagKey<Item>... tags) {
+                    if (tags != null) none.addAll(Arrays.asList(tags));
+                    return this;
+                }
+
+                /** Строго двуручное оружие (по тегу items/two_handed или WeaponProfile). */
+                public Builder twoHandedOnly(boolean value) {
+                    this.twoHandedOnly = value;
+                    return this;
+                }
+
+                public WeaponRequirement build() {
+                    return new WeaponRequirement(any, all, none, twoHandedOnly);
+                }
+            }
+
+            // ---------- equals/hashCode/toString для удобства логов/сравнений ----------
+
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (!(o instanceof WeaponRequirement that)) return false;
+                return twoHandedOnly == that.twoHandedOnly
+                        && Objects.equals(anyOfTags, that.anyOfTags)
+                        && Objects.equals(allOfTags, that.allOfTags)
+                        && Objects.equals(noneOfTags, that.noneOfTags);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(anyOfTags, allOfTags, noneOfTags, twoHandedOnly);
+            }
+
+            @Override
+            public String toString() {
+                return "WeaponRequirement{" +
+                        "any=" + anyOfTags +
+                        ", all=" + allOfTags +
+                        ", none=" + noneOfTags +
+                        ", twoHandedOnly=" + twoHandedOnly +
+                        '}';
+            }
+        }
+
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponRequirement.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltResult.java -----
 package com.doomspire.grimcore.spell.autobolt;
 
@@ -2414,7 +3161,6 @@ public final class AutoBoltService {
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltService.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltTuning.java -----
-// src/main/java/com/doomspire/grimcore/spell/autobolt/AutoBoltTuning.java
 package com.doomspire.grimcore.spell.autobolt;
 
 import com.doomspire.grimcore.datapack.Balance;
@@ -2422,10 +3168,23 @@ import com.doomspire.grimcore.datapack.codec.SpellTuning;
 import com.doomspire.grimcore.stat.StatSnapshot;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-//TODO ДОБАВИТЬ PROJECTILE SPEED
+
+//NOTE: Обёртка над data-тюнингом авто-болта.
 /**
- * Обёртка над data-тюнингом авто-болта.
  * Все данные берутся из Balance/SpellTuning (datapack).
+ *
+ * ВАЖНО: поле projectile_speed читается «мягко»:
+ *  - если SpellTuning.Entry уже поддерживает projectileSpeed() — используем его;
+ *  - иначе пытаемся найти параметр "projectile_speed" в доп.полях (если таковые есть);
+ *  - иначе берём безопасный дефолт (как у ванильной стрелы).
+ *
+ * Datapack-пример (data/grimfate/spells.json):
+ * {
+ *   "id": "grimfate:auto_bolt_staff",
+ *   "baseCost": 3,
+ *   "baseCooldown": 8,
+ *   "projectile_speed": 1.6
+ * }
  */
 public final class AutoBoltTuning {
 
@@ -2433,32 +3192,73 @@ public final class AutoBoltTuning {
     public static final ResourceLocation AUTO_BOLT_ID =
             ResourceLocation.fromNamespaceAndPath("grimfate", "auto_bolt_staff");
 
-    /** Временный дефолт, пока projectile_speed не вынесен в SpellTuning. */
+    /** Дефолт близок к ванильной стреле (+-). */
     private static final float DEFAULT_PROJECTILE_SPEED = 1.6f;
+
+    /** Нижний «разумный» порог — чтобы болт не зависал в воздухе при багах данных. */
+    private static final float MIN_PROJECTILE_SPEED = 0.4f;
+
+    /** Верхний ограничитель на случай перебора в датапаке. */
+    private static final float MAX_PROJECTILE_SPEED = 3.5f;
 
     public int manaCost(StatSnapshot snap, ItemStack staff) {
         SpellTuning.Entry e = Balance.getSpellEntry(AUTO_BOLT_ID);
-        // В дальнейшем сюда можно добавить сниж. стоимости от статов/аффиксов.
+        // Позже: модификаторы стоимости от статов/аффиксов.
         return (e != null) ? Math.max(0, e.baseCost()) : 0;
     }
 
     public int cooldownTicks(StatSnapshot snap, ItemStack staff) {
         SpellTuning.Entry e = Balance.getSpellEntry(AUTO_BOLT_ID);
-        // При необходимости учесть CDR/скорость атаки – делаем это на уровне ядра поверх baseCooldown.
+        // Позже: учёт CDR/скорости атаки поверх baseCooldown.
         return (e != null) ? Math.max(0, e.baseCooldown()) : 0;
     }
 
+    /**
+     * Скорость снаряда (базовая). Баллистика (гравитация/drag) настраивается в сущности проектайла.
+     * Здесь только базовый модуль скорости вылета.
+     */
     public float projectileSpeed(StatSnapshot snap, ItemStack staff) {
-        // В SpellTuning projectile_speed пока нет → возвращаем дефолт.
-        // Как только поле появится в кодеке/datapack – читаем его отсюда.
-        return DEFAULT_PROJECTILE_SPEED;
+        SpellTuning.Entry e = Balance.getSpellEntry(AUTO_BOLT_ID);
+
+        float v = DEFAULT_PROJECTILE_SPEED;
+
+        if (e != null) {
+            // 1) Если в кодеке уже появилось строгое поле projectileSpeed()
+            try {
+                // Вызов через метод, если он существует (без жёсткой зависимости).
+                var m = e.getClass().getMethod("projectileSpeed");
+                Object ret = m.invoke(e);
+                if (ret instanceof Number n) v = n.floatValue();
+            } catch (NoSuchMethodException ignored) {
+                // 2) Альтернатива: попытка вытащить из «экстра»-поля, если кодек хранит map/extra
+                try {
+                    var mExtra = e.getClass().getMethod("extra");
+                    Object extra = mExtra.invoke(e); // ожидаем Map<String,Object> либо подобное
+                    if (extra instanceof java.util.Map<?,?> map) {
+                        Object val = map.get("projectile_speed");
+                        if (val instanceof Number n) v = n.floatValue();
+                        else if (val instanceof String s) v = Float.parseFloat(s);
+                    }
+                } catch (Throwable ignored2) {
+                    // нет extra — ок
+                }
+            } catch (Throwable ignored) {
+                // любые рефлексивные ошибки глушим — упадём на дефолт
+            }
+        }
+
+        // Позже: модификаторы скорости от статов/аффиксов (ranged_speed, staff_mastery и т.п.)
+        // v *= snap.getMul(Stats.PROJECTILE_SPEED); // пример
+
+        if (Float.isNaN(v) || Float.isInfinite(v)) v = DEFAULT_PROJECTILE_SPEED;
+        if (v < MIN_PROJECTILE_SPEED) v = MIN_PROJECTILE_SPEED;
+        if (v > MAX_PROJECTILE_SPEED) v = MAX_PROJECTILE_SPEED;
+        return v;
     }
 
     public static AutoBoltTuning get() { return new AutoBoltTuning(); }
     private AutoBoltTuning() {}
 }
-
-
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltTuning.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\GrimSpells.java -----
@@ -2644,10 +3444,10 @@ package com.doomspire.grimcore.stat;
 
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 
-/**
- * Пересчитывает агрегированные статы (StatSnapshot) на основе атрибутов, предметов и бонусов.
- * Вызов: при изменении атрибутов/уровня/экипировки/эффектов.
- */
+
+//NOTE:Пересчитывает агрегированные статы (StatSnapshot) на основе атрибутов, предметов и бонусов.
+//NOTE:Вызов: при изменении атрибутов/уровня/экипировки/эффектов.
+
 public class StatCalculator {
 
     public static StatSnapshot calculate(PlayerStatsAttachment att) {
@@ -2662,32 +3462,47 @@ public class StatCalculator {
         int eva = att.getAttribute(Attributes.EVASION);
 
         // Примеры формул (значения можно вынести в JSON balance/attributes.json)
-        snapshot.maxHealth = 100 + vit * 20;
+        snapshot.maxHealth   = 100 + vit * 20;
         snapshot.regenHealth = 1 + vit * 1;
 
-        snapshot.maxMana = 100 + spirit * 30;
+        snapshot.maxMana   = 100 + spirit * 30;
         snapshot.regenMana = 1 + spirit * 3;
 
-        snapshot.damage.put(DamageTypes.PHYS_MELEE, str * 0.03f);
+        snapshot.damage.put(DamageTypes.PHYS_MELEE,  str * 0.03f);
         snapshot.damage.put(DamageTypes.PHYS_RANGED, dex * 0.03f);
-        snapshot.damage.put(DamageTypes.FIRE, intl * 0.02f);
-        snapshot.damage.put(DamageTypes.FROST, intl * 0.02f);
-        snapshot.damage.put(DamageTypes.LIGHTNING, intl * 0.02f);
-        snapshot.damage.put(DamageTypes.POISON, intl * 0.02f);
+        snapshot.damage.put(DamageTypes.FIRE,        intl * 0.02f);
+        snapshot.damage.put(DamageTypes.FROST,       intl * 0.02f);
+        snapshot.damage.put(DamageTypes.LIGHTNING,   intl * 0.02f);
+        snapshot.damage.put(DamageTypes.POISON,      intl * 0.02f);
 
-        snapshot.critChance = 0f; // 1% за очко
-        snapshot.critDamage = 0.5f;        // +50% базово
-        snapshot.lifesteal = 0f;
-        snapshot.manasteal = 0f;
-        snapshot.evasionChance = eva * 0.01f;
-        snapshot.moveSpeedPct = dex * 0.25D; // 0.25% за 1 DEX
+        snapshot.critChance     = 0f;       // 1% за очко — добавим позже при балансировке
+        snapshot.critDamage     = 0.5f;     // +50% базово
+        snapshot.lifesteal      = 0f;
+        snapshot.manasteal      = 0f;
+        snapshot.evasionChance  = eva * 0.01f;
+        snapshot.moveSpeedPct   = dex * 0.25D; // 0.25% за 1 DEX
 
-        // TODO: сюда позже подключим бонусы предметов через StatAggregator
+        // Глобальная редукция входящего урона.
+        // Пока = 0, позже сюда добавим:
+        //  - AffixAggregator (из экипировки/бижутерии/аур),
+        //  - классовые/баф-эффекты,
+        //  - возможные бонусы от атрибутов/скилл-дерева.
+        snapshot.damageReductionAll = 0f;
+
+        // TODO: сюда позже подключим бонусы предметов и аффиксы через агрегатор статов
+
+        // Клампы безопасных диапазонов (если потребуется)
+        snapshot.evasionChance = clamp01(snapshot.evasionChance);
+        snapshot.damageReductionAll = clamp01(snapshot.damageReductionAll);
 
         return snapshot;
     }
-}
 
+    private static float clamp01(float v) {
+        if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
+        return Math.max(0f, Math.min(1f, v));
+    }
+}
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatCalculator.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatEffects.java -----
@@ -2752,9 +3567,8 @@ n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatEffect
 package com.doomspire.grimcore.stat;
 
 import java.util.EnumMap;
-
+//NOTE: Кэшированное состояние всех характеристик игрока/моба
 /**
- * Кэшированное состояние всех характеристик игрока/моба.
  * Используется в боевом движке и GUI.
  */
 public class StatSnapshot {
@@ -2778,6 +3592,13 @@ public class StatSnapshot {
     public float evasionChance;
     public double moveSpeedPct; // бонус к скорости в процентах (например 7.5 = +7.5%)
 
+    /**
+     * Глобальная редукция входящего урона (после резистов), 0..1.
+     * Пример: 0.20f = -20% ко всему входящему урону.
+     * Рассчитывается в StatCalculator из аффиксов/бафов/источников защиты.
+     */
+    public float damageReductionAll;
+
     public StatSnapshot() {
         for (DamageTypes type : DamageTypes.values()) {
             damage.put(type, 0f);
@@ -2785,9 +3606,9 @@ public class StatSnapshot {
         for (ResistTypes type : ResistTypes.values()) {
             resistances.put(type, 0f);
         }
+        damageReductionAll = 0f;
     }
 }
-
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatSnapshot.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\xp\LevelTable.java -----
@@ -2876,6 +3697,106 @@ n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\xp\Rewards.java
 }
 
 n----- END FILE: .\grimcore\src\main\resources\data\grimcore\mobs\minecraft\zombie.json -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java -----
+package com.doomspire.grimfate.affix;
+
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimcore.affix.AffixAggregator;
+import com.doomspire.grimfate.compat.curios.CuriosCompat;
+import com.doomspire.grimfate.registry.ModDataComponents;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.List;
+
+//NOTE: Сторона контента: собираем аффиксы со всех источников сущности.
+/**
+ * Источники:
+ *  - main hand / offhand (WEAPON/SHIELD),
+ *  - броня по слотам (ARMOR),
+ *  - Curios (JEWELRY), если мод загружен,
+ *  - временные бафы/ауры (позже).
+ */
+public final class GrimfateAffixExtraction {
+    private GrimfateAffixExtraction() {}
+
+    public static List<AffixAggregator.AffixEntry> extractFromEntity(LivingEntity entity) {
+        var b = new AffixAggregator.ListBuilder();
+
+        // 1) Оружие/щит
+        appendFromStack(entity.getMainHandItem(), b, Affix.Source.WEAPON);
+        appendFromStack(entity.getOffhandItem(), b, guessOffhandSource(entity.getOffhandItem()));
+
+        // 2) Броня
+        for (ItemStack armor : entity.getArmorSlots()) {
+            appendFromStack(armor, b, Affix.Source.ARMOR);
+        }
+
+        // 3) Curios (бижутерия), если мод загружен
+        if (CuriosCompat.isLoaded()) {
+            // как только появится реальный обход — раскомментировать и использовать
+            // CuriosCompat.forEachEquipped(entity, (stack, slotId) -> {
+            //     appendFromStack(stack, b, Affix.Source.JEWELRY);
+            // });
+        }
+
+        // 4) Бафы/ауры — TODO позже
+
+        return b.build();
+    }
+
+    private static Affix.Source guessOffhandSource(ItemStack offhand) {
+        // Пока считаем оффхенд щитом, если предмет помечен тегом grimfate:shields — добавим позже.
+        // До ввода тегов возвращаем SHIELD как безопасную эвристику.
+        return Affix.Source.SHIELD;
+    }
+
+    private static void appendFromStack(ItemStack stack, AffixAggregator.ListBuilder b, Affix.Source src) {
+        if (stack == null || stack.isEmpty()) return;
+        readFromStack(stack, src, b);
+    }
+
+    /**
+     * Чтение аффиксов из data-component'а {@link com.doomspire.grimfate.item.comp.AffixListComponent}.
+     * Суммируем все роллы аффикса в единую величину (magnitude) и добавляем запись для агрегатора.
+     *
+     * Формат компонента:
+     *   entries: [{ id: "namespace:affix_id", rolls: [ ...floats... ] }, ...]
+     */
+    private static void readFromStack(ItemStack stack, Affix.Source src, AffixAggregator.ListBuilder b) {
+        var comp = stack.get(ModDataComponents.AFFIX_LIST.get());
+        if (comp == null) return;
+
+        for (var e : comp.entries()) {
+            if (e == null) continue;
+
+            // Парсим ID
+            ResourceLocation id = ResourceLocation.tryParse(e.id());
+            if (id == null) continue; // некорректный id — пропускаем
+
+            // Сводим список роллов к одной величине (по умолчанию — сумма)
+            float mag = 0f;
+            var rolls = e.rolls();
+            if (rolls != null) {
+                for (Float r : rolls) {
+                    if (r != null && !Float.isNaN(r) && !Float.isInfinite(r)) {
+                        mag += r;
+                    }
+                }
+            }
+
+            // Пропускаем «пустые» величины
+            if (mag == 0f) continue;
+
+            b.add(id, mag, src);
+        }
+    }
+}
+
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\CustomHudOverlay.java -----
 package com.doomspire.grimfate.client;
 
@@ -3817,6 +4738,74 @@ public final class AddSpellCommand {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\commands\AddSpellCommand.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\compat\bettercombat\BetterCombatBridge.java -----
+package com.doomspire.grimfate.compat.bettercombat;
+
+import com.mojang.logging.LogUtils;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.neoforged.fml.ModList;
+import org.slf4j.Logger;
+
+//NOTE: Мягкая интеграция с Better Combat (без жёсткой зависимости)
+/**
+ * Задача «моста» — централизовать:
+ *  1) проверку наличия мода,
+ *  2) константы с их тегами (Item Tags), чтобы удобно маппить наши теги в data-ресурсах,
+ *  3) место для будущих утилит, если понадобится.
+ *
+ * ВАЖНО:
+ *  - Реальная привязка к анимациям происходит через data-теги (JSON),
+ *    где мы включаем наши теги (#grimfate:daggers, #grimfate:swords, #grimfate:two_handed …)
+ *    в их теги (bettercombat:daggers, bettercombat:swords, …).
+ *  - Этот класс НЕ тянет никаких API Better Combat во время компиляции.
+ */
+public final class BetterCombatBridge {
+    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final String MODID = "bettercombat";
+
+    private BetterCombatBridge() {}
+
+    /** Есть ли установлен Better Combat. */
+    public static boolean isLoaded() {
+        return ModList.get().isLoaded(MODID);
+    }
+
+    /** Вызвать из commonSetup для логов диагностики. */
+    public static void init() {
+        if (isLoaded()) {
+            LOGGER.info("[Grimfate] Better Combat detected. Weapon tags will be bridged via data pack.");
+        } else {
+            LOGGER.warn("[Grimfate] Better Combat NOT detected. Using vanilla/Gecko animations only.");
+        }
+    }
+
+    // ---------- Их основные item-теги (называем ровно как у них; используем только как ссылки в ресурсах) ----------
+
+    public static final TagKey<Item> BC_SWORDS      = itemTag("swords");
+    public static final TagKey<Item> BC_DAGGERS     = itemTag("daggers");
+    public static final TagKey<Item> BC_AXES        = itemTag("axes");
+    public static final TagKey<Item> BC_MACES       = itemTag("maces");
+    public static final TagKey<Item> BC_HAMMERS     = itemTag("hammers");
+    public static final TagKey<Item> BC_SPEARS      = itemTag("spears");
+    public static final TagKey<Item> BC_POLEARMS    = itemTag("polearms");
+    public static final TagKey<Item> BC_GREATSWORDS = itemTag("greatswords");
+    public static final TagKey<Item> BC_GREATAXES   = itemTag("greataxes");
+    public static final TagKey<Item> BC_STAVES      = itemTag("staves"); // если у них есть такой набор (покрываем на будущее)
+
+    /** Наш общий флаг-свойство (двуручность) — маппится в группы greatswords/greataxes/spears/… через data. */
+    public static final TagKey<Item> GF_TWO_HANDED  =
+            TagKey.create(net.minecraft.core.registries.Registries.ITEM,
+                    ResourceLocation.fromNamespaceAndPath("grimfate", "two_handed"));
+
+    private static TagKey<Item> itemTag(String path) {
+        return TagKey.create(net.minecraft.core.registries.Registries.ITEM,
+                ResourceLocation.fromNamespaceAndPath(MODID, path));
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\compat\bettercombat\BetterCombatBridge.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\compat\curios\CuriosCompat.java -----
 package com.doomspire.grimfate.compat.curios;
 
@@ -4031,13 +5020,12 @@ n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\core\Config.jav
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\core\Grimfate.java -----
 package com.doomspire.grimfate.core;
 
+import com.doomspire.grimcore.affix.AffixAggregator;
+import com.doomspire.grimcore.affix.ModAffixes;
 import com.doomspire.grimfate.commands.AddSpellCommand;
 import com.doomspire.grimfate.config.ClientConfig;
 import com.doomspire.grimfate.network.ModNetworking;
-import com.doomspire.grimfate.registry.ModArmorMaterials;
-import com.doomspire.grimfate.registry.ModDataComponents;
-import com.doomspire.grimfate.registry.ModEntityTypes;
-import com.doomspire.grimfate.registry.ModItems;
+import com.doomspire.grimfate.registry.*;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -4082,13 +5070,23 @@ public class Grimfate {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::addCreative);
 
-        // Клиент — все клиентские MOD-бус листенеры (вместе с Hotkeys onRegisterKeys)
+        // Клиент — все клиентские MOD-бус листенеры
         if (FMLEnvironment.dist.isClient()) {
-                GrimfateClient.registerModBusListeners(modEventBus);
-            }
+            GrimfateClient.registerModBusListeners(modEventBus);
+        }
     }
 
-    private void commonSetup(final FMLCommonSetupEvent e) { /* ... */ }
+    private void commonSetup(final FMLCommonSetupEvent e) {
+        e.enqueueWork(com.doomspire.grimfate.registry.ModCurios::init);
+        e.enqueueWork(() -> {
+            // 1) Базовые аффиксы ядра (dr_all, max_mana_flat, fire_resist и т.д.)
+            ModAffixes.bootstrap();
+            // 2) Подключаем экстрактор аффиксов со стороны контента
+            AffixAggregator.setExtractor(com.doomspire.grimfate.affix.GrimfateAffixExtraction::extractFromEntity);
+
+            LOGGER.info("[Grimfate] AffixAggregator hooked and ModAffixes bootstrapped.");
+        });
+    }
 
     private void addCreative(final BuildCreativeModeTabContentsEvent e) { /* ... */ }
 
@@ -4104,6 +5102,7 @@ public class Grimfate {
     @net.neoforged.bus.api.SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) { /* ... */ }
 }
+
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\core\Grimfate.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\core\GrimfateClient.java -----
 package com.doomspire.grimfate.core;
@@ -4360,6 +5359,37 @@ public class GenericGeoArmorItem extends ArmorItem implements GeoItem {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\GenericGeoArmorItem.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\BaseBowItem.java -----
+package com.doomspire.grimfate.item;
+
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+
+//NOTE: База для всех луков Grimfate
+/**
+ * Поведение:
+ * - Стрельба, натяжение, зачарования (Infinity и т.п.) — как у ванильного BowItem.
+ * - Визуальные стадии натяжения (pull0/1/2) настраиваются ТОЛЬКО ресурсами (JSON overrides).
+ * - 3D-в руках и 2D-в инвентаре задаются через loader "neoforge:separate_transforms".
+ *
+ * Зачем класс:
+ * - Точка для будущих расширений (подключение WeaponProfileComponent, статов, перков).
+ * - Единый тип для наших реестров/тегов (если понадобится специфичное поведение позже).
+ */
+public class BaseBowItem extends BowItem {
+    public BaseBowItem(Properties props) { super(props); }
+
+    @Override
+    public UseAnim getUseAnimation(ItemStack stack) {
+        // Оставляем анимацию как у обычного лука (нужно для предикатов "pull"/"pulling")
+        return UseAnim.BOW;
+    }
+
+    // Если понадобится — здесь будет хук под WeaponProfileComponent/аффиксы/прочее.
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\BaseBowItem.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListComponent.java -----
 package com.doomspire.grimfate.item.comp;
 
@@ -5036,6 +6066,43 @@ public final class ModArmorMaterials {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModArmorMaterials.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModCurios.java -----
+package com.doomspire.grimfate.registry;
+
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
+import net.neoforged.fml.ModList;
+
+//NOTE: Мост к Curios: проверка наличия, константы слотов, потенциальные хелперы
+/**
+ * Слоты в Curios 9.5.x регистрируются через data/curios/... (см. ресурсы нашего мода).
+ */
+public final class ModCurios {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    public static final String SLOT_RING = "ring";
+    public static final String SLOT_NECKLACE = "necklace";
+    public static final String SLOT_BELT = "belt";
+
+    private ModCurios() {}
+
+    /** true, если Curios присутствует. */
+    public static boolean isLoaded() {
+        return ModList.get().isLoaded("curios");
+    }
+
+    /** Позвать из commonSetup для логов и ранней диагностики. */
+    public static void init() {
+        if (isLoaded()) {
+            LOGGER.info("[Grimfate] Curios detected. Slot types are provided via data files (curios/slots).");
+        } else {
+            LOGGER.warn("[Grimfate] Curios NOT detected. Jewelry slots will be unavailable.");
+        }
+    }
+}
+
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModCurios.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModDataComponents.java -----
 package com.doomspire.grimfate.registry;
 
@@ -5759,22 +6826,577 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhi
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_wraps.json -----
 { "parent": "item/generated", "textures": { "layer0": "grimfate:item/rawhide_wraps" } }
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_wraps.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow.json -----
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   { "parent": "grimfate:item/weakling_bow_3d" },
+  "gui":    { "parent": "grimfate:item/weakling_bow_2d" },
+  "fixed":  { "parent": "grimfate:item/weakling_bow_2d" },
+  "ground": { "parent": "grimfate:item/weakling_bow_2d" },
+  "head":   { "parent": "grimfate:item/weakling_bow_2d" }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_2d.json -----
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "grimfate:item/weakling_bow"
+  }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_2d.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3d.json -----
+{
+  "parent": "item/handheld",
+  "textures": { "layer0": "grimfate:item/weakling_bow_3d" },
+  "overrides": [
+    { "predicate": { "pulling": 1 },                 "model": "grimfate:item/weakling_bow_3dpull2" },
+    { "predicate": { "pull": 0.65, "pulling": 1 },   "model": "grimfate:item/weakling_bow_3dpull1" },
+    { "predicate": { "pull": 0.1,  "pulling": 1 },   "model": "grimfate:item/weakling_bow_3dpull0" }
+  ]
+}
+
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3d.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull0.json -----
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [32, 32],
+	"textures": {
+		"3": "weakling_bow_3dpull0",
+		"particle": "block/weakling_bow_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 9, 6],
+			"to": [9, 16, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 9, 6]},
+			"faces": {
+				"north": {"uv": [6.5, 1, 7.5, 4.5], "texture": "#3"},
+				"east": {"uv": [6.5, 4.5, 7.5, 8], "texture": "#3"},
+				"south": {"uv": [7.5, 1, 8.5, 4.5], "texture": "#3"},
+				"west": {"uv": [7.5, 4.5, 8.5, 8], "texture": "#3"},
+				"up": {"uv": [12, 12, 11, 11], "texture": "#3"},
+				"down": {"uv": [1, 11.5, 0, 12.5], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.1, 4.2, 7],
+			"to": [8.9, 9.2, 9],
+			"rotation": {"angle": -22.5, "axis": "x", "origin": [7, 7.2, 7]},
+			"faces": {
+				"north": {"uv": [6.5, 8, 7.5, 10.5], "texture": "#3"},
+				"east": {"uv": [7.5, 8, 8.5, 10.5], "texture": "#3"},
+				"south": {"uv": [8.5, 1, 9.5, 3.5], "texture": "#3"},
+				"west": {"uv": [8.5, 3.5, 9.5, 6], "texture": "#3"},
+				"up": {"uv": [2, 12.5, 1, 11.5], "texture": "#3"},
+				"down": {"uv": [12.5, 1, 11.5, 2], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.35, 0.1, 9.7],
+			"to": [8.65, 5.1, 11.2],
+			"rotation": {"angle": -45, "axis": "x", "origin": [7, 3.1, 9.45]},
+			"faces": {
+				"north": {"uv": [9.5, 6, 10.25, 8.5], "texture": "#3"},
+				"east": {"uv": [9.5, 8.5, 10.25, 11], "texture": "#3"},
+				"south": {"uv": [10.5, 1, 11.25, 3.5], "texture": "#3"},
+				"west": {"uv": [10.5, 3.5, 11.25, 6], "texture": "#3"},
+				"up": {"uv": [3.75, 12.25, 3, 11.5], "texture": "#3"},
+				"down": {"uv": [12.25, 3, 11.5, 3.75], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.1, 16, 6.3],
+			"to": [8.9, 21, 8.3],
+			"rotation": {"angle": 22.5, "axis": "x", "origin": [7, 16, 6.3]},
+			"faces": {
+				"north": {"uv": [8.5, 6, 9.5, 8.5], "texture": "#3"},
+				"east": {"uv": [8.5, 8.5, 9.5, 11], "texture": "#3"},
+				"south": {"uv": [9.5, 1, 10.5, 3.5], "texture": "#3"},
+				"west": {"uv": [9.5, 3.5, 10.5, 6], "texture": "#3"},
+				"up": {"uv": [3, 12.5, 2, 11.5], "texture": "#3"},
+				"down": {"uv": [12.5, 2, 11.5, 3], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.35, 20.6, 8.45],
+			"to": [8.65, 25.6, 9.95],
+			"rotation": {"angle": 45, "axis": "x", "origin": [7, 20.6, 8.2]},
+			"faces": {
+				"north": {"uv": [6, 10.5, 6.75, 13], "texture": "#3"},
+				"east": {"uv": [10.5, 6, 11.25, 8.5], "texture": "#3"},
+				"south": {"uv": [7, 10.5, 7.75, 13], "texture": "#3"},
+				"west": {"uv": [10.5, 8.5, 11.25, 11], "texture": "#3"},
+				"up": {"uv": [4.75, 12.25, 4, 11.5], "texture": "#3"},
+				"down": {"uv": [12.25, 4, 11.5, 4.75], "texture": "#3"}
+			}
+		},
+		{
+			"from": [8, 1, 10],
+			"to": [8, 24, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 11, 10]},
+			"faces": {
+				"north": {"uv": [0, 0, 0, 11.5], "texture": "#3"},
+				"east": {"uv": [0, 0, 3, 11.5], "texture": "#3"},
+				"south": {"uv": [0, 0, 0, 11.5], "texture": "#3"},
+				"west": {"uv": [3, 0, 6, 11.5], "texture": "#3"},
+				"up": {"uv": [0, 3, 0, 0], "texture": "#3"},
+				"down": {"uv": [0, 0, 0, 3], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.5, 12.5, -1],
+			"to": [8.5, 13.5, 15],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6.5, 12.5, 6]},
+			"faces": {
+				"north": {"uv": [6, 9, 6.5, 9.5], "texture": "#3"},
+				"east": {"uv": [6, 0, 14, 0.5], "texture": "#3"},
+				"south": {"uv": [6, 9, 6.5, 9.5], "texture": "#3"},
+				"west": {"uv": [6, 0.5, 14, 1], "texture": "#3"},
+				"up": {"uv": [6.5, 9, 6, 1], "texture": "#3"},
+				"down": {"uv": [6, 1, 6.5, 9], "texture": "#3"}
+			}
+		},
+		{
+			"from": [8, 12, -3],
+			"to": [8, 14, 0],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 12, -3]},
+			"faces": {
+				"north": {"uv": [0, 0, 0, 1], "texture": "#3"},
+				"east": {"uv": [8, 11, 9.5, 12], "texture": "#3"},
+				"south": {"uv": [0, 0, 0, 1], "texture": "#3"},
+				"west": {"uv": [9.5, 11, 11, 12], "texture": "#3"},
+				"up": {"uv": [0, 1.5, 0, 0], "texture": "#3"},
+				"down": {"uv": [0, 0, 0, 1.5], "texture": "#3"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"thirdperson_lefthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"firstperson_righthand": {
+			"rotation": [26, 21, -74],
+			"translation": [-10, -1.25, -1.5]
+		},
+		"firstperson_lefthand": {
+			"rotation": [20, -15, -75],
+			"translation": [-6, 1.25, -5.75]
+		},
+		"ground": {
+			"rotation": [40, 0, 0],
+			"translation": [0, 3.75, 0]
+		},
+		"gui": {
+			"rotation": [0, 90, 0],
+			"translation": [0, -3.75, 0]
+		},
+		"fixed": {
+			"rotation": [0, 90, 0],
+			"translation": [-0.75, -4.25, 0]
+		}
+	},
+	"groups": [
+		{
+			"name": "weakling_bow_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3, 4, 5, 6, 7]
+		}
+	]
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull0.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull1.json -----
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [64, 64],
+	"textures": {
+		"3": "weakling_bow_3dpull1",
+		"particle": "block/weakling_bow_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 9, 6],
+			"to": [9, 16, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 9, 6]},
+			"faces": {
+				"north": {"uv": [4.5, 5.25, 5, 7], "texture": "#3"},
+				"east": {"uv": [5.25, 5.25, 5.75, 7], "texture": "#3"},
+				"south": {"uv": [0, 5.5, 0.5, 7.25], "texture": "#3"},
+				"west": {"uv": [0.75, 5.5, 1.25, 7.25], "texture": "#3"},
+				"up": {"uv": [4.25, 7.5, 3.75, 7], "texture": "#3"},
+				"down": {"uv": [7.5, 7, 7, 7.5], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.1, 4.7, 8],
+			"to": [8.9, 9.7, 10],
+			"rotation": {"angle": -45, "axis": "x", "origin": [7, 7.7, 8]},
+			"faces": {
+				"north": {"uv": [5.5, 1, 6, 2.25], "texture": "#3"},
+				"east": {"uv": [1.5, 5.5, 2, 6.75], "texture": "#3"},
+				"south": {"uv": [2.25, 5.5, 2.75, 6.75], "texture": "#3"},
+				"west": {"uv": [5.5, 2.5, 6, 3.75], "texture": "#3"},
+				"up": {"uv": [5, 7.75, 4.5, 7.25], "texture": "#3"},
+				"down": {"uv": [5.75, 7.25, 5.25, 7.75], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.35, 1.6, 11.45],
+			"to": [8.65, 6.6, 12.95],
+			"rotation": {"angle": -45, "axis": "x", "origin": [7, 4.6, 11.2]},
+			"faces": {
+				"north": {"uv": [6.25, 1, 6.625, 2.25], "texture": "#3"},
+				"east": {"uv": [6.25, 2.5, 6.625, 3.75], "texture": "#3"},
+				"south": {"uv": [6.75, 4, 7.125, 5.25], "texture": "#3"},
+				"west": {"uv": [6.75, 5.5, 7.125, 6.75], "texture": "#3"},
+				"up": {"uv": [7.875, 4.375, 7.5, 4], "texture": "#3"},
+				"down": {"uv": [7.875, 4.75, 7.5, 5.125], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.1, 16, 6.3],
+			"to": [8.9, 21, 8.3],
+			"rotation": {"angle": 45, "axis": "x", "origin": [7, 16, 6.3]},
+			"faces": {
+				"north": {"uv": [3, 5.5, 3.5, 6.75], "texture": "#3"},
+				"east": {"uv": [3.75, 5.5, 4.25, 6.75], "texture": "#3"},
+				"south": {"uv": [6, 4, 6.5, 5.25], "texture": "#3"},
+				"west": {"uv": [6, 5.5, 6.5, 6.75], "texture": "#3"},
+				"up": {"uv": [0.5, 8, 0, 7.5], "texture": "#3"},
+				"down": {"uv": [1.25, 7.5, 0.75, 8], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.35, 17.6, 9.7],
+			"to": [8.65, 19.1, 14.7],
+			"rotation": {"angle": -45, "axis": "x", "origin": [7, 19.35, 9.7]},
+			"faces": {
+				"north": {"uv": [7.5, 5.5, 7.875, 5.875], "texture": "#3"},
+				"east": {"uv": [7, 1, 8.25, 1.375], "texture": "#3"},
+				"south": {"uv": [7.5, 6.25, 7.875, 6.625], "texture": "#3"},
+				"west": {"uv": [1.5, 7, 2.75, 7.375], "texture": "#3"},
+				"up": {"uv": [7.375, 3, 7, 1.75], "texture": "#3"},
+				"down": {"uv": [3.375, 7, 3, 8.25], "texture": "#3"}
+			}
+		},
+		{
+			"from": [8, 2, 13],
+			"to": [8, 23, 21],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 11, 14]},
+			"faces": {
+				"north": {"uv": [1.5, 7.75, 1.5, 13], "texture": "#3"},
+				"east": {"uv": [0, 0, 2, 5.25], "texture": "#3"},
+				"south": {"uv": [1.5, 7.75, 1.5, 13], "texture": "#3"},
+				"west": {"uv": [2.25, 0, 4.25, 5.25], "texture": "#3"},
+				"up": {"uv": [1.75, 9.75, 1.75, 7.75], "texture": "#3"},
+				"down": {"uv": [1.75, 7.75, 1.75, 9.75], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.5, 12.5, 2],
+			"to": [8.5, 13.5, 18],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6.5, 12.5, 9]},
+			"faces": {
+				"north": {"uv": [5.5, 4, 5.75, 4.25], "texture": "#3"},
+				"east": {"uv": [4.5, 0, 8.5, 0.25], "texture": "#3"},
+				"south": {"uv": [5.5, 4.5, 5.75, 4.75], "texture": "#3"},
+				"west": {"uv": [4.5, 0.5, 8.5, 0.75], "texture": "#3"},
+				"up": {"uv": [4.75, 5, 4.5, 1], "texture": "#3"},
+				"down": {"uv": [5.25, 1, 5, 5], "texture": "#3"}
+			}
+		},
+		{
+			"from": [8, 12, 0],
+			"to": [8, 14, 3],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 12, 0]},
+			"faces": {
+				"north": {"uv": [7.75, 1.75, 7.75, 2.25], "texture": "#3"},
+				"east": {"uv": [7, 3.25, 7.75, 3.75], "texture": "#3"},
+				"south": {"uv": [7.75, 1.75, 7.75, 2.25], "texture": "#3"},
+				"west": {"uv": [6, 7, 6.75, 7.5], "texture": "#3"},
+				"up": {"uv": [2, 8.5, 2, 7.75], "texture": "#3"},
+				"down": {"uv": [2, 7.75, 2, 8.5], "texture": "#3"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"thirdperson_lefthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"firstperson_righthand": {
+			"rotation": [26, 21, -74],
+			"translation": [-10, -1.25, -1.5]
+		},
+		"firstperson_lefthand": {
+			"rotation": [20, -15, -75],
+			"translation": [-6, 1.25, -5.75]
+		},
+		"ground": {
+			"rotation": [40, 0, 0],
+			"translation": [0, 3.75, 0]
+		},
+		"gui": {
+			"rotation": [0, 90, 0],
+			"translation": [0, -3.75, 0]
+		},
+		"fixed": {
+			"rotation": [0, 90, 0],
+			"translation": [-0.75, -4.25, 0]
+		}
+	},
+	"groups": [
+		{
+			"name": "weakling_bow_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3, 4, 5, 6, 7]
+		}
+	]
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull1.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull2.json -----
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [64, 64],
+	"textures": {
+		"2": "weakling_bow_3dpull2",
+		"particle": "block/weakling_bow_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 9, 6],
+			"to": [9, 16, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 9, 6]},
+			"faces": {
+				"north": {"uv": [4.75, 4.75, 5.25, 6.5], "texture": "#2"},
+				"east": {"uv": [0, 5, 0.5, 6.75], "texture": "#2"},
+				"south": {"uv": [5, 0.5, 5.5, 2.25], "texture": "#2"},
+				"west": {"uv": [0.75, 5, 1.25, 6.75], "texture": "#2"},
+				"up": {"uv": [5.25, 7.25, 4.75, 6.75], "texture": "#2"},
+				"down": {"uv": [7.5, 5, 7, 5.5], "texture": "#2"}
+			}
+		},
+		{
+			"from": [7.1, 4.7, 7.75],
+			"to": [8.9, 9.7, 9.75],
+			"rotation": {"angle": -45, "axis": "x", "origin": [7, 7.7, 7.75]},
+			"faces": {
+				"north": {"uv": [1.5, 5, 2, 6.25], "texture": "#2"},
+				"east": {"uv": [2.25, 5, 2.75, 6.25], "texture": "#2"},
+				"south": {"uv": [5, 2.5, 5.5, 3.75], "texture": "#2"},
+				"west": {"uv": [3, 5, 3.5, 6.25], "texture": "#2"},
+				"up": {"uv": [6, 7.5, 5.5, 7], "texture": "#2"},
+				"down": {"uv": [7.5, 5.75, 7, 6.25], "texture": "#2"}
+			}
+		},
+		{
+			"from": [7.35, 5.1, 9.95],
+			"to": [8.65, 6.6, 14.95],
+			"rotation": {"angle": 22.5, "axis": "x", "origin": [7, 4.85, 11.95]},
+			"faces": {
+				"north": {"uv": [1, 7.25, 1.375, 7.625], "texture": "#2"},
+				"east": {"uv": [6.25, 3.5, 7.5, 3.875], "texture": "#2"},
+				"south": {"uv": [7.25, 1.25, 7.625, 1.625], "texture": "#2"},
+				"west": {"uv": [6.25, 4.25, 7.5, 4.625], "texture": "#2"},
+				"up": {"uv": [6.625, 6.25, 6.25, 5], "texture": "#2"},
+				"down": {"uv": [6.875, 0.5, 6.5, 1.75], "texture": "#2"}
+			}
+		},
+		{
+			"from": [7.1, 16, 6.3],
+			"to": [8.9, 21, 8.3],
+			"rotation": {"angle": 45, "axis": "x", "origin": [7, 16, 6.3]},
+			"faces": {
+				"north": {"uv": [5.5, 4, 6, 5.25], "texture": "#2"},
+				"east": {"uv": [5.5, 5.5, 6, 6.75], "texture": "#2"},
+				"south": {"uv": [5.75, 0.5, 6.25, 1.75], "texture": "#2"},
+				"west": {"uv": [5.75, 2, 6.25, 3.25], "texture": "#2"},
+				"up": {"uv": [7.5, 7, 7, 6.5], "texture": "#2"},
+				"down": {"uv": [7.75, 0.5, 7.25, 1], "texture": "#2"}
+			}
+		},
+		{
+			"from": [7.35, 17.85, 9.95],
+			"to": [8.65, 19.35, 14.95],
+			"rotation": {"angle": -22.5, "axis": "x", "origin": [7, 19.6, 9.95]},
+			"faces": {
+				"north": {"uv": [1.75, 7.25, 2.125, 7.625], "texture": "#2"},
+				"east": {"uv": [1.5, 6.5, 2.75, 6.875], "texture": "#2"},
+				"south": {"uv": [7, 7.25, 7.375, 7.625], "texture": "#2"},
+				"west": {"uv": [6.5, 2, 7.75, 2.375], "texture": "#2"},
+				"up": {"uv": [3.375, 7.75, 3, 6.5], "texture": "#2"},
+				"down": {"uv": [6.625, 6.5, 6.25, 7.75], "texture": "#2"}
+			}
+		},
+		{
+			"from": [8, 4, 14],
+			"to": [8, 21, 22],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 11, 18]},
+			"faces": {
+				"north": {"uv": [2.5, 7.25, 2.5, 11.5], "texture": "#2"},
+				"east": {"uv": [0, 0, 2, 4.25], "texture": "#2"},
+				"south": {"uv": [2.75, 7.25, 2.75, 11.5], "texture": "#2"},
+				"west": {"uv": [2.25, 0, 4.25, 4.25], "texture": "#2"},
+				"up": {"uv": [3.75, 9.25, 3.75, 7.25], "texture": "#2"},
+				"down": {"uv": [4, 7.25, 4, 9.25], "texture": "#2"}
+			}
+		},
+		{
+			"from": [7.5, 12.5, 5],
+			"to": [8.5, 13.5, 21],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6.5, 12.5, 12]},
+			"faces": {
+				"north": {"uv": [3.75, 5, 4, 5.25], "texture": "#2"},
+				"east": {"uv": [0, 4.5, 4, 4.75], "texture": "#2"},
+				"south": {"uv": [5, 4, 5.25, 4.25], "texture": "#2"},
+				"west": {"uv": [4.5, 0, 8.5, 0.25], "texture": "#2"},
+				"up": {"uv": [4.75, 4.5, 4.5, 0.5], "texture": "#2"},
+				"down": {"uv": [4.5, 4.75, 4.25, 8.75], "texture": "#2"}
+			}
+		},
+		{
+			"from": [8, 12, 3],
+			"to": [8, 14, 6],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 12, 3]},
+			"faces": {
+				"north": {"uv": [3.75, 5.5, 3.75, 6], "texture": "#2"},
+				"east": {"uv": [6.5, 2.75, 7.25, 3.25], "texture": "#2"},
+				"south": {"uv": [4, 5.5, 4, 6], "texture": "#2"},
+				"west": {"uv": [0, 7, 0.75, 7.5], "texture": "#2"},
+				"up": {"uv": [3.75, 7, 3.75, 6.25], "texture": "#2"},
+				"down": {"uv": [4, 6.25, 4, 7], "texture": "#2"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"thirdperson_lefthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"firstperson_righthand": {
+			"rotation": [26, 21, -74],
+			"translation": [-10, -1.25, -1.5]
+		},
+		"firstperson_lefthand": {
+			"rotation": [20, -15, -75],
+			"translation": [-6, 1.25, -5.75]
+		},
+		"ground": {
+			"rotation": [40, 0, 0],
+			"translation": [0, 3.75, 0]
+		},
+		"gui": {
+			"rotation": [0, 90, 0],
+			"translation": [0, -3.75, 0]
+		},
+		"fixed": {
+			"rotation": [0, 90, 0],
+			"translation": [-0.75, -4.25, 0]
+		}
+	},
+	"groups": [
+		{
+			"name": "weakling_bow_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3, 4, 5, 6, 7]
+		}
+	]
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull2.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\axes.json -----
+{ "replace": false, "values": ["#grimfate:axes"] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\axes.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\bows.json -----
+{ "replace": false, "values": ["#grimfate:bows"] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\bows.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\crossbows.json -----
+{ "replace": false, "values": ["#grimfate:crossbows"] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\crossbows.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\daggers.json -----
+{
+  "replace": false,
+  "values": [
+    "#grimfate:daggers"
+  ]
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\daggers.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\greataxes.json -----
+{ "replace": false, "values": ["#grimfate:two_handed"] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\greataxes.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\greatswords.json -----
+{ "replace": false, "values": ["#grimfate:two_handed"] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\greatswords.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\hammers.json -----
+{ "replace": false, "values": ["#grimfate:hammers"] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\hammers.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\staves.json -----
+{ "replace": false, "values": ["#grimfate:staves"] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\staves.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\swords.json -----
+{ "replace": false, "values": ["#grimfate:swords"] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\bettercombat\tags\items\swords.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\curios\slot_types\belt.json -----
+{
+  "name": "belt",
+  "size": 1,
+  "order": 30,
+  "icon": "curios:slot/belt",
+  "cosmetic": false,
+  "entities": ["curios:player_like"]
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\curios\slot_types\belt.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\curios\slot_types\necklace.json -----
 {
   "name": "necklace",
   "size": 1,
-  "cosmetic": false
+  "order": 20,
+  "icon": "curios:slot/necklace",
+  "cosmetic": false,
+  "entities": ["curios:player_like"]
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\curios\slot_types\necklace.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\curios\slot_types\ring.json -----
 {
-  "name": "ring",
   "size": 2,
-  "cosmetic": false
+  "order": 10,
+  "icon": "curios:slot/ring",
+  "cosmetic": false,
+  "entities": ["curios:player_like"]
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\curios\slot_types\ring.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\curios\tags\items\belt.json -----
+{ "values": [] }
+n----- END FILE: .\grimfate\src\main\resources\data\curios\tags\items\belt.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\curios\tags\items\necklace.json -----
 { "values": ["grimfate:copper_necklace","grimfate:bronze_necklace"] }
 
@@ -5905,15 +7527,43 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\le
 { "values": ["grimfate:copper_helmet", "grimfate:copper_chestplate", "grimfate:copper_leggings", "grimfate:copper_boots"] }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\plate.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\axes.json -----
+{ "replace": false, "values": [
+
+] }
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\axes.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\bows.json -----
+{ "replace": false, "values": [
+  "grimfate:weakliing_bow"
+] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\bows.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\crossbows.json -----
+{ "replace": false, "values": [
+
+] }
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\crossbows.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\daggers.json -----
-{ "replace": false, "values": [] }
+{ "replace": false, "values": [
+
+] }
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\daggers.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\melee_weapons.json -----
-{ "replace": false, "values": ["grimfate:rusty_sword", "grimfate:copper_sword"] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\melee_weapons.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\ranged_weapons.json -----
-{ "replace": false, "values": ["grimfate:simple_bow", "grimfate:hunters_bow"] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\ranged_weapons.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\greataxes.json -----
+{ "replace": false, "values": [
+
+] }
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\greataxes.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\greatswords.json -----
+{ "replace": false, "values": [
+
+] }
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\greatswords.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\hammers.json -----
+{ "replace": false, "values": [
+
+] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\hammers.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\archer.json -----
 { "values": [] }
 
@@ -5926,23 +7576,18 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\mag
 { "values": [] }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\melee.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\shields.json -----
-{ "replace": false, "values": ["grimfate:weathered_shield"] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\shields.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\staves.json -----
-{
-  "replace": false,
-  "values": [
-    "grimfate:weathered_staff",
-    "grimfate:apprentice_staff"
-  ]
-}
-
+{ "replace": false, "values": [
+  "grimfate:scholar_staff"
+] }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\staves.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\two_handed.json -----
-{ "replace": false, "values": [] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\two_handed.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\swords.json -----
+{ "replace": false, "values": [
+  "grimfate:copper_sword"
+] }
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\swords.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\neoforge\loot_modifiers\global_loot_modifiers.json -----
 {
   "replace": false,
