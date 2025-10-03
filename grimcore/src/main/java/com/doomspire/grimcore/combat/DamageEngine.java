@@ -2,6 +2,7 @@ package com.doomspire.grimcore.combat;
 
 import com.doomspire.grimcore.attach.MobStatsAttachment;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.attach.ThreatService;
 import com.doomspire.grimcore.net.GrimcoreNetworking;
 import com.doomspire.grimcore.stat.DamageTypes;
 import com.doomspire.grimcore.stat.ModAttachments;
@@ -14,6 +15,7 @@ import net.minecraft.world.entity.player.Player;
 import java.util.concurrent.ThreadLocalRandom;
 
 // NOTE: Централизованный пайплайн урона — последовательность расчёта каждого hit.
+// NOTE: Генерация угрозы тоже подключена здесь
 public final class DamageEngine {
     private DamageEngine() {}
 
@@ -125,6 +127,11 @@ public final class DamageEngine {
                 tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
                 tAtt.markDirty();
             }
+        }
+
+        // === НОВОЕ: генерация угрозы по фактически нанесённому урону ===
+        if (applied > 0 && ctx.attacker instanceof Player pA) {
+            ThreatService.addThreatFromDamage(target, pA, applied);
         }
 
         // --- lifesteal/manasteal по фактически нанесённому урону ---

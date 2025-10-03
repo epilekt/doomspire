@@ -2,6 +2,7 @@ package com.doomspire.grimcore.events;
 
 import com.doomspire.grimcore.attach.MobStatsAttachment;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.attach.ThreatService;            // ← добавлено
 import com.doomspire.grimcore.combat.DamageContext;
 import com.doomspire.grimcore.combat.DamageEngine;
 import com.doomspire.grimcore.combat.EnvironmentalDamage;
@@ -13,6 +14,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;               // ← добавлено
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
@@ -102,10 +104,18 @@ public final class CoreDamageEvents {
             }
             MobStatsAttachment tStats = living.getData(ModAttachments.MOB_STATS.get());
             if (tStats != null) {
-                tStats.setCurrentHealth(tStats.getCurrentHealth() - Math.round(base));
+                int before = tStats.getCurrentHealth();
+                int applied = Math.max(0, Math.min(before, Math.round(base))); // фактически нанесённый урон
+
+                // === НОВОЕ: угроза от урона игрока ===
+                if (applied > 0 && src instanceof Player pA) {
+                    ThreatService.addThreatFromDamage(living, pA, applied);
+                }
+
+                tStats.setCurrentHealth(before - applied);
                 tStats.markDirty();
                 event.setNewDamage(0f);
-                if (tStats.getCurrentHealth() <= 0) killByGeneric(living);
+                if ((before - applied) <= 0) killByGeneric(living);
             }
         }
     }

@@ -1,10 +1,7 @@
 package com.doomspire.grimcore;
 
 import com.doomspire.grimcore.data.ModDataComponents;
-import com.doomspire.grimcore.events.CoreDamageEvents;
-import com.doomspire.grimcore.events.CorePlayerEvents;
-import com.doomspire.grimcore.events.MobSpawnInit;
-import com.doomspire.grimcore.events.RegenTicker;
+import com.doomspire.grimcore.events.*;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -22,6 +19,7 @@ public final class Grimcore {
         NeoForge.EVENT_BUS.register(CorePlayerEvents.class);
         NeoForge.EVENT_BUS.register(MobSpawnInit.class);
         NeoForge.EVENT_BUS.register(RegenTicker.class);
+
 
     }
 }

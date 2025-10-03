@@ -1,14 +1,11 @@
 package com.doomspire.grimcore.stat;
 
 import com.doomspire.grimcore.Grimcore;
-import com.doomspire.grimcore.attach.MobStatsAttachment;
-import com.doomspire.grimcore.attach.PlayerLoadoutAttachment;
-import com.doomspire.grimcore.attach.PlayerProgressAttachment;
+import com.doomspire.grimcore.attach.*;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.attachment.AttachmentType;
-import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 
 public final class ModAttachments {
     private ModAttachments() {}
@@ -44,5 +41,14 @@ public final class ModAttachments {
                             .serialize(PlayerLoadoutAttachment.CODEC)      // хот-бар сохраняется
                             .sync(PlayerLoadoutAttachment.STREAM_CODEC)     // ВАЖНО: клиент видит изменения
                             .build());
+
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<MobThreatAttachment>> MOB_THREAT =
+            ATTACHMENT_TYPES.register("mob_threat",
+                    () -> AttachmentType.builder(MobThreatAttachment::new)
+                            .sync(MobThreatAttachment.STREAM_CODEC) // сеть
+                            //.serialize(MobThreatAttachment.CODEC) // добавим позже, если нужно сохранять в сейв
+                            .build());
+
+
 }
 
