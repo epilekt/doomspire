@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "  C",
+    " S ",
+    "S  "
+  ],
+  "key": {
+    "S": { "item": "minecraft:stick" },
+    "C": { "item": "grimfate:canvas_fabric" }
+  },
+  "result": { "item": "grimfate:scholar_staff", "count": 1 }
+}
+

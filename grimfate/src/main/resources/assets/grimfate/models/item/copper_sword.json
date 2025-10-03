@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   { "parent": "grimfate:item/copper_sword_3d" },
+  "gui":    { "parent": "grimfate:item/copper_sword_2d" },
+  "fixed":  { "parent": "grimfate:item/copper_sword_2d" },
+  "ground": { "parent": "grimfate:item/copper_sword_2d" },
+  "head":   { "parent": "grimfate:item/copper_sword_2d" }
+}

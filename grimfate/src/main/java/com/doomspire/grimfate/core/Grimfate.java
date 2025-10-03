@@ -57,8 +57,13 @@ public class Grimfate {
     }
 
     private void commonSetup(final FMLCommonSetupEvent e) {
-        e.enqueueWork(com.doomspire.grimfate.registry.ModCurios::init);
         e.enqueueWork(() -> {
+            com.doomspire.grimcore.spell.api.WeaponGate.setTwoHandedResolver((stack, player) -> {
+                var comp = stack.get(com.doomspire.grimfate.registry.ModDataComponents.WEAPON_PROFILE.get());
+                return comp != null && comp.twoHanded();
+            });
+            com.doomspire.grimfate.compat.bettercombat.BetterCombatBridge.init();
+            com.doomspire.grimfate.registry.ModCurios.init();
             // 1) Базовые аффиксы ядра (dr_all, max_mana_flat, fire_resist и т.д.)
             ModAffixes.bootstrap();
             // 2) Подключаем экстрактор аффиксов со стороны контента

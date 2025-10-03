@@ -5,7 +5,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
-
+//TODO: Привести к существующим в data тэгам, поправить WeaponPredicates.java
 public final class ModItemTags {
     public static final TagKey<Item> MELEE_WEAPONS  = tag("melee_weapons");
     public static final TagKey<Item> STAVES         = tag("staves");

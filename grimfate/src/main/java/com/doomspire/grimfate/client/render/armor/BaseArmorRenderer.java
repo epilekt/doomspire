@@ -4,17 +4,17 @@ import com.doomspire.grimfate.client.model.armor.BaseArmorGeoModel;
 import com.doomspire.grimfate.item.armor.GenericGeoArmorItem;
 import software.bernie.geckolib.renderer.GeoArmorRenderer;
 
+/**
+ * Базовый GeckoLib-рендерер брони для всех сетов Grimfate.
+ * Работает с {@link GenericGeoArmorItem} и читает пути к geo/texture из его Visual.
+ *
+ * ВАЖНО: имена костей (bone ids) должны совпадать с теми, что в .geo.json.
+ * Ниже указаны дефолтные/распространённые идентификаторы. Если в ваших моделях другие,
+ * просто поправьте строки на ваши bone ids.
+ */
 public class BaseArmorRenderer extends GeoArmorRenderer<GenericGeoArmorItem> {
+
     public BaseArmorRenderer() {
         super(new BaseArmorGeoModel());
-        // При необходимости можно связать кости:
-        //this.headBone = "armorHead";
-        //this.bodyBone = "armorBody";
-        //this.rightArmBone = "armorRightArm";
-        //this.leftArmBone = "armorLeftArm";
-        //this.rightLegBone = "armorRightLeg";
-        //this.leftLegBone = "armorLeftLeg";
-        //this.rightBootBone = "armorRightBoot";
-        //this.leftBootBone = "armorLeftBoot";
     }
 }

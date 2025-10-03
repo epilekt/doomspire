@@ -1,5 +1,7 @@
 package com.doomspire.grimcore.spell.api;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 
@@ -10,135 +12,93 @@ import java.util.Objects;
 import java.util.Set;
 
 //NOTE: DTO c требованиями к оружию для кастов/навыков.* Опираемся на теги предметов (data/*/tags/items/...) и флаг двуручности.
-//Использование
-// - Зафиксировать нужные теги (anyOf / allOf / noneOf) через фабрики или Builder
-// - Флаг twoHandedOnly=true — требуем, чтобы оружие относилось к группе "двуручное" +
-//   (проверяется в WeaponGate по нашему тегу items/two_handed или по профилю оружия)" +
-//Важно: класс — чистый перенос данных (без логики проверки)" +
-//Проверка выполняется в {@code WeaponGate}" +
+/**
+ * Семантика:
+ *  - anyOfTags — хотя бы один из тегов должен совпасть;
+ *  - allOfTags — каждый из тегов должен совпасть;
+ *  - noneOfTags — ни один из тегов не должен совпасть (запрещённые категории);
+ *  - twoHandedOnly — предмет должен быть двуручным (см. WeaponGate.TWO_HANDED и внешний резолвер).
+ */
 
-        public final class WeaponRequirement {
+public final class WeaponRequirement {
 
-            /** Должен совпасть ХОТЯ БЫ один тег из набора. */
-            private final Set<TagKey<Item>> anyOfTags;
+    private final Set<TagKey<Item>> anyOfTags;
+    private final Set<TagKey<Item>> allOfTags;
+    private final Set<TagKey<Item>> noneOfTags;
+    private final boolean twoHandedOnly;
 
-            /** Должны совпасть ВСЕ теги из набора. */
-            private final Set<TagKey<Item>> allOfTags;
+    private WeaponRequirement(Set<TagKey<Item>> anyOf,
+                              Set<TagKey<Item>> allOf,
+                              Set<TagKey<Item>> noneOf,
+                              boolean twoHandedOnly) {
+        this.anyOfTags = anyOf == null ? Collections.emptySet() : Set.copyOf(anyOf);
+        this.allOfTags = allOf == null ? Collections.emptySet() : Set.copyOf(allOf);
+        this.noneOfTags = noneOf == null ? Collections.emptySet() : Set.copyOf(noneOf);
+        this.twoHandedOnly = twoHandedOnly;
+    }
 
-            /** НЕЛЬЗЯ, чтобы совпал ЛЮБОЙ из этих тегов. */
-            private final Set<TagKey<Item>> noneOfTags;
+    // ==== getters, которые ожидает WeaponGate ====
+    public Set<TagKey<Item>> anyOfTags()   { return anyOfTags; }
+    public Set<TagKey<Item>> allOfTags()   { return allOfTags; }
+    public Set<TagKey<Item>> noneOfTags()  { return noneOfTags; }
+    public boolean twoHandedOnly()         { return twoHandedOnly; }
 
-            /** Требуется ли строго двуручное оружие (по тегу/профилю). */
-            private final boolean twoHandedOnly;
+    // ==== Builder API ====
+    public static Builder builder() { return new Builder(); }
 
-            private WeaponRequirement(Set<TagKey<Item>> anyOfTags,
-                                      Set<TagKey<Item>> allOfTags,
-                                      Set<TagKey<Item>> noneOfTags,
-                                      boolean twoHandedOnly) {
-                this.anyOfTags = unmodifiableCopy(anyOfTags);
-                this.allOfTags = unmodifiableCopy(allOfTags);
-                this.noneOfTags = unmodifiableCopy(noneOfTags);
-                this.twoHandedOnly = twoHandedOnly;
-            }
+    public static final class Builder {
+        private final LinkedHashSet<TagKey<Item>> any = new LinkedHashSet<>();
+        private final LinkedHashSet<TagKey<Item>> all = new LinkedHashSet<>();
+        private final LinkedHashSet<TagKey<Item>> none = new LinkedHashSet<>();
+        private boolean twoHanded;
 
-            private static <T> Set<T> unmodifiableCopy(Set<T> in) {
-                if (in == null || in.isEmpty()) return Collections.emptySet();
-                return Collections.unmodifiableSet(new LinkedHashSet<>(in));
-                // LinkedHashSet — предсказуемый порядок для дебага/тултипов
-            }
+        /** Требуется совпасть ХОТЯ БЫ с одним из этих тегов. */
+        public Builder anyOf(TagKey<Item> tag) { if (tag != null) any.add(tag); return this; }
+        public Builder anyOf(ResourceLocation tagId) { return anyOf(tagKey(tagId)); }
 
-            public Set<TagKey<Item>> anyOfTags()     { return anyOfTags; }
-            public Set<TagKey<Item>> allOfTags()     { return allOfTags; }
-            public Set<TagKey<Item>> noneOfTags()    { return noneOfTags; }
-            public boolean twoHandedOnly()           { return twoHandedOnly; }
+        /** Требуется совпасть со ВСЕМИ этими тегами. */
+        public Builder allOf(TagKey<Item> tag) { if (tag != null) all.add(tag); return this; }
+        public Builder allOf(ResourceLocation tagId) { return allOf(tagKey(tagId)); }
 
-            // ---------- Фабрики для удобства ----------
+        /** Предмет НЕ должен иметь ни один из этих тегов. */
+        public Builder noneOf(TagKey<Item> tag) { if (tag != null) none.add(tag); return this; }
+        public Builder noneOf(ResourceLocation tagId) { return noneOf(tagKey(tagId)); }
 
-            /** Требуется совпасть хотя бы с одним из тегов. */
-            @SafeVarargs
-            public static WeaponRequirement anyOf(TagKey<Item>... any) {
-                return new Builder().anyOf(any).build();
-            }
+        /** Требовать двуручность. */
+        public Builder requireTwoHanded(boolean v) { this.twoHanded = v; return this; }
 
-            /** Требуется совпасть по всем указанным тегам. */
-            @SafeVarargs
-            public static WeaponRequirement allOf(TagKey<Item>... all) {
-                return new Builder().allOf(all).build();
-            }
-
-            /** Запрет по тегам (blacklist). */
-            @SafeVarargs
-            public static WeaponRequirement noneOf(TagKey<Item>... none) {
-                return new Builder().noneOf(none).build();
-            }
-
-            /** Чистый билдер без предзаданных тегов. */
-            public static Builder builder() {
-                return new Builder();
-            }
-
-            // ---------- Builder ----------
-
-            public static final class Builder {
-                private final Set<TagKey<Item>> any = new LinkedHashSet<>();
-                private final Set<TagKey<Item>> all = new LinkedHashSet<>();
-                private final Set<TagKey<Item>> none = new LinkedHashSet<>();
-                private boolean twoHandedOnly = false;
-
-                @SafeVarargs
-                public final Builder anyOf(TagKey<Item>... tags) {
-                    if (tags != null) any.addAll(Arrays.asList(tags));
-                    return this;
-                }
-
-                @SafeVarargs
-                public final Builder allOf(TagKey<Item>... tags) {
-                    if (tags != null) all.addAll(Arrays.asList(tags));
-                    return this;
-                }
-
-                @SafeVarargs
-                public final Builder noneOf(TagKey<Item>... tags) {
-                    if (tags != null) none.addAll(Arrays.asList(tags));
-                    return this;
-                }
-
-                /** Строго двуручное оружие (по тегу items/two_handed или WeaponProfile). */
-                public Builder twoHandedOnly(boolean value) {
-                    this.twoHandedOnly = value;
-                    return this;
-                }
-
-                public WeaponRequirement build() {
-                    return new WeaponRequirement(any, all, none, twoHandedOnly);
-                }
-            }
-
-            // ---------- equals/hashCode/toString для удобства логов/сравнений ----------
-
-            @Override
-            public boolean equals(Object o) {
-                if (this == o) return true;
-                if (!(o instanceof WeaponRequirement that)) return false;
-                return twoHandedOnly == that.twoHandedOnly
-                        && Objects.equals(anyOfTags, that.anyOfTags)
-                        && Objects.equals(allOfTags, that.allOfTags)
-                        && Objects.equals(noneOfTags, that.noneOfTags);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(anyOfTags, allOfTags, noneOfTags, twoHandedOnly);
-            }
-
-            @Override
-            public String toString() {
-                return "WeaponRequirement{" +
-                        "any=" + anyOfTags +
-                        ", all=" + allOfTags +
-                        ", none=" + noneOfTags +
-                        ", twoHandedOnly=" + twoHandedOnly +
-                        '}';
-            }
+        public WeaponRequirement build() {
+            return new WeaponRequirement(any, all, none, twoHanded);
         }
 
+        private static TagKey<Item> tagKey(ResourceLocation id) {
+            Objects.requireNonNull(id, "tag id");
+            return TagKey.create(Registries.ITEM, id);
+        }
+    }
+
+    // ==== Удобные фабрики под наши теги ====
+    public static WeaponRequirement stavesOnly() {
+        return builder()
+                .anyOf(ResourceLocation.fromNamespaceAndPath("grimfate", "staves"))
+                .build();
+    }
+
+    public static WeaponRequirement bowsOnly() {
+        return builder()
+                .anyOf(ResourceLocation.fromNamespaceAndPath("grimfate", "bows"))
+                .build();
+    }
+
+    public static WeaponRequirement twoHandedFrom(ResourceLocation... families) {
+        Builder b = builder().requireTwoHanded(true);
+        if (families != null) for (ResourceLocation id : families) b.anyOf(id);
+        return b.build();
+    }
+
+    @Override
+    public String toString() {
+        return "WeaponRequirement{any=" + anyOfTags + ", all=" + allOfTags +
+                ", none=" + noneOfTags + ", twoHanded=" + twoHandedOnly + "}";
+    }
+}

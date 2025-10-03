@@ -6,7 +6,7 @@ import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-//NOTE: Реестр предметов grimfate
+//NOTE: Регистрация предметов grimfate из подмодулей
 
 /**
  * Все конкретные предметы объявляются и регистрируются в подмодулях:

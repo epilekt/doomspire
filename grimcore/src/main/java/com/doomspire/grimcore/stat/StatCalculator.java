@@ -1,6 +1,8 @@
 package com.doomspire.grimcore.stat;
 
+import com.doomspire.grimcore.affix.AffixAggregator;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import net.minecraft.world.entity.LivingEntity;
 
 
 //NOTE:Пересчитывает агрегированные статы (StatSnapshot) на основе атрибутов, предметов и бонусов.
@@ -47,15 +49,23 @@ public class StatCalculator {
         //  - возможные бонусы от атрибутов/скилл-дерева.
         snapshot.damageReductionAll = 0f;
 
-        // TODO: сюда позже подключим бонусы предметов и аффиксы через агрегатор статов
-
         // Клампы безопасных диапазонов (если потребуется)
         snapshot.evasionChance = clamp01(snapshot.evasionChance);
         snapshot.damageReductionAll = clamp01(snapshot.damageReductionAll);
 
         return snapshot;
     }
-
+    /**
+     * Полный расчёт со всеми модификаторами предметов/аффиксов.
+     * ВНИМАНИЕ: owner может быть null — тогда вернётся чистая версия без аффиксов.
+     */
+    public static StatSnapshot calculateWithAffixes(PlayerStatsAttachment att, LivingEntity owner) {
+        StatSnapshot snap = calculate(att);
+        if (owner != null) {
+            AffixAggregator.applyAll(snap, owner);
+        }
+        return snap;
+    }
     private static float clamp01(float v) {
         if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
         return Math.max(0f, Math.min(1f, v));

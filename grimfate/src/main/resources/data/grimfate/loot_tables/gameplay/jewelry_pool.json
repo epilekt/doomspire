@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "conditions": [
+        { "condition": "minecraft:random_chance", "chance": 0.20 }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:tag",
+          "name": "grimfate:jewelry",
+          "expand": true
+        }
+      ]
+    }
+  ]
+}

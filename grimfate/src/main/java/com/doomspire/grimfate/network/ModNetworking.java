@@ -40,37 +40,43 @@ public final class ModNetworking {
         reg.playToServer(C2SCastSpellSlotPayload.TYPE, C2SCastSpellSlotPayload.STREAM_CODEC,
                 ModNetworking::handleCastSpellSlot);
 
-        reg.playToServer(C2SCastAutoBoltPayload.TYPE, C2SCastAutoBoltPayload.STREAM_CODEC,
-                (msg, ctx) -> {
-                    ctx.enqueueWork(() -> {
-                        var sp = (net.minecraft.server.level.ServerPlayer) ctx.player();
-                        if (sp == null) return;
+        reg.playToServer(C2SCastAutoBoltPayload.TYPE, C2SCastAutoBoltPayload.STREAM_CODEC, (msg, ctx) -> {
+            ctx.enqueueWork(() -> {
+                ServerPlayer sp = (ServerPlayer) ctx.player();
+                if (sp == null) return;
 
-                        // 1) Определяем в какой руке посох (серверная валидация)
-                        var stack = (msg.hand() == net.minecraft.world.InteractionHand.MAIN_HAND)
-                                ? sp.getMainHandItem() : sp.getOffhandItem();
+                // 1) Какая рука?
+                var stack = (msg.hand() == net.minecraft.world.InteractionHand.MAIN_HAND)
+                        ? sp.getMainHandItem() : sp.getOffhandItem();
+                if (stack.isEmpty()) return;
 
-                        if (stack.isEmpty()) return;
-                        if (!com.doomspire.grimfate.combat.WeaponPredicates.isStaff(stack)) return;
+                // 2) Требуется посох — серверная проверка + дружелюбный отказ
+                // TODO: заменить на WeaponGate.check(...) как только подключим API grimcore WeaponGate.
+                if (!com.doomspire.grimfate.combat.WeaponPredicates.isStaff(stack)) {
+                    // Сообщение игроку (верхний HUD), + мягкий "отказ" звуком
+                    sp.displayClientMessage(net.minecraft.network.chat.Component.translatable("grimfate.msg.require_staff"), true);
+                    sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                            net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 0.7f, 1.0f);
+                    return;
+                }
 
-                        // 2) Ядро: посчитать и списать ресурсы (мана/скейлы/кд/скорость)
-                        var result = com.doomspire.grimcore.spell.autobolt.AutoBoltService.computeAndConsume(sp, stack);
-                        if (!result.ok()) return;
+                // 3) Ядро: посчитать/списать ресурсы (мана, кд, скорость)
+                var result = com.doomspire.grimcore.spell.autobolt.AutoBoltService.computeAndConsume(sp, stack);
+                if (!result.ok()) return;
 
-                        // 3) Контент: спавним снаряд с указанной скоростью
-                        var proj = new com.doomspire.grimfate.entity.BoltProjectileEntity(sp.level(), sp);
-                        proj.shootForward(sp, result.projectileSpeed());
-                        sp.level().addFreshEntity(proj);
+                // 4) Контент: спавним снаряд
+                var proj = new com.doomspire.grimfate.entity.BoltProjectileEntity(sp.level(), sp);
+                proj.shootForward(sp, result.projectileSpeed());
+                sp.level().addFreshEntity(proj);
 
-                        // 4) Презентация/звук (контент)
-                        sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                                net.minecraft.sounds.SoundEvents.WITHER_SHOOT,
-                                net.minecraft.sounds.SoundSource.PLAYERS, 0.6f, 1.0f);
+                // 5) Звук выстрела
+                sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                        net.minecraft.sounds.SoundEvents.WITHER_SHOOT, net.minecraft.sounds.SoundSource.PLAYERS, 0.6f, 1.0f);
 
-                        // 5) КД — ставим НА КОНКРЕТНЫЙ ПОСОХ (пер-айтем)
-                        sp.getCooldowns().addCooldown(stack.getItem(), result.cooldownTicks());
-                    });
-                });
+                // 6) КД — на сам предмет (пер-айтем)
+                sp.getCooldowns().addCooldown(stack.getItem(), result.cooldownTicks());
+            });
+        });
     }
 
     public static void sendAllocatePoint(String attrId) {
@@ -148,6 +154,19 @@ public final class ModNetworking {
 
             var spell = GrimSpells.get(spellId);
             if (spell == null) return;
+
+            // === оружейные требования ===
+            var req = com.doomspire.grimfate.spell.SpellRequirements.require(spellId);
+            if (req != null) {
+                var gate = com.doomspire.grimcore.spell.api.WeaponGate.check(sp, req);
+                if (!gate.ok) {
+                    sp.displayClientMessage(net.minecraft.network.chat.Component.literal(gate.reason), true);
+                    sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                            net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 0.7f, 1.0f);
+                    return;
+                }
+            }
+
 
             var lvl = sp.serverLevel();
             var ctxSpell = new SpellContext(lvl, sp, slot, 0, 0, 0, null);
