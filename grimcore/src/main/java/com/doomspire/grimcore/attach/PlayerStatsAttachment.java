@@ -129,9 +129,26 @@ public class PlayerStatsAttachment {
         return true;
     }
 
+    /** Базовый снапшот без учёта аффиксов экипировки. */
     public StatSnapshot getSnapshot() {
         if (dirty) {
             snapshot = StatCalculator.calculate(this);
+            dirty = false;
+        }
+        return snapshot;
+    }
+
+    /**
+     * Полный снапшот с применением аффиксов владельца.
+     * Если owner == null — вернёт базовый вариант как в {@link #getSnapshot()}.
+     */
+    public StatSnapshot getSnapshotWithAffixes(Player owner) {
+        if (dirty) {
+            if (owner != null) {
+                snapshot = StatCalculator.calculateWithAffixes(this, owner);
+            } else {
+                snapshot = StatCalculator.calculate(this);
+            }
             dirty = false;
         }
         return snapshot;
@@ -145,7 +162,7 @@ public class PlayerStatsAttachment {
         buf.writeVarInt(att.unspentPoints);
         buf.writeVarInt(att.currentHealth);
         buf.writeVarInt(att.currentMana);
-        buf.writeVarInt(att.overshield); // <<< нове поле
+        buf.writeVarInt(att.overshield); // <<< новое поле
         for (Attributes a : Attributes.values()) {
             buf.writeVarInt(att.getAttribute(a));
         }

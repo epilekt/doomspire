@@ -62,20 +62,20 @@ public final class Armors {
                             ArmorItem.Type.BOOTS, new Item.Properties(), copperVisual()));
 
     // ===== RAWHIDE =====
-    public static final DeferredHolder<Item, Item> RAWHIDE_HELMET =
-            ModItems.ITEMS.register("rawhide_helmet",
+    public static final DeferredHolder<Item, Item> RAWHIDE_HOOD =
+            ModItems.ITEMS.register("rawhide_hood",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.rawhideHolder(),
                             ArmorItem.Type.HELMET, new Item.Properties(), rawhideVisual()));
 
-    public static final DeferredHolder<Item, Item> RAWHIDE_CHESTPLATE =
-            ModItems.ITEMS.register("rawhide_chestplate",
+    public static final DeferredHolder<Item, Item> RAWHIDE_JACKET =
+            ModItems.ITEMS.register("rawhide_jacket",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.rawhideHolder(),
                             ArmorItem.Type.CHESTPLATE, new Item.Properties(), rawhideVisual()));
 
-    public static final DeferredHolder<Item, Item> RAWHIDE_LEGGINGS =
-            ModItems.ITEMS.register("rawhide_leggings",
+    public static final DeferredHolder<Item, Item> RAWHIDE_WRAPS =
+            ModItems.ITEMS.register("rawhide_wraps",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.rawhideHolder(),
                             ArmorItem.Type.LEGGINGS, new Item.Properties(), rawhideVisual()));
@@ -87,26 +87,26 @@ public final class Armors {
                             ArmorItem.Type.BOOTS, new Item.Properties(), rawhideVisual()));
 
     // ===== LINEN =====
-    public static final DeferredHolder<Item, Item> LINEN_HELMET =
-            ModItems.ITEMS.register("linen_helmet",
+    public static final DeferredHolder<Item, Item> LINEN_HAT =
+            ModItems.ITEMS.register("linen_hat",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.HELMET, new Item.Properties(), linenVisual()));
 
-    public static final DeferredHolder<Item, Item> LINEN_CHESTPLATE =
-            ModItems.ITEMS.register("linen_chestplate",
+    public static final DeferredHolder<Item, Item> LINEN_CAPE =
+            ModItems.ITEMS.register("linen_cape",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.CHESTPLATE, new Item.Properties(), linenVisual()));
 
-    public static final DeferredHolder<Item, Item> LINEN_LEGGINGS =
-            ModItems.ITEMS.register("linen_leggings",
+    public static final DeferredHolder<Item, Item> LINEN_PANTS =
+            ModItems.ITEMS.register("linen_pants",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.LEGGINGS, new Item.Properties(), linenVisual()));
 
-    public static final DeferredHolder<Item, Item> LINEN_BOOTS =
-            ModItems.ITEMS.register("linen_boots",
+    public static final DeferredHolder<Item, Item> LINEN_SHOES =
+            ModItems.ITEMS.register("linen_shoes",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.BOOTS, new Item.Properties(), linenVisual()));

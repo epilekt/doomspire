@@ -50,6 +50,7 @@
 .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltResult.java
 .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltService.java
 .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltTuning.java
+.\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\impl\AutoBoltSpell.java
 .\grimcore\src\main\java\com\doomspire\grimcore\spell\GrimSpells.java
 .\grimcore\src\main\java\com\doomspire\grimcore\stat\Attributes.java
 .\grimcore\src\main\java\com\doomspire\grimcore\stat\DamageTypes.java
@@ -81,13 +82,16 @@
 .\grimfate\src\main\java\com\doomspire\grimfate\core\GrimfateClient.java
 .\grimfate\src\main\java\com\doomspire\grimfate\entity\BoltProjectileEntity.java
 .\grimfate\src\main\java\com\doomspire\grimfate\events\LoadoutTickEvents.java
+.\grimfate\src\main\java\com\doomspire\grimfate\item\armor\Armors.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\GenericGeoArmorItem.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\BaseBowItem.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListComponent.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\WeaponProfileComponent.java
+.\grimfate\src\main\java\com\doomspire\grimfate\item\jewelry\Jewelry.java
+.\grimfate\src\main\java\com\doomspire\grimfate\item\materials\Materials.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\StaffItem.java
+.\grimfate\src\main\java\com\doomspire\grimfate\item\weapons\Weapons.java
 .\grimfate\src\main\java\com\doomspire\grimfate\loot\ModLootModifiers.java
-.\grimfate\src\main\java\com\doomspire\grimfate\loot\RustyRingDropModifier.java
 .\grimfate\src\main\java\com\doomspire\grimfate\network\AutoBoltServer.java
 .\grimfate\src\main\java\com\doomspire\grimfate\network\ModNetworking.java
 .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\C2SAllocatePointPayload.java
@@ -101,6 +105,7 @@
 .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModEntityTypes.java
 .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItems.java
 .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItemTags.java
+.\grimfate\src\main\java\com\doomspire\grimfate\spell\SpellRequirements.java
 .\grimfate\src\main\resources\assets\grimfate\geo\armor\copper_armor_set.geo.json
 .\grimfate\src\main\resources\assets\grimfate\geo\armor\linen_armor_set.geo.json
 .\grimfate\src\main\resources\assets\grimfate\geo\armor\rawhide_armor_set.geo.json
@@ -114,6 +119,10 @@
 .\grimfate\src\main\resources\assets\grimfate\models\item\copper_leggings.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\copper_necklace.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\copper_ring.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_2d.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_3d.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_3d.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\linen_cape.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\linen_hat.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\linen_pants.json
@@ -122,6 +131,9 @@
 .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_hood.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_jacket.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_wraps.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff_2d.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff_3d.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_2d.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3d.json
@@ -146,10 +158,17 @@
 .\grimfate\src\main\resources\data\grimfate\balance\attributes.json
 .\grimfate\src\main\resources\data\grimfate\balance\levels.json
 .\grimfate\src\main\resources\data\grimfate\balance\spells.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\copper_ring.json
-.\grimfate\src\main\resources\data\grimfate\recipes\apprentice_staff.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\global_loot_modifiers.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\jewelry_from_chests.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json
+.\grimfate\src\main\resources\data\grimfate\loot_tables\gameplay\jewelry_pool.json
+.\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabric.json
 .\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json
-.\grimfate\src\main\resources\data\grimfate\recipes\hunters_bow.json
+.\grimfate\src\main\resources\data\grimfate\recipes\copperforced_shield.json
+.\grimfate\src\main\resources\data\grimfate\recipes\rawhide.json
+.\grimfate\src\main\resources\data\grimfate\recipes\scholar_staff.json
+.\grimfate\src\main\resources\data\grimfate\recipes\weakling_bow.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\armor\boots.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\armor\chest.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\armor\cloth.json
@@ -164,9 +183,11 @@
 .\grimfate\src\main\resources\data\grimfate\tags\items\greataxes.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\greatswords.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\hammers.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\jewelry.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\role\archer.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\role\mage.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\role\melee.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\shields.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\staves.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\swords.json
 .\grimfate\src\main\resources\data\neoforge\loot_modifiers\global_loot_modifiers.json
@@ -941,9 +962,26 @@ public class PlayerStatsAttachment {
         return true;
     }
 
+    /** Базовый снапшот без учёта аффиксов экипировки. */
     public StatSnapshot getSnapshot() {
         if (dirty) {
             snapshot = StatCalculator.calculate(this);
+            dirty = false;
+        }
+        return snapshot;
+    }
+
+    /**
+     * Полный снапшот с применением аффиксов владельца.
+     * Если owner == null — вернёт базовый вариант как в {@link #getSnapshot()}.
+     */
+    public StatSnapshot getSnapshotWithAffixes(Player owner) {
+        if (dirty) {
+            if (owner != null) {
+                snapshot = StatCalculator.calculateWithAffixes(this, owner);
+            } else {
+                snapshot = StatCalculator.calculate(this);
+            }
             dirty = false;
         }
         return snapshot;
@@ -957,7 +995,7 @@ public class PlayerStatsAttachment {
         buf.writeVarInt(att.unspentPoints);
         buf.writeVarInt(att.currentHealth);
         buf.writeVarInt(att.currentMana);
-        buf.writeVarInt(att.overshield); // <<< нове поле
+        buf.writeVarInt(att.overshield); // <<< новое поле
         for (Attributes a : Attributes.values()) {
             buf.writeVarInt(att.getAttribute(a));
         }
@@ -1039,11 +1077,11 @@ import com.doomspire.grimcore.stat.ResistTypes;
 import com.doomspire.grimcore.stat.StatSnapshot;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-//NOTE: Централизованный пайплайн урона - задаем игре последовательность расчета урона от каждого hit
-
+// NOTE: Централизованный пайплайн урона — последовательность расчёта каждого hit.
 public final class DamageEngine {
     private DamageEngine() {}
 
@@ -1056,7 +1094,10 @@ public final class DamageEngine {
         if (targetIsPlayer) {
             PlayerStatsAttachment tAtt = target.getData(ModAttachments.PLAYER_STATS.get());
             if (tAtt == null) return 0f;
-            tSnap = tAtt.getSnapshot();
+            // ВАЖНО: берём снапшот с аффиксами владельца
+            tSnap = (target instanceof Player pT)
+                    ? tAtt.getSnapshotWithAffixes(pT)
+                    : tAtt.getSnapshot();
             // Evade
             if (ThreadLocalRandom.current().nextFloat() < tSnap.evasionChance) {
                 return 0f;
@@ -1074,8 +1115,11 @@ public final class DamageEngine {
         StatSnapshot aSnap = null;
         if (ctx.attacker != null) {
             var aPlayer = ctx.attacker.getData(ModAttachments.PLAYER_STATS.get());
-            if (aPlayer != null) aSnap = aPlayer.getSnapshot();
-            else {
+            if (aPlayer != null) {
+                aSnap = (ctx.attacker instanceof Player pA)
+                        ? aPlayer.getSnapshotWithAffixes(pA)
+                        : aPlayer.getSnapshot();
+            } else {
                 var aMob = ctx.attacker.getData(ModAttachments.MOB_STATS.get());
                 if (aMob != null) aSnap = aMob.getSnapshot();
             }
@@ -1187,25 +1231,18 @@ public final class DamageEngine {
 
     // ===== helpers =====
 
-    /**
-     * Чтение глобальной редукции урона. До того как поле появится в StatSnapshot,
-     * метод вернёт 0f, чтобы не ломать компиляцию.
-     */
+    /** Чтение глобальной редукции урона. До того как поле появится в StatSnapshot — вернёт 0f. */
     private static float readDamageReductionAll(StatSnapshot snap) {
         try {
-            // Публичное поле
-            var f = snap.getClass().getField("damageReductionAll");
+            var f = snap.getClass().getField("damageReductionAll"); // публичное поле
             Object v = f.get(snap);
             if (v instanceof Number n) return n.floatValue();
         } catch (Throwable ignored) {
-            // попробуем геттер
-            try {
+            try { // попробуем геттер на всякий случай
                 var m = snap.getClass().getMethod("damageReductionAll");
                 Object v = m.invoke(snap);
                 if (v instanceof Number n) return n.floatValue();
-            } catch (Throwable ignored2) {
-                // поля нет — используем 0
-            }
+            } catch (Throwable ignored2) {}
         }
         return 0f;
     }
@@ -2764,65 +2801,40 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 
-//NOTE: Утилита проверки оружия в руках игрока по {@link WeaponRequirement}.
 /**
- * Основана на тегах предметов и (опционально) внешнем резолвере двуручности.
- * Спроектирована так, чтобы:
- *  - работать только на NeoForge / ванильных API 1.21.1;
- *  - не иметь жёстких зависимостей на grimfate/контент;
- *  - легко расшириться профилем оружия позже (WeaponProfileComponent).
- *
- * Как работает:
- *  1) Проверяем main hand: теги any/all/none.
- *  2) Если требование не выполнено — пробуем offhand (для кинжалов и т.п., где каста
- *     может быть "из левой руки"). Это поведение можно отключить, если нужно — на уровне вызова.
- *  3) Если requirement.twoHandedOnly() == true:
- *      - предмет обязан иметь тег TWO_HANDED (по умолчанию grimfate:two_handed)
- *        или вернёт true внешний резолвер двуручности;
- *      - если offhand НЕ пуст и предмет двуручный — отказ (блок оффхенда).
- *
- * Внешний резолвер двуручности:
- *  Можно (необязательно) установить через {@link #setTwoHandedResolver(BiFunction)},
- *  например, чтобы читать ваш WeaponProfileComponent без прямой зависимости.
+ * Проверяет предмет в руках игрока против {@link WeaponRequirement}.
+ * Учитывает теги, (опционально) двуручность и занятость offhand.
  */
-
 public final class WeaponGate {
 
-    /** Глобальный тег «двуручное» — по умолчанию grimfate:two_handed. */
+    /** Глобальный тег «двуручное» — grimfate:two_handed. */
     public static final TagKey<Item> TWO_HANDED =
             TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("grimfate", "two_handed"));
 
-    /** Необязательный внешний резолвер двуручности (например, из WeaponProfileComponent). */
+    /** Внешний резолвер двуручности (например, читает WeaponProfileComponent в контент-модуле). */
     private static volatile BiFunction<ItemStack, Player, Boolean> TWO_HANDED_RESOLVER = null;
 
     private WeaponGate() {}
 
-    /**
-     * Основная проверка: смотрим main hand, затем offhand.
-     * Возвращает объект-результат с причиной отказа (для UX) либо OK.
-     */
+    /** Основная проверка: сначала main hand, затем offhand. */
     public static Result check(Player player, WeaponRequirement req) {
         Objects.requireNonNull(player, "player");
         Objects.requireNonNull(req, "requirement");
 
-        // 1) Пытаемся удовлетворить требование предметом из main hand
         ItemStack main = player.getMainHandItem();
         Result mainRes = checkStackAgainstRequirement(main, player, req, InteractionHand.MAIN_HAND, true);
         if (mainRes.ok) return mainRes;
 
-        // 2) Если не прошло — пробуем offhand (некоторые умения могут кастоваться из левой руки)
         ItemStack off = player.getOffhandItem();
         Result offRes = checkStackAgainstRequirement(off, player, req, InteractionHand.OFF_HAND, true);
         if (offRes.ok) return offRes;
 
-        // 3) Оба варианта не подошли — вернём более «информативную» причину
-        //    (предпочтительно с main hand, чтобы игрок сначала проверил основной слот)
         return preferInformative(mainRes, offRes);
     }
 
     /**
-     * Точечная проверка конкретного стака и руки.
-     * @param enforceOffhandBlock если true, при двуручности запретим занятый offhand.
+     * Точечная проверка стака в конкретной руке.
+     * @param enforceOffhandBlock если true — при двуручности запрещаем занятый offhand.
      */
     public static Result checkStackAgainstRequirement(ItemStack stack,
                                                       Player player,
@@ -2830,67 +2842,59 @@ public final class WeaponGate {
                                                       InteractionHand hand,
                                                       boolean enforceOffhandBlock) {
         if (stack.isEmpty()) {
-            return Result.fail("Требуется подходящее оружие в " + prettyHand(hand) + ".");
+            return Result.failKey("grimfate.msg.weapon_required",
+                    "Требуется подходящее оружие в " + prettyHand(hand) + ".");
         }
 
-        // Быстрые проверки тегов
+        // Теги
         if (!matchesAny(stack, req.anyOfTags())) {
-            return Result.fail("Оружие в " + prettyHand(hand) + " не подходит (нет нужной категории).");
+            return Result.failKey("grimfate.msg.weapon_required",
+                    "Оружие в " + prettyHand(hand) + " не подходит (нет нужной категории).");
         }
         if (!matchesAll(stack, req.allOfTags())) {
-            return Result.fail("Оружие в " + prettyHand(hand) + " не подходит (не все требования выполнены).");
+            return Result.failKey("grimfate.msg.weapon_required",
+                    "Оружие в " + prettyHand(hand) + " не подходит (не все требования выполнены).");
         }
         if (!matchesNone(stack, req.noneOfTags())) {
-            return Result.fail("Оружие в " + prettyHand(hand) + " запрещено для этого умения.");
+            return Result.failKey("grimfate.msg.weapon_forbidden",
+                    "Оружие в " + prettyHand(hand) + " запрещено для этого умения.");
         }
 
-        // Двуручность — отдельной проверкой (часто встречается и влияет на оффхенд/анимации)
+        // Двуручность
         if (req.twoHandedOnly()) {
             boolean isTwoHanded = isTwoHanded(stack, player);
             if (!isTwoHanded) {
-                return Result.fail("Нужно двуручное оружие.");
+                return Result.failKey("grimfate.msg.two_handed_needed", "Нужно двуручное оружие.");
             }
             if (enforceOffhandBlock && !player.getOffhandItem().isEmpty()) {
-                // Блокировка использования оффхенда с реальным двуручным оружием.
-                return Result.fail("Освободите вторую руку для двуручного оружия.");
+                return Result.failKey("grimfate.msg.free_offhand", "Освободите вторую руку для двуручного оружия.");
             }
         }
 
         return Result.ok(hand);
     }
 
-    // ---------- Внешняя интеграция (настраиваемые хуки) ----------
-
-    /**
-     * Установить внешний резолвер двуручности (например, чтобы читать WeaponProfileComponent).
-     * Возвращайте TRUE, если предмет двуручный по вашему профилю.
-     */
+    // ---------- внешняя интеграция ----------
+    /** Установить внешний резолвер двуручности. Возвращайте TRUE, если предмет двуручный. */
     public static void setTwoHandedResolver(BiFunction<ItemStack, Player, Boolean> resolver) {
         TWO_HANDED_RESOLVER = resolver;
     }
 
-    // ---------- Внутренняя логика ----------
-
+    // ---------- внутренняя логика ----------
     private static boolean isTwoHanded(ItemStack stack, Player player) {
-        // 1) Наш общий тег two_handed (grimfate:two_handed)
         if (stack.is(TWO_HANDED)) return true;
-
-        // 2) Внешний резолвер (например, WeaponProfileComponent из grimfate)
         BiFunction<ItemStack, Player, Boolean> resolver = TWO_HANDED_RESOLVER;
         if (resolver != null) {
             try {
                 Boolean r = resolver.apply(stack, player);
                 if (Boolean.TRUE.equals(r)) return true;
-            } catch (Throwable ignored) {
-                // Безопасность: внешняя интеграция не должна ломать гейт
-            }
+            } catch (Throwable ignored) {}
         }
-
         return false;
     }
 
     private static boolean matchesAny(ItemStack stack, Set<TagKey<Item>> tags) {
-        if (tags == null || tags.isEmpty()) return true; // нет требований — проходим
+        if (tags == null || tags.isEmpty()) return true;
         for (TagKey<Item> t : tags) if (stack.is(t)) return true;
         return false;
     }
@@ -2912,38 +2916,42 @@ public final class WeaponGate {
     }
 
     private static Result preferInformative(Result a, Result b) {
-        // Если одна из причин более конкретна — вернём её.
-        // На практике причина с двуручностью/оффхендом полезнее, чем просто "нет тега".
         String ra = a.reason == null ? "" : a.reason;
         String rb = b.reason == null ? "" : b.reason;
-        // Очень простая эвристика: более длинное сообщение считаем информативнее.
         return (ra.length() >= rb.length()) ? a : b;
     }
 
-    // ---------- Результат проверки ----------
-
+    // ---------- результат ----------
     public static final class Result {
         public final boolean ok;
-        public final String reason;              // для UX: почему отказано (локализуем позже)
-        public final InteractionHand usedHand;   // какой рукой можно кастовать (если ok)
+        /** Локализуемый ключ (если не null) — для UX сообщений на клиенте. */
+        public final String reasonKey;
+        /** Человекочитаемое пояснение (fallback, может быть на любом языке). */
+        public final String reason;
+        public final InteractionHand usedHand;
 
-        private Result(boolean ok, String reason, InteractionHand usedHand) {
+        private Result(boolean ok, String reasonKey, String reason, InteractionHand usedHand) {
             this.ok = ok;
+            this.reasonKey = reasonKey;
             this.reason = reason;
             this.usedHand = usedHand;
         }
 
         public static Result ok(InteractionHand hand) {
-            return new Result(true, null, hand);
+            return new Result(true, null, null, hand);
         }
 
-        public static Result fail(String reason) {
-            return new Result(false, reason, null);
+        public static Result failKey(String key, String fallbackText) {
+            return new Result(false, key, fallbackText, null);
+        }
+
+        public static Result fail(String fallbackText) {
+            return new Result(false, null, fallbackText, null);
         }
 
         @Override
         public String toString() {
-            return ok ? "OK(" + usedHand + ")" : "FAIL(" + reason + ")";
+            return ok ? "OK(" + usedHand + ")" : "FAIL(key=" + reasonKey + ", text=" + reason + ")";
         }
     }
 }
@@ -2952,6 +2960,8 @@ n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\Weapo
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponRequirement.java -----
 package com.doomspire.grimcore.spell.api;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 
@@ -2962,139 +2972,96 @@ import java.util.Objects;
 import java.util.Set;
 
 //NOTE: DTO c требованиями к оружию для кастов/навыков.* Опираемся на теги предметов (data/*/tags/items/...) и флаг двуручности.
-//Использование
-// - Зафиксировать нужные теги (anyOf / allOf / noneOf) через фабрики или Builder
-// - Флаг twoHandedOnly=true — требуем, чтобы оружие относилось к группе "двуручное" +
-//   (проверяется в WeaponGate по нашему тегу items/two_handed или по профилю оружия)" +
-//Важно: класс — чистый перенос данных (без логики проверки)" +
-//Проверка выполняется в {@code WeaponGate}" +
+/**
+ * Семантика:
+ *  - anyOfTags — хотя бы один из тегов должен совпасть;
+ *  - allOfTags — каждый из тегов должен совпасть;
+ *  - noneOfTags — ни один из тегов не должен совпасть (запрещённые категории);
+ *  - twoHandedOnly — предмет должен быть двуручным (см. WeaponGate.TWO_HANDED и внешний резолвер).
+ */
 
-        public final class WeaponRequirement {
+public final class WeaponRequirement {
 
-            /** Должен совпасть ХОТЯ БЫ один тег из набора. */
-            private final Set<TagKey<Item>> anyOfTags;
+    private final Set<TagKey<Item>> anyOfTags;
+    private final Set<TagKey<Item>> allOfTags;
+    private final Set<TagKey<Item>> noneOfTags;
+    private final boolean twoHandedOnly;
 
-            /** Должны совпасть ВСЕ теги из набора. */
-            private final Set<TagKey<Item>> allOfTags;
+    private WeaponRequirement(Set<TagKey<Item>> anyOf,
+                              Set<TagKey<Item>> allOf,
+                              Set<TagKey<Item>> noneOf,
+                              boolean twoHandedOnly) {
+        this.anyOfTags = anyOf == null ? Collections.emptySet() : Set.copyOf(anyOf);
+        this.allOfTags = allOf == null ? Collections.emptySet() : Set.copyOf(allOf);
+        this.noneOfTags = noneOf == null ? Collections.emptySet() : Set.copyOf(noneOf);
+        this.twoHandedOnly = twoHandedOnly;
+    }
 
-            /** НЕЛЬЗЯ, чтобы совпал ЛЮБОЙ из этих тегов. */
-            private final Set<TagKey<Item>> noneOfTags;
+    // ==== getters, которые ожидает WeaponGate ====
+    public Set<TagKey<Item>> anyOfTags()   { return anyOfTags; }
+    public Set<TagKey<Item>> allOfTags()   { return allOfTags; }
+    public Set<TagKey<Item>> noneOfTags()  { return noneOfTags; }
+    public boolean twoHandedOnly()         { return twoHandedOnly; }
 
-            /** Требуется ли строго двуручное оружие (по тегу/профилю). */
-            private final boolean twoHandedOnly;
+    // ==== Builder API ====
+    public static Builder builder() { return new Builder(); }
 
-            private WeaponRequirement(Set<TagKey<Item>> anyOfTags,
-                                      Set<TagKey<Item>> allOfTags,
-                                      Set<TagKey<Item>> noneOfTags,
-                                      boolean twoHandedOnly) {
-                this.anyOfTags = unmodifiableCopy(anyOfTags);
-                this.allOfTags = unmodifiableCopy(allOfTags);
-                this.noneOfTags = unmodifiableCopy(noneOfTags);
-                this.twoHandedOnly = twoHandedOnly;
-            }
+    public static final class Builder {
+        private final LinkedHashSet<TagKey<Item>> any = new LinkedHashSet<>();
+        private final LinkedHashSet<TagKey<Item>> all = new LinkedHashSet<>();
+        private final LinkedHashSet<TagKey<Item>> none = new LinkedHashSet<>();
+        private boolean twoHanded;
 
-            private static <T> Set<T> unmodifiableCopy(Set<T> in) {
-                if (in == null || in.isEmpty()) return Collections.emptySet();
-                return Collections.unmodifiableSet(new LinkedHashSet<>(in));
-                // LinkedHashSet — предсказуемый порядок для дебага/тултипов
-            }
+        /** Требуется совпасть ХОТЯ БЫ с одним из этих тегов. */
+        public Builder anyOf(TagKey<Item> tag) { if (tag != null) any.add(tag); return this; }
+        public Builder anyOf(ResourceLocation tagId) { return anyOf(tagKey(tagId)); }
 
-            public Set<TagKey<Item>> anyOfTags()     { return anyOfTags; }
-            public Set<TagKey<Item>> allOfTags()     { return allOfTags; }
-            public Set<TagKey<Item>> noneOfTags()    { return noneOfTags; }
-            public boolean twoHandedOnly()           { return twoHandedOnly; }
+        /** Требуется совпасть со ВСЕМИ этими тегами. */
+        public Builder allOf(TagKey<Item> tag) { if (tag != null) all.add(tag); return this; }
+        public Builder allOf(ResourceLocation tagId) { return allOf(tagKey(tagId)); }
 
-            // ---------- Фабрики для удобства ----------
+        /** Предмет НЕ должен иметь ни один из этих тегов. */
+        public Builder noneOf(TagKey<Item> tag) { if (tag != null) none.add(tag); return this; }
+        public Builder noneOf(ResourceLocation tagId) { return noneOf(tagKey(tagId)); }
 
-            /** Требуется совпасть хотя бы с одним из тегов. */
-            @SafeVarargs
-            public static WeaponRequirement anyOf(TagKey<Item>... any) {
-                return new Builder().anyOf(any).build();
-            }
+        /** Требовать двуручность. */
+        public Builder requireTwoHanded(boolean v) { this.twoHanded = v; return this; }
 
-            /** Требуется совпасть по всем указанным тегам. */
-            @SafeVarargs
-            public static WeaponRequirement allOf(TagKey<Item>... all) {
-                return new Builder().allOf(all).build();
-            }
-
-            /** Запрет по тегам (blacklist). */
-            @SafeVarargs
-            public static WeaponRequirement noneOf(TagKey<Item>... none) {
-                return new Builder().noneOf(none).build();
-            }
-
-            /** Чистый билдер без предзаданных тегов. */
-            public static Builder builder() {
-                return new Builder();
-            }
-
-            // ---------- Builder ----------
-
-            public static final class Builder {
-                private final Set<TagKey<Item>> any = new LinkedHashSet<>();
-                private final Set<TagKey<Item>> all = new LinkedHashSet<>();
-                private final Set<TagKey<Item>> none = new LinkedHashSet<>();
-                private boolean twoHandedOnly = false;
-
-                @SafeVarargs
-                public final Builder anyOf(TagKey<Item>... tags) {
-                    if (tags != null) any.addAll(Arrays.asList(tags));
-                    return this;
-                }
-
-                @SafeVarargs
-                public final Builder allOf(TagKey<Item>... tags) {
-                    if (tags != null) all.addAll(Arrays.asList(tags));
-                    return this;
-                }
-
-                @SafeVarargs
-                public final Builder noneOf(TagKey<Item>... tags) {
-                    if (tags != null) none.addAll(Arrays.asList(tags));
-                    return this;
-                }
-
-                /** Строго двуручное оружие (по тегу items/two_handed или WeaponProfile). */
-                public Builder twoHandedOnly(boolean value) {
-                    this.twoHandedOnly = value;
-                    return this;
-                }
-
-                public WeaponRequirement build() {
-                    return new WeaponRequirement(any, all, none, twoHandedOnly);
-                }
-            }
-
-            // ---------- equals/hashCode/toString для удобства логов/сравнений ----------
-
-            @Override
-            public boolean equals(Object o) {
-                if (this == o) return true;
-                if (!(o instanceof WeaponRequirement that)) return false;
-                return twoHandedOnly == that.twoHandedOnly
-                        && Objects.equals(anyOfTags, that.anyOfTags)
-                        && Objects.equals(allOfTags, that.allOfTags)
-                        && Objects.equals(noneOfTags, that.noneOfTags);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(anyOfTags, allOfTags, noneOfTags, twoHandedOnly);
-            }
-
-            @Override
-            public String toString() {
-                return "WeaponRequirement{" +
-                        "any=" + anyOfTags +
-                        ", all=" + allOfTags +
-                        ", none=" + noneOfTags +
-                        ", twoHandedOnly=" + twoHandedOnly +
-                        '}';
-            }
+        public WeaponRequirement build() {
+            return new WeaponRequirement(any, all, none, twoHanded);
         }
 
+        private static TagKey<Item> tagKey(ResourceLocation id) {
+            Objects.requireNonNull(id, "tag id");
+            return TagKey.create(Registries.ITEM, id);
+        }
+    }
 
+    // ==== Удобные фабрики под наши теги ====
+    public static WeaponRequirement stavesOnly() {
+        return builder()
+                .anyOf(ResourceLocation.fromNamespaceAndPath("grimfate", "staves"))
+                .build();
+    }
+
+    public static WeaponRequirement bowsOnly() {
+        return builder()
+                .anyOf(ResourceLocation.fromNamespaceAndPath("grimfate", "bows"))
+                .build();
+    }
+
+    public static WeaponRequirement twoHandedFrom(ResourceLocation... families) {
+        Builder b = builder().requireTwoHanded(true);
+        if (families != null) for (ResourceLocation id : families) b.anyOf(id);
+        return b.build();
+    }
+
+    @Override
+    public String toString() {
+        return "WeaponRequirement{any=" + anyOfTags + ", all=" + allOfTags +
+                ", none=" + noneOfTags + ", twoHanded=" + twoHandedOnly + "}";
+    }
+}
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponRequirement.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltResult.java -----
 package com.doomspire.grimcore.spell.autobolt;
@@ -3261,6 +3228,119 @@ public final class AutoBoltTuning {
 }
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltTuning.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\impl\AutoBoltSpell.java -----
+package com.doomspire.grimcore.spell.autobolt.impl;
+
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.spell.api.CastResult;
+import com.doomspire.grimcore.spell.api.Spell;
+import com.doomspire.grimcore.spell.api.SpellContext;
+import com.doomspire.grimcore.spell.api.SpellSchool;
+import com.doomspire.grimcore.spell.api.SpellTag;
+import com.doomspire.grimcore.spell.api.WeaponGate;
+import com.doomspire.grimcore.spell.api.WeaponRequirement;
+import com.doomspire.grimcore.spell.autobolt.AutoBoltService;
+import com.doomspire.grimcore.spell.autobolt.AutoBoltTuning;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.Collections;
+import java.util.Set;
+
+/**
+ * Ядровой спелл авто-болта для посохов:
+ * - требования к оружию: только #grimfate:staves;
+ * - расход/кулдаун берутся из AutoBoltTuning;
+ * - при cast выполняется только проверка + списание ресурсов через AutoBoltService;
+ *   сам спавн снаряда делается на стороне grimfate.
+ */
+public final class AutoBoltSpell implements Spell {
+
+    private static final ResourceLocation ID =
+            ResourceLocation.fromNamespaceAndPath("grimfate", "auto_bolt_staff");
+
+    private static final WeaponRequirement REQ_STAFF = WeaponRequirement.stavesOnly();
+    private static final AutoBoltTuning TUNING = AutoBoltTuning.get();
+
+    @Override
+    public ResourceLocation id() {
+        return ID;
+    }
+
+    @Override
+    public SpellSchool school() {
+        // Подбираем подходящую школу (можно завести отдельную SCHOOL:ARCANE или "STAFF").
+        return SpellSchool.ARCANE;
+    }
+
+    @Override
+    public Set<SpellTag> tags() {
+        // Теги для фильтров/баланса — пока пусто, можно добавить LMB_SPELL / BASIC_ATTACK и т.п.
+        return Collections.emptySet();
+    }
+
+    @Override
+    public int manaCost(SpellContext ctx) {
+        Player p = asPlayer(ctx.caster);
+        if (p == null) return 0;
+
+        ItemStack staff = findStaffInHands(p);
+        StatSnapshot snap = PlayerStatsAttachment.get(p).getSnapshot();
+        return TUNING.manaCost(snap, staff);
+    }
+
+    @Override
+    public int cooldownTicks(SpellContext ctx) {
+        Player p = asPlayer(ctx.caster);
+        if (p == null) return 0;
+
+        ItemStack staff = findStaffInHands(p);
+        StatSnapshot snap = PlayerStatsAttachment.get(p).getSnapshot();
+        return TUNING.cooldownTicks(snap, staff);
+    }
+
+    @Override
+    public CastResult cast(SpellContext ctx) {
+        if (!(ctx.caster instanceof ServerPlayer sp)) {
+            return CastResult.FAIL;
+        }
+
+        WeaponGate.Result gate = WeaponGate.check(sp, REQ_STAFF);
+        if (!gate.ok) return CastResult.FAIL;
+
+        ItemStack staff = sp.getItemInHand(
+                gate.usedHand != null ? gate.usedHand : InteractionHand.MAIN_HAND);
+
+        var res = AutoBoltService.computeAndConsume(sp, staff);
+        return res.ok() ? CastResult.OK : CastResult.FAIL;
+    }
+
+    // ---------- helpers ----------
+
+    private static Player asPlayer(LivingEntity e) {
+        return (e instanceof Player pl) ? pl : null;
+    }
+
+    private static ItemStack findStaffInHands(Player p) {
+        ItemStack main = p.getMainHandItem();
+        if (!main.isEmpty() && isStaff(main)) return main;
+        ItemStack off = p.getOffhandItem();
+        if (!off.isEmpty() && isStaff(off)) return off;
+        return ItemStack.EMPTY;
+    }
+
+    private static boolean isStaff(ItemStack stack) {
+        // Заглушка, заменим на тег #grimfate:staves
+        return true;
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\impl\AutoBoltSpell.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\spell\GrimSpells.java -----
 package com.doomspire.grimcore.spell;
 
@@ -3442,7 +3522,9 @@ n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\ResistType
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatCalculator.java -----
 package com.doomspire.grimcore.stat;
 
+import com.doomspire.grimcore.affix.AffixAggregator;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import net.minecraft.world.entity.LivingEntity;
 
 
 //NOTE:Пересчитывает агрегированные статы (StatSnapshot) на основе атрибутов, предметов и бонусов.
@@ -3489,15 +3571,23 @@ public class StatCalculator {
         //  - возможные бонусы от атрибутов/скилл-дерева.
         snapshot.damageReductionAll = 0f;
 
-        // TODO: сюда позже подключим бонусы предметов и аффиксы через агрегатор статов
-
         // Клампы безопасных диапазонов (если потребуется)
         snapshot.evasionChance = clamp01(snapshot.evasionChance);
         snapshot.damageReductionAll = clamp01(snapshot.damageReductionAll);
 
         return snapshot;
     }
-
+    /**
+     * Полный расчёт со всеми модификаторами предметов/аффиксов.
+     * ВНИМАНИЕ: owner может быть null — тогда вернётся чистая версия без аффиксов.
+     */
+    public static StatSnapshot calculateWithAffixes(PlayerStatsAttachment att, LivingEntity owner) {
+        StatSnapshot snap = calculate(att);
+        if (owner != null) {
+            AffixAggregator.applyAll(snap, owner);
+        }
+        return snap;
+    }
     private static float clamp01(float v) {
         if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
         return Math.max(0f, Math.min(1f, v));
@@ -4599,18 +4689,18 @@ import com.doomspire.grimfate.client.model.armor.BaseArmorGeoModel;
 import com.doomspire.grimfate.item.armor.GenericGeoArmorItem;
 import software.bernie.geckolib.renderer.GeoArmorRenderer;
 
+/**
+ * Базовый GeckoLib-рендерер брони для всех сетов Grimfate.
+ * Работает с {@link GenericGeoArmorItem} и читает пути к geo/texture из его Visual.
+ *
+ * ВАЖНО: имена костей (bone ids) должны совпадать с теми, что в .geo.json.
+ * Ниже указаны дефолтные/распространённые идентификаторы. Если в ваших моделях другие,
+ * просто поправьте строки на ваши bone ids.
+ */
 public class BaseArmorRenderer extends GeoArmorRenderer<GenericGeoArmorItem> {
+
     public BaseArmorRenderer() {
         super(new BaseArmorGeoModel());
-        // При необходимости можно связать кости:
-        //this.headBone = "armorHead";
-        //this.bodyBone = "armorBody";
-        //this.rightArmBone = "armorRightArm";
-        //this.leftArmBone = "armorLeftArm";
-        //this.rightLegBone = "armorRightLeg";
-        //this.leftLegBone = "armorLeftLeg";
-        //this.rightBootBone = "armorRightBoot";
-        //this.leftBootBone = "armorLeftBoot";
     }
 }
 
@@ -5077,8 +5167,13 @@ public class Grimfate {
     }
 
     private void commonSetup(final FMLCommonSetupEvent e) {
-        e.enqueueWork(com.doomspire.grimfate.registry.ModCurios::init);
         e.enqueueWork(() -> {
+            com.doomspire.grimcore.spell.api.WeaponGate.setTwoHandedResolver((stack, player) -> {
+                var comp = stack.get(com.doomspire.grimfate.registry.ModDataComponents.WEAPON_PROFILE.get());
+                return comp != null && comp.twoHanded();
+            });
+            com.doomspire.grimfate.compat.bettercombat.BetterCombatBridge.init();
+            com.doomspire.grimfate.registry.ModCurios.init();
             // 1) Базовые аффиксы ядра (dr_all, max_mana_flat, fire_resist и т.д.)
             ModAffixes.bootstrap();
             // 2) Подключаем экстрактор аффиксов со стороны контента
@@ -5279,6 +5374,125 @@ public final class LoadoutTickEvents {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\events\LoadoutTickEvents.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\Armors.java -----
+package com.doomspire.grimfate.item.armor;
+
+import com.doomspire.grimfate.core.Grimfate;
+import com.doomspire.grimfate.item.armor.GenericGeoArmorItem;
+import com.doomspire.grimfate.registry.ModArmorMaterials;
+import com.doomspire.grimfate.registry.ModItems;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+
+//NOTE: Подмодуль регистрации брони.
+
+public final class Armors {
+    private Armors() {}
+
+    // ===== VISUALS =====
+    private static GenericGeoArmorItem.Visual copperVisual() {
+        return new GenericGeoArmorItem.Visual(
+                Grimfate.rl("geo/armor/copper_armor_set.geo.json"),
+                Grimfate.rl("textures/armor/copper_armor_set_texture.png")
+        );
+    }
+
+    private static GenericGeoArmorItem.Visual rawhideVisual() {
+        return new GenericGeoArmorItem.Visual(
+                Grimfate.rl("geo/armor/rawhide_armor_set.geo.json"),
+                Grimfate.rl("textures/armor/rawhide_armor_set.png")
+        );
+    }
+
+    private static GenericGeoArmorItem.Visual linenVisual() {
+        return new GenericGeoArmorItem.Visual(
+                Grimfate.rl("geo/armor/linen_armor_set.geo.json"),
+                Grimfate.rl("textures/armor/linen_armor_set.png")
+        );
+    }
+
+    // ===== COPPER =====
+    public static final DeferredHolder<Item, Item> COPPER_HELMET =
+            ModItems.ITEMS.register("copper_helmet",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.copperHolder(),
+                            ArmorItem.Type.HELMET, new Item.Properties(), copperVisual()));
+
+    public static final DeferredHolder<Item, Item> COPPER_CHESTPLATE =
+            ModItems.ITEMS.register("copper_chestplate",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.copperHolder(),
+                            ArmorItem.Type.CHESTPLATE, new Item.Properties(), copperVisual()));
+
+    public static final DeferredHolder<Item, Item> COPPER_LEGGINGS =
+            ModItems.ITEMS.register("copper_leggings",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.copperHolder(),
+                            ArmorItem.Type.LEGGINGS, new Item.Properties(), copperVisual()));
+
+    public static final DeferredHolder<Item, Item> COPPER_BOOTS =
+            ModItems.ITEMS.register("copper_boots",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.copperHolder(),
+                            ArmorItem.Type.BOOTS, new Item.Properties(), copperVisual()));
+
+    // ===== RAWHIDE =====
+    public static final DeferredHolder<Item, Item> RAWHIDE_HELMET =
+            ModItems.ITEMS.register("rawhide_helmet",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.rawhideHolder(),
+                            ArmorItem.Type.HELMET, new Item.Properties(), rawhideVisual()));
+
+    public static final DeferredHolder<Item, Item> RAWHIDE_CHESTPLATE =
+            ModItems.ITEMS.register("rawhide_chestplate",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.rawhideHolder(),
+                            ArmorItem.Type.CHESTPLATE, new Item.Properties(), rawhideVisual()));
+
+    public static final DeferredHolder<Item, Item> RAWHIDE_LEGGINGS =
+            ModItems.ITEMS.register("rawhide_leggings",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.rawhideHolder(),
+                            ArmorItem.Type.LEGGINGS, new Item.Properties(), rawhideVisual()));
+
+    public static final DeferredHolder<Item, Item> RAWHIDE_BOOTS =
+            ModItems.ITEMS.register("rawhide_boots",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.rawhideHolder(),
+                            ArmorItem.Type.BOOTS, new Item.Properties(), rawhideVisual()));
+
+    // ===== LINEN =====
+    public static final DeferredHolder<Item, Item> LINEN_HELMET =
+            ModItems.ITEMS.register("linen_helmet",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.linenHolder(),
+                            ArmorItem.Type.HELMET, new Item.Properties(), linenVisual()));
+
+    public static final DeferredHolder<Item, Item> LINEN_CHESTPLATE =
+            ModItems.ITEMS.register("linen_chestplate",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.linenHolder(),
+                            ArmorItem.Type.CHESTPLATE, new Item.Properties(), linenVisual()));
+
+    public static final DeferredHolder<Item, Item> LINEN_LEGGINGS =
+            ModItems.ITEMS.register("linen_leggings",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.linenHolder(),
+                            ArmorItem.Type.LEGGINGS, new Item.Properties(), linenVisual()));
+
+    public static final DeferredHolder<Item, Item> LINEN_BOOTS =
+            ModItems.ITEMS.register("linen_boots",
+                    () -> new GenericGeoArmorItem(
+                            ModArmorMaterials.linenHolder(),
+                            ArmorItem.Type.BOOTS, new Item.Properties(), linenVisual()));
+
+    /** Вызывается из ModItems.init(modBus) при необходимости; регистрации статичны. */
+    public static void init(IEventBus modBus) {}
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\Armors.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\GenericGeoArmorItem.java -----
 package com.doomspire.grimfate.item.armor;
 
@@ -5493,6 +5707,78 @@ public record WeaponProfileComponent(
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\WeaponProfileComponent.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\jewelry\Jewelry.java -----
+package com.doomspire.grimfate.item.jewelry;
+
+import com.doomspire.grimfate.registry.ModItems;
+import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+
+//NOTE: Подмодуль регистрации бижутерии (Curios-слоты).
+
+public final class Jewelry {
+    private Jewelry() {}
+
+    // ===== Rings =====
+
+    public static final DeferredHolder<Item, Item> COPPER_RING =
+            ModItems.ITEMS.register("copper_ring",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> BRONZE_RING =
+            ModItems.ITEMS.register("bronze_ring",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+
+    // ===== Amulets =====
+    public static final DeferredHolder<Item, Item> COPPER_NECKLACE =
+            ModItems.ITEMS.register("copper_necklace",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> BRONZE_NECKLACE =
+            ModItems.ITEMS.register("bronze_necklace",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+
+    // ===== Belt =====
+   // public static final DeferredHolder<Item, Item> LEATHER_BELT =
+   //         ModItems.ITEMS.register("leather_belt",
+   //                 () -> new Item(new Item.Properties().stacksTo(1)));
+
+    /** Вызов из ModItems.init(modBus); регистрации статические. */
+    public static void init(IEventBus modBus) {}
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\jewelry\Jewelry.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\materials\Materials.java -----
+package com.doomspire.grimfate.item.materials;
+
+import com.doomspire.grimfate.registry.ModItems;
+import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+
+//NOTE: Подмодуль регистрации материалов крафта.
+
+public final class Materials {
+    private Materials() {}
+
+    public static final DeferredHolder<Item, Item> FIBER =
+            ModItems.ITEMS.register("fiber", () -> new Item(new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> CANVAS_FABRIC =
+            ModItems.ITEMS.register("canvas_fabric", () -> new Item(new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> RAWHIDE =
+            ModItems.ITEMS.register("rawhide", () -> new Item(new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> PORK_FAT =
+            ModItems.ITEMS.register("pork_fat", () -> new Item(new Item.Properties()));
+
+    /** Вызов из ModItems.init(modBus) при необходимости; регистрации статические. */
+    public static void init(IEventBus modBus) {}
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\materials\Materials.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\StaffItem.java -----
 package com.doomspire.grimfate.item;
 
@@ -5551,6 +5837,48 @@ public class StaffItem extends Item {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\StaffItem.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\weapons\Weapons.java -----
+package com.doomspire.grimfate.item.weapons;
+
+import com.doomspire.grimfate.item.BaseBowItem;
+import com.doomspire.grimfate.registry.ModItems;
+import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+
+//NOTE: Подмодуль регистрации оружия/щита. Объявляем RegistryObject/DeferredHolder. Сюда прокидываем новые пушки
+/**
+ * ВАЖНО: сам DeferredRegister<Item> хранится в ModItems.
+ * Здесь мы только объявляем RegistryObject/DeferredHolder и регистрируем через ModItems.ITEMS.register(...).
+ */
+public final class Weapons {
+    private Weapons() {}
+
+    // ===== Оружие / щит (PHASE_PLAN) =====
+    public static final DeferredHolder<Item, Item> COPPER_SWORD =
+            ModItems.ITEMS.register("copper_sword",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> SCHOLAR_STAFF =
+            ModItems.ITEMS.register("scholar_staff",
+                    () -> new com.doomspire.grimfate.item.StaffItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> WEAKLING_BOW =
+            ModItems.ITEMS.register("weakling_bow",
+                    () -> new BaseBowItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> COPPERFORCED_SHIELD =
+            ModItems.ITEMS.register("copperforced_shield",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+
+    /** Вызывается из ModItems.init(modBus) для явной инициализации подмодуля (на будущее). */
+    public static void init(IEventBus modBus) {
+        // Ничего: все регистрации делаются статически через ModItems.ITEMS.register(...)
+        // Метод оставлен для единообразия вызовов из ModItems/Grimfate.
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\weapons\Weapons.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\ModLootModifiers.java -----
 package com.doomspire.grimfate.loot;
 
@@ -5568,8 +5896,6 @@ public final class ModLootModifiers {
     public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> GLM_SERIALIZERS =
             DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, Grimfate.MODID);
 
-    public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<RustyRingDropModifier>> RUSTY_RING =
-            GLM_SERIALIZERS.register("rusty_ring", () -> RustyRingDropModifier.CODEC);
 
     public static void init(net.neoforged.bus.api.IEventBus modBus) {
         GLM_SERIALIZERS.register(modBus);
@@ -5577,67 +5903,6 @@ public final class ModLootModifiers {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\ModLootModifiers.java -----n
------ BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\RustyRingDropModifier.java -----
-package com.doomspire.grimfate.loot;
-
-import com.doomspire.grimcore.data.ModDataComponents;
-import com.doomspire.grimcore.data.component.StatBonusComponent;
-import com.doomspire.grimcore.stat.Attributes;
-import com.doomspire.grimfate.core.Grimfate;
-import com.doomspire.grimfate.registry.ModItems;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.storage.loot.LootContext;
-import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
-import net.neoforged.neoforge.common.loot.LootModifier;
-
-import java.util.Map;
-
-/** Простой GLM: с заданным шансом добавляет grimfate:rusty_ring (+1 SPIRIT). */
-public class RustyRingDropModifier extends LootModifier {
-
-    public static final MapCodec<RustyRingDropModifier> CODEC = RecordCodecBuilder.mapCodec(inst ->
-            LootModifier.codecStart(inst)
-                    .and(Codec.DOUBLE.fieldOf("chance").forGetter(m -> m.chance))
-                    .apply(inst, RustyRingDropModifier::new)
-    );
-
-    private final double chance;
-
-    public RustyRingDropModifier(LootItemCondition[] conditions, double chance) {
-        super(conditions);
-        this.chance = chance;
-    }
-
-    @Override
-    public MapCodec<? extends IGlobalLootModifier> codec() { return CODEC; }
-
-    @Override
-    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext ctx) {
-        // ✅ Ограничиваемся сундуками: имя лут-таблицы должно содержать "chests/"
-        ResourceLocation tableId = ctx.getQueriedLootTableId();
-        if (tableId == null || !tableId.getPath().contains("chests/")) return generatedLoot;
-
-        if (ctx.getRandom().nextDouble() > this.chance) return generatedLoot;
-
-        ItemStack ring = new ItemStack(ModItems.RUSTY_RING.get());
-
-        // Компонент: +1 к SPIRIT
-        ring.set(ModDataComponents.STAT_BONUS.get(),
-                new StatBonusComponent(Map.of(Attributes.SPIRIT, 1)));
-
-        generatedLoot.add(ring);
-        Grimfate.LOGGER.debug("[GLM] rusty_ring: ADDED to {}", tableId);
-        return generatedLoot;
-    }
-}
-
-n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\RustyRingDropModifier.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\network\AutoBoltServer.java -----
 package com.doomspire.grimfate.network;
 
@@ -5702,13 +5967,14 @@ import com.doomspire.grimcore.net.GrimcoreNetworking;
 import com.doomspire.grimcore.spell.GrimSpells;
 import com.doomspire.grimcore.spell.api.CastResult;
 import com.doomspire.grimcore.spell.api.SpellContext;
+import com.doomspire.grimcore.spell.api.WeaponGate;
+import com.doomspire.grimcore.spell.api.WeaponRequirement;
 import com.doomspire.grimcore.stat.Attributes;
 import com.doomspire.grimcore.stat.ModAttachments;
 import com.doomspire.grimcore.stat.StatEffects;
-import com.doomspire.grimfate.entity.BoltProjectileEntity;
 import com.doomspire.grimfate.network.payload.*;
-import com.doomspire.grimfate.registry.ModItems;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -5717,13 +5983,12 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.UUID;
-
 public final class ModNetworking {
     private ModNetworking() {}
     private static boolean REGISTERED = false;
+
     public static void register(RegisterPayloadHandlersEvent e) {
-        if (REGISTERED) return;      // ← защита от повтора (кстати нихуя не помогает никогда)
+        if (REGISTERED) return;
         REGISTERED = true;
         var reg = e.registrar("grimfate");
 
@@ -5736,37 +6001,38 @@ public final class ModNetworking {
         reg.playToServer(C2SCastSpellSlotPayload.TYPE, C2SCastSpellSlotPayload.STREAM_CODEC,
                 ModNetworking::handleCastSpellSlot);
 
-        reg.playToServer(C2SCastAutoBoltPayload.TYPE, C2SCastAutoBoltPayload.STREAM_CODEC,
-                (msg, ctx) -> {
-                    ctx.enqueueWork(() -> {
-                        var sp = (net.minecraft.server.level.ServerPlayer) ctx.player();
-                        if (sp == null) return;
+        // ПКМ авто-болт со стаффа
+        reg.playToServer(C2SCastAutoBoltPayload.TYPE, C2SCastAutoBoltPayload.STREAM_CODEC, (msg, ctx) -> {
+            ctx.enqueueWork(() -> {
+                ServerPlayer sp = (ServerPlayer) ctx.player();
+                if (sp == null) return;
 
-                        // 1) Определяем в какой руке посох (серверная валидация)
-                        var stack = (msg.hand() == net.minecraft.world.InteractionHand.MAIN_HAND)
-                                ? sp.getMainHandItem() : sp.getOffhandItem();
+                // Требуется посох (WeaponGate + локализация причины)
+                var gate = WeaponGate.check(sp, WeaponRequirement.stavesOnly());
+                if (!gate.ok) {
+                    showGateFailure(sp, gate);
+                    return;
+                }
 
-                        if (stack.isEmpty()) return;
-                        if (!com.doomspire.grimfate.combat.WeaponPredicates.isStaff(stack)) return;
+                // Ядро: ресурсы/кд/скорость
+                var hand = gate.usedHand != null ? gate.usedHand : net.minecraft.world.InteractionHand.MAIN_HAND;
+                var stack = sp.getItemInHand(hand);
+                var result = com.doomspire.grimcore.spell.autobolt.AutoBoltService.computeAndConsume(sp, stack);
+                if (!result.ok()) return;
 
-                        // 2) Ядро: посчитать и списать ресурсы (мана/скейлы/кд/скорость)
-                        var result = com.doomspire.grimcore.spell.autobolt.AutoBoltService.computeAndConsume(sp, stack);
-                        if (!result.ok()) return;
+                // Контент: прожектайл
+                var proj = new com.doomspire.grimfate.entity.BoltProjectileEntity(sp.level(), sp);
+                proj.shootForward(sp, result.projectileSpeed());
+                sp.level().addFreshEntity(proj);
 
-                        // 3) Контент: спавним снаряд с указанной скоростью
-                        var proj = new com.doomspire.grimfate.entity.BoltProjectileEntity(sp.level(), sp);
-                        proj.shootForward(sp, result.projectileSpeed());
-                        sp.level().addFreshEntity(proj);
+                // Звук
+                sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                        SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 0.6f, 1.0f);
 
-                        // 4) Презентация/звук (контент)
-                        sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                                net.minecraft.sounds.SoundEvents.WITHER_SHOOT,
-                                net.minecraft.sounds.SoundSource.PLAYERS, 0.6f, 1.0f);
-
-                        // 5) КД — ставим НА КОНКРЕТНЫЙ ПОСОХ (пер-айтем)
-                        sp.getCooldowns().addCooldown(stack.getItem(), result.cooldownTicks());
-                    });
-                });
+                // КД — на предмет
+                sp.getCooldowns().addCooldown(stack.getItem(), result.cooldownTicks());
+            });
+        });
     }
 
     public static void sendAllocatePoint(String attrId) {
@@ -5795,7 +6061,7 @@ public final class ModNetworking {
             att.markDirty();
             GrimcoreNetworking.syncPlayerStats(sp, att);
 
-            // ⬇️ ТОЛЬКО вызов ядра — никаких модификаторов в ModNetworking
+            // ядро-эффекты
             StatEffects.applyAll(sp);
         });
     }
@@ -5814,15 +6080,6 @@ public final class ModNetworking {
                 att.setUnspentPoints(msg.unspent());
                 att.markDirty();
             }
-            // UI обновится сам — экран читает свежие данные из Attachment.
-        });
-    }
-
-    private static void handleCastAutoBolt(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            ServerPlayer sp = (ServerPlayer) ctx.player();
-            if (sp == null) return;
-            AutoBoltServer.tryCast(sp); // общая точка для ПКМ-автоатаки
         });
     }
 
@@ -5836,7 +6093,6 @@ public final class ModNetworking {
 
             PlayerLoadoutAttachment loadout = sp.getData(ModAttachments.PLAYER_LOADOUT.get());
             if (loadout == null) return;
-
             if (loadout.getCooldown(slot) > 0) return;
 
             ResourceLocation spellId = loadout.get(slot);
@@ -5844,6 +6100,16 @@ public final class ModNetworking {
 
             var spell = GrimSpells.get(spellId);
             if (spell == null) return;
+
+            // Оружейные требования спелла
+            var req = com.doomspire.grimfate.spell.SpellRequirements.require(spellId);
+            if (req != null) {
+                var gate = WeaponGate.check(sp, req);
+                if (!gate.ok) {
+                    showGateFailure(sp, gate);
+                    return;
+                }
+            }
 
             var lvl = sp.serverLevel();
             var ctxSpell = new SpellContext(lvl, sp, slot, 0, 0, 0, null);
@@ -5869,6 +6135,19 @@ public final class ModNetworking {
 
     public static void sendCastSpellSlot(int slot) {
         PacketDistributor.sendToServer(new C2SCastSpellSlotPayload(slot));
+    }
+
+    // === UX helper ===
+    private static void showGateFailure(ServerPlayer sp, WeaponGate.Result gate) {
+        if (gate.reasonKey != null) {
+            sp.displayClientMessage(Component.translatable(gate.reasonKey), true);
+        } else if (gate.reason != null && !gate.reason.isBlank()) {
+            sp.displayClientMessage(Component.literal(gate.reason), true);
+        } else {
+            sp.displayClientMessage(Component.translatable("grimfate.msg.weapon_required"), true);
+        }
+        sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.7f, 1.0f);
     }
 }
 
@@ -6057,11 +6336,14 @@ public final class ModArmorMaterials {
                     /* knockback  */ 0.0f
             ));
 
-    // Возвращаем Holder<ArmorMaterial> для humanoidArmor(...)
     public static Holder<ArmorMaterial> copperHolder() {
-        // В NeoForge 21.1 это Holder.Reference<T>
         return COPPER.getDelegate();
-        // Если у вас есть getHolder(): return COPPER.getHolder().orElseThrow();
+    }
+    public static Holder<ArmorMaterial> linenHolder() {
+        return LINEN.getDelegate();
+    }
+    public static Holder<ArmorMaterial> rawhideHolder() {
+        return RAWHIDE.getDelegate();
     }
 }
 
@@ -6178,152 +6460,34 @@ n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModEnt
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItems.java -----
 package com.doomspire.grimfate.registry;
 
-import com.doomspire.grimcore.data.component.StatBonusComponent;
-import com.doomspire.grimcore.stat.Attributes;
-import com.doomspire.grimcore.stat.DamageTypes;
-import com.doomspire.grimfate.combat.WeaponType;
 import com.doomspire.grimfate.core.Grimfate;
-import com.doomspire.grimfate.item.StaffItem;
-import com.doomspire.grimfate.item.armor.GenericGeoArmorItem;
-import com.doomspire.grimfate.item.comp.WeaponProfileComponent;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Rarity;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-import java.util.Map;
+//NOTE: Регистрация предметов grimfate из подмодулей
 
-import static com.doomspire.grimfate.core.Grimfate.rl;
+/**
+ * Все конкретные предметы объявляются и регистрируются в подмодулях:
+ *  - item/weapons/Weapons
+ *  - item/armor/Armors
+ *  - item/materials/Materials
+ *  - item/jewelry/Jewelry
+ */
 
 public final class ModItems {
-    private ModItems(){}
+    private ModItems() {}
 
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(Registries.ITEM, Grimfate.MODID);
 
-    // Материалы
-    public static final DeferredHolder<Item, Item> HARDWOOD_SHAFT = ITEMS.register("hardwood_shaft", () -> new Item(new Item.Properties()));
-    public static final DeferredHolder<Item, Item> LINEN_CLOTH    = ITEMS.register("linen_cloth",    () -> new Item(new Item.Properties()));
-    public static final DeferredHolder<Item, Item> COPPER_RIVET   = ITEMS.register("copper_rivet",   () -> new Item(new Item.Properties()));
-
-    private static GenericGeoArmorItem.Visual copperVisual() {
-        return new GenericGeoArmorItem.Visual(
-                rl("geo/armor/copper_armor_set.geo.json"),
-                rl("textures/armor/copper_armor_set_texture.png")
-        );
-    }
-
-    // ===== Jewelry =====
-    public static final DeferredItem<Item> COPPER_RING = ITEMS.register("copper_ring",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.STAT_BONUS.get(),
-                            // +1 INT
-                            new StatBonusComponent(Map.of(Attributes.INTELLIGENCE, 1)))
-            ));
-
-    public static final DeferredItem<Item> SCHOLAR_RING = ITEMS.register("scholar_ring",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.STAT_BONUS.get(),
-                            // +1 INT, +1 SPIRIT
-                            new StatBonusComponent(Map.of(Attributes.INTELLIGENCE, 1, Attributes.SPIRIT, 1)))
-            ));
-
-    public static final DeferredItem<Item> SIMPLE_AMULET = ITEMS.register("simple_amulet",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.STAT_BONUS.get(),
-                            // +1 SPIRIT (= условная «мана» на старте)
-                            new StatBonusComponent(Map.of(Attributes.SPIRIT, 1)))
-            ));
-
-    public static final DeferredItem<Item> HUNTER_AMULET = ITEMS.register("hunter_amulet",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.STAT_BONUS.get(),
-                            // +1 DEX
-                            new StatBonusComponent(Map.of(Attributes.DEXTERITY, 1)))
-            ));
-
-    public static final DeferredItem<Item> LEATHER_BELT = ITEMS.register("leather_belt",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.STAT_BONUS.get(),
-                            // +1 VIT
-                            new StatBonusComponent(Map.of(Attributes.VITALITY, 1)))
-            ));
-
-    // Броня (каждый предмет — Item с humanoidArmor + GeckoLib визуалом)
-    public static final DeferredHolder<Item, Item> COPPER_HELMET = ITEMS.register("copper_helmet",
-            () -> new GenericGeoArmorItem(ModArmorMaterials.copperHolder(), ArmorItem.Type.HELMET, new Item.Properties(), copperVisual()));
-    public static final DeferredHolder<Item, Item> COPPER_CHESTPLATE = ITEMS.register("copper_chestplate",
-            () -> new GenericGeoArmorItem(ModArmorMaterials.copperHolder(), ArmorItem.Type.CHESTPLATE, new Item.Properties(), copperVisual()));
-    public static final DeferredHolder<Item, Item> COPPER_LEGGINGS = ITEMS.register("copper_leggings",
-            () -> new GenericGeoArmorItem(ModArmorMaterials.copperHolder(), ArmorItem.Type.LEGGINGS, new Item.Properties(), copperVisual()));
-    public static final DeferredHolder<Item, Item> COPPER_BOOTS = ITEMS.register("copper_boots",
-            () -> new GenericGeoArmorItem(ModArmorMaterials.copperHolder(), ArmorItem.Type.BOOTS, new Item.Properties(), copperVisual()));
-
-    // Оружие/щит (каждому задаём WEAPON_PROFILE через Properties.component)
-    public static final DeferredHolder<Item, Item> RUSTY_SWORD = ITEMS.register("rusty_sword",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.WEAPON_PROFILE.get(),
-                            new WeaponProfileComponent(WeaponType.SWORD, false, 1.0f, 1.0f, 1))));
-
-    public static final DeferredHolder<Item, Item> COPPER_SWORD = ITEMS.register("copper_sword",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.WEAPON_PROFILE.get(),
-                            new WeaponProfileComponent(WeaponType.SWORD, false, 1.05f, 1.1f, 1))));
-
-    public static final DeferredHolder<Item, Item> WEATHERED_STAFF = ITEMS.register("weathered_staff",
-            () -> new StaffItem(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.WEAPON_PROFILE.get(),
-                            new WeaponProfileComponent(WeaponType.STAFF, true, 1.0f, 1.0f, 2))));
-
-    public static final DeferredHolder<Item, Item> APPRENTICE_STAFF = ITEMS.register("apprentice_staff",
-            () -> new StaffItem(new Item.Properties()
-                    .stacksTo(1)
-                    .rarity(Rarity.UNCOMMON)
-                    .component(ModDataComponents.WEAPON_PROFILE.get(),
-                            new WeaponProfileComponent(WeaponType.STAFF, true, 1.05f, 1.1f, 2))));
-
-    public static final DeferredHolder<Item, Item> SIMPLE_BOW = ITEMS.register("simple_bow",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.WEAPON_PROFILE.get(),
-                            new WeaponProfileComponent(WeaponType.BOW, true, 1.0f, 1.0f, 1))));
-
-    public static final DeferredHolder<Item, Item> HUNTERS_BOW = ITEMS.register("hunters_bow",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .rarity(Rarity.UNCOMMON)
-                    .component(ModDataComponents.WEAPON_PROFILE.get(),
-                            new WeaponProfileComponent(WeaponType.BOW, true, 1.05f, 1.15f, 2))));
-
-    public static final DeferredHolder<Item, Item> WEATHERED_SHIELD = ITEMS.register("weathered_shield",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .component(ModDataComponents.WEAPON_PROFILE.get(),
-                            new WeaponProfileComponent(WeaponType.SHIELD, false, 0.9f, 0.0f, 0))));
-
-    public static final DeferredHolder<Item, Item> RUSTY_RING = ITEMS.register("rusty_ring",
-            () -> new Item(new Item.Properties()
-                    .stacksTo(1)
-                    .rarity(Rarity.UNCOMMON)));
-
     public static void init(IEventBus modBus) {
         ITEMS.register(modBus);
+        // Подмодулям не требуется отдельный вызов — их поля регистрируются статически через ModItems.ITEMS
+        // (Метод оставлен на будущее, если появится дополнительная логика инициализации.)
     }
 }
-
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItems.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItemTags.java -----
@@ -6334,7 +6498,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
-
+//TODO: Привести к существующим в data тэгам, поправить WeaponPredicates.java
 public final class ModItemTags {
     public static final TagKey<Item> MELEE_WEAPONS  = tag("melee_weapons");
     public static final TagKey<Item> STAVES         = tag("staves");
@@ -6349,6 +6513,39 @@ public final class ModItemTags {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItemTags.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\spell\SpellRequirements.java -----
+package com.doomspire.grimfate.spell;
+
+import com.doomspire.grimcore.spell.api.WeaponRequirement;
+import net.minecraft.resources.ResourceLocation;
+
+/**
+ * Централизованная таблица: какой спелл требует какое оружие.
+ * На старте держим тут только то, что уже есть; позже расширим при добавлении новых спеллов.
+ */
+public final class SpellRequirements {
+    private SpellRequirements() {}
+
+    /**
+     * Вернёт требования к оружию для указанного спелла, либо null если требований нет.
+     */
+    public static WeaponRequirement require(ResourceLocation spellId) {
+        if (spellId == null) return null;
+
+        // Примеры (раскомментировать/добавлять по мере готовности спеллов):
+        // if (spellId.equals(ResourceLocation.fromNamespaceAndPath("grimfate", "hunter_mark"))) {
+        //     return WeaponRequirement.builder().allowTag("grimfate:bows").build();
+        // }
+        // if (spellId.equals(ResourceLocation.fromNamespaceAndPath("grimfate", "mage_bolt"))) {
+        //     return WeaponRequirement.builder().allowTag("grimfate:staves").build();
+        // }
+
+        return null; // по умолчанию — без требований
+    }
+}
+
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\spell\SpellRequirements.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\geo\armor\copper_armor_set.geo.json -----
 {
 	"format_version": "1.12.0",
@@ -6802,6 +6999,250 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\coppe
 }
 
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_ring.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword.json -----
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   { "parent": "grimfate:item/copper_sword_3d" },
+  "gui":    { "parent": "grimfate:item/copper_sword_2d" },
+  "fixed":  { "parent": "grimfate:item/copper_sword_2d" },
+  "ground": { "parent": "grimfate:item/copper_sword_2d" },
+  "head":   { "parent": "grimfate:item/copper_sword_2d" }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_2d.json -----
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "grimfate:item/weakling_bow_2d"
+  }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_2d.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_3d.json -----
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [32, 32],
+	"textures": {
+		"0": "block/copper_sword_3d",
+		"particle": "block/copper_sword_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 0, 7],
+			"to": [9, 2, 9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 0, 7]},
+			"faces": {
+				"north": {"uv": [6, 6, 7, 7], "texture": "#0"},
+				"east": {"uv": [0, 6.5, 1, 7.5], "texture": "#0"},
+				"south": {"uv": [1.5, 6.5, 2.5, 7.5], "texture": "#0"},
+				"west": {"uv": [3, 6.5, 4, 7.5], "texture": "#0"},
+				"up": {"uv": [5.5, 7.5, 4.5, 6.5], "texture": "#0"},
+				"down": {"uv": [8.5, 3, 7.5, 4], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.5, 2, 7.5],
+			"to": [8.5, 6, 8.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6.5, 2, 6.5]},
+			"faces": {
+				"north": {"uv": [7.5, 4.5, 8, 6.5], "texture": "#0"},
+				"east": {"uv": [6, 7.5, 6.5, 9.5], "texture": "#0"},
+				"south": {"uv": [7, 7.5, 7.5, 9.5], "texture": "#0"},
+				"west": {"uv": [0, 8, 0.5, 10], "texture": "#0"},
+				"up": {"uv": [9.5, 3.5, 9, 3], "texture": "#0"},
+				"down": {"uv": [4.5, 9, 4, 9.5], "texture": "#0"}
+			}
+		},
+		{
+			"from": [6, 6, 7],
+			"to": [10, 7, 9],
+			"rotation": {"angle": 0, "axis": "z", "origin": [10, 5, 6]},
+			"faces": {
+				"north": {"uv": [1, 8, 3, 8.5], "texture": "#0"},
+				"east": {"uv": [1, 9, 2, 9.5], "texture": "#0"},
+				"south": {"uv": [3.5, 8, 5.5, 8.5], "texture": "#0"},
+				"west": {"uv": [2.5, 9, 3.5, 9.5], "texture": "#0"},
+				"up": {"uv": [8, 1, 6, 0], "texture": "#0"},
+				"down": {"uv": [8, 1.5, 6, 2.5], "texture": "#0"}
+			}
+		},
+		{
+			"from": [6.5, 7, 7.5],
+			"to": [9.5, 19, 8.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 7, 6.5]},
+			"faces": {
+				"north": {"uv": [0, 0, 1.5, 6], "texture": "#0"},
+				"east": {"uv": [4, 0, 4.5, 6], "texture": "#0"},
+				"south": {"uv": [2, 0, 3.5, 6], "texture": "#0"},
+				"west": {"uv": [5, 0, 5.5, 6], "texture": "#0"},
+				"up": {"uv": [9.5, 7.5, 8, 7], "texture": "#0"},
+				"down": {"uv": [9.5, 8, 8, 8.5], "texture": "#0"}
+			}
+		},
+		{
+			"from": [5.775, 19.2, 7.525],
+			"to": [7.875, 21.3, 8.475],
+			"rotation": {"angle": -45, "axis": "z", "origin": [5.9, 18.2, 14.4]},
+			"faces": {
+				"north": {"uv": [6, 3, 7, 4], "texture": "#0"},
+				"east": {"uv": [8.5, 0, 9, 1], "texture": "#0"},
+				"south": {"uv": [6, 4.5, 7, 5.5], "texture": "#0"},
+				"west": {"uv": [8.5, 1.5, 9, 2.5], "texture": "#0"},
+				"up": {"uv": [9.5, 5, 8.5, 4.5], "texture": "#0"},
+				"down": {"uv": [9.5, 5.5, 8.5, 6], "texture": "#0"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [0, 90, 0],
+			"translation": [0, 2, 1]
+		},
+		"thirdperson_lefthand": {
+			"rotation": [0, 90, 0],
+			"translation": [0, 2, 1]
+		},
+		"firstperson_righthand": {
+			"rotation": [0, 90, 0],
+			"translation": [1.25, 3, -0.25]
+		},
+		"firstperson_lefthand": {
+			"rotation": [0, 90, 0],
+			"translation": [1.25, 3, -0.25]
+		},
+		"ground": {
+			"rotation": [0, 0, 150],
+			"translation": [0, 5, 0]
+		},
+		"gui": {
+			"rotation": [0, 0, -45],
+			"translation": [-1.25, -1.5, 0]
+		},
+		"fixed": {
+			"rotation": [0, 0, 45],
+			"translation": [1, -1, 0]
+		}
+	},
+	"groups": [
+		{
+			"name": "copper_sword_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3, 4]
+		}
+	]
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_3d.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_3d.json -----
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [64, 64],
+	"textures": {
+		"0": "block/copperforced_shield_3d",
+		"particle": "block/copperforced_shield_3d"
+	},
+	"elements": [
+		{
+			"from": [2, 2, 7],
+			"to": [14, 14, 9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 0, 7]},
+			"faces": {
+				"north": {"uv": [4, 0, 7, 3], "texture": "#0"},
+				"east": {"uv": [4, 6, 4.5, 9], "texture": "#0"},
+				"south": {"uv": [4, 3, 7, 6], "texture": "#0"},
+				"west": {"uv": [4.5, 6, 5, 9], "texture": "#0"},
+				"up": {"uv": [8, 6.5, 5, 6], "texture": "#0"},
+				"down": {"uv": [8, 6.5, 5, 7], "texture": "#0"}
+			}
+		},
+		{
+			"from": [5.55, 7, 6],
+			"to": [9.55, 11, 8],
+			"rotation": {"angle": -45, "axis": "z", "origin": [6.6, 8, 6]},
+			"faces": {
+				"north": {"uv": [7, 0, 8, 1], "texture": "#0"},
+				"east": {"uv": [7, 4.5, 7.5, 5.5], "texture": "#0"},
+				"south": {"uv": [7, 1, 8, 2], "texture": "#0"},
+				"west": {"uv": [5, 7, 5.5, 8], "texture": "#0"},
+				"up": {"uv": [6.5, 7.5, 5.5, 7], "texture": "#0"},
+				"down": {"uv": [8, 5.5, 7, 6], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.5, 5.5, 9],
+			"to": [8.5, 10.5, 12],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 9, 9]},
+			"faces": {
+				"north": {"uv": [6.5, 7, 6.75, 8.25], "texture": "#0"},
+				"east": {"uv": [7, 2, 7.75, 3.25], "texture": "#0"},
+				"south": {"uv": [6.75, 7, 7, 8.25], "texture": "#0"},
+				"west": {"uv": [7, 3.25, 7.75, 4.5], "texture": "#0"},
+				"up": {"uv": [7.25, 7.75, 7, 7], "texture": "#0"},
+				"down": {"uv": [7.5, 7, 7.25, 7.75], "texture": "#0"}
+			}
+		},
+		{
+			"from": [0, 0, 8],
+			"to": [16, 16, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, 0, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 4, 4], "texture": "#0"},
+				"east": {"uv": [0, 0, 0, 4], "texture": "#0"},
+				"south": {"uv": [0, 4, 4, 8], "texture": "#0"},
+				"west": {"uv": [0, 0, 0, 4], "texture": "#0"},
+				"up": {"uv": [4, 0, 0, 0], "texture": "#0"},
+				"down": {"uv": [4, 0, 0, 0], "texture": "#0"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [0, -90, 0],
+			"translation": [3, -2, 1.5]
+		},
+		"thirdperson_lefthand": {
+			"rotation": [0, -90, 0],
+			"translation": [3, -2, 1.5]
+		},
+		"firstperson_righthand": {
+			"rotation": [23, 26, 30],
+			"translation": [2, -3, -2]
+		},
+		"firstperson_lefthand": {
+			"rotation": [17, -21, 12],
+			"translation": [2, -3.5, -2]
+		},
+		"ground": {
+			"translation": [0, 3.5, 0]
+		},
+		"gui": {
+			"rotation": [-26, -138, -5],
+			"scale": [0.9, 0.9, 0.9]
+		},
+		"head": {
+			"translation": [0, 0, -6.5]
+		},
+		"fixed": {
+			"translation": [0, 0, -5],
+			"scale": [4, 4, 4]
+		}
+	},
+	"groups": [
+		{
+			"name": "copperforced_shield_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3]
+		}
+	]
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_3d.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\linen_cape.json -----
 { "parent": "item/generated", "textures": { "layer0": "grimfate:item/linen_cape" } }
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\linen_cape.json -----n
@@ -6826,6 +7267,118 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhi
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_wraps.json -----
 { "parent": "item/generated", "textures": { "layer0": "grimfate:item/rawhide_wraps" } }
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_wraps.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff.json -----
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   { "parent": "grimfate:item/scholar_staff_3d" },
+  "gui":    { "parent": "grimfate:item/scholar_staff_2d" },
+  "fixed":  { "parent": "grimfate:item/scholar_staff_2d" },
+  "ground": { "parent": "grimfate:item/scholar_staff_2d" },
+  "head":   { "parent": "grimfate:item/scholar_staff_2d" }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff_2d.json -----
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "grimfate:item/weakling_bow_2d"
+  }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff_2d.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff_3d.json -----
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [64, 64],
+	"textures": {
+		"0": "block/scholar_staff_3d",
+		"particle": "block/scholar_staff_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 0, 7],
+			"to": [9, 25, 9],
+			"rotation": {"angle": 0, "axis": "x", "origin": [7, 0, 7]},
+			"faces": {
+				"north": {"uv": [5.5, 0, 6, 6.25], "texture": "#0"},
+				"east": {"uv": [6.25, 0, 6.75, 6.25], "texture": "#0"},
+				"south": {"uv": [5.5, 6.5, 6, 12.75], "texture": "#0"},
+				"west": {"uv": [6.25, 6.5, 6.75, 12.75], "texture": "#0"},
+				"up": {"uv": [7.5, 0.5, 7, 0], "texture": "#0"},
+				"down": {"uv": [7.5, 0.75, 7, 1.25], "texture": "#0"}
+			}
+		},
+		{
+			"from": [3, 9, 8],
+			"to": [13, 29, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 22, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 2.5, 5], "texture": "#0"},
+				"east": {"uv": [7, 1.5, 7, 6.5], "texture": "#0"},
+				"south": {"uv": [2.75, 0, 5.25, 5], "texture": "#0"},
+				"west": {"uv": [7, 6.75, 7, 11.75], "texture": "#0"},
+				"up": {"uv": [9.75, 1.5, 7.25, 1.5], "texture": "#0"},
+				"down": {"uv": [9.75, 1.75, 7.25, 1.75], "texture": "#0"}
+			}
+		},
+		{
+			"from": [8, 9, 3],
+			"to": [8, 29, 13],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 22, 7]},
+			"faces": {
+				"north": {"uv": [7.25, 2, 7.25, 7], "texture": "#0"},
+				"east": {"uv": [0, 5.25, 2.5, 10.25], "texture": "#0"},
+				"south": {"uv": [7.25, 7.25, 7.25, 12.25], "texture": "#0"},
+				"west": {"uv": [2.75, 5.25, 5.25, 10.25], "texture": "#0"},
+				"up": {"uv": [7.5, 4.5, 7.5, 2], "texture": "#0"},
+				"down": {"uv": [7.5, 4.75, 7.5, 7.25], "texture": "#0"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [20, 0, 0],
+			"translation": [-0.25, 0, 1.5]
+		},
+		"thirdperson_lefthand": {
+			"rotation": [20, 0, 0],
+			"translation": [-0.25, 0, 1.25]
+		},
+		"firstperson_righthand": {
+			"rotation": [-10, 0, 0],
+			"translation": [2, -2.5, 0]
+		},
+		"firstperson_lefthand": {
+			"rotation": [-10, 0, 0],
+			"translation": [2, -2.5, 0]
+		},
+		"ground": {
+			"rotation": [30, 0, 0],
+			"translation": [0, 4, 0]
+		},
+		"gui": {
+			"rotation": [0, 0, -45],
+			"translation": [-3.5, -3.75, 0]
+		},
+		"fixed": {
+			"rotation": [0, 0, 45],
+			"translation": [4, -3.75, -0.25]
+		}
+	},
+	"groups": [
+		{
+			"name": "scholar_staff_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2]
+		}
+	]
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff_3d.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow.json -----
 {
   "parent": "minecraft:item/handheld",
@@ -6834,23 +7387,7 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhi
   "gui":    { "parent": "grimfate:item/weakling_bow_2d" },
   "fixed":  { "parent": "grimfate:item/weakling_bow_2d" },
   "ground": { "parent": "grimfate:item/weakling_bow_2d" },
-  "head":   { "parent": "grimfate:item/weakling_bow_2d" }
-}
-
-n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_2d.json -----
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "grimfate:item/weakling_bow"
-  }
-}
-
-n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_2d.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3d.json -----
-{
-  "parent": "item/handheld",
-  "textures": { "layer0": "grimfate:item/weakling_bow_3d" },
+  "head":   { "parent": "grimfate:item/weakling_bow_2d" },
   "overrides": [
     { "predicate": { "pulling": 1 },                 "model": "grimfate:item/weakling_bow_3dpull2" },
     { "predicate": { "pull": 0.65, "pulling": 1 },   "model": "grimfate:item/weakling_bow_3dpull1" },
@@ -6858,6 +7395,143 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakl
   ]
 }
 
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_2d.json -----
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "grimfate:item/weakling_bow_2d"
+  }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_2d.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3d.json -----
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [32, 32],
+	"textures": {
+		"0": "block/weakling_bow_3d",
+		"particle": "block/weakling_bow_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 9, 6],
+			"to": [9, 16, 8],
+			"rotation": {"angle": 0, "axis": "x", "origin": [7, 9, 6]},
+			"faces": {
+				"north": {"uv": [0, 0, 1, 3.5], "texture": "#0"},
+				"east": {"uv": [1.5, 0, 2.5, 3.5], "texture": "#0"},
+				"south": {"uv": [3, 0, 4, 3.5], "texture": "#0"},
+				"west": {"uv": [0, 4, 1, 7.5], "texture": "#0"},
+				"up": {"uv": [11, 10, 10, 9], "texture": "#0"},
+				"down": {"uv": [11, 10.5, 10, 11.5], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.1, 4.2, 7],
+			"to": [8.9, 9.2, 9],
+			"rotation": {"angle": -22.5, "axis": "x", "origin": [7, 7.2, 7]},
+			"faces": {
+				"north": {"uv": [5.5, 0, 6.5, 2.5], "texture": "#0"},
+				"east": {"uv": [5.5, 3, 6.5, 5.5], "texture": "#0"},
+				"south": {"uv": [5.5, 6, 6.5, 8.5], "texture": "#0"},
+				"west": {"uv": [7, 0, 8, 2.5], "texture": "#0"},
+				"up": {"uv": [1, 12, 0, 11], "texture": "#0"},
+				"down": {"uv": [12.5, 0, 11.5, 1], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.35, -0.4, 9.2],
+			"to": [8.65, 4.6, 10.7],
+			"rotation": {"angle": -22.5, "axis": "x", "origin": [7, 2.6, 8.95]},
+			"faces": {
+				"north": {"uv": [8.5, 3, 9.25, 5.5], "texture": "#0"},
+				"east": {"uv": [8.5, 6, 9.25, 8.5], "texture": "#0"},
+				"south": {"uv": [5.5, 9, 6.25, 11.5], "texture": "#0"},
+				"west": {"uv": [7, 9, 7.75, 11.5], "texture": "#0"},
+				"up": {"uv": [12.25, 5.25, 11.5, 4.5], "texture": "#0"},
+				"down": {"uv": [12.25, 6, 11.5, 6.75], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.1, 16, 6.3],
+			"to": [8.9, 21, 8.3],
+			"rotation": {"angle": 22.5, "axis": "x", "origin": [7, 16, 6.3]},
+			"faces": {
+				"north": {"uv": [7, 3, 8, 5.5], "texture": "#0"},
+				"east": {"uv": [7, 6, 8, 8.5], "texture": "#0"},
+				"south": {"uv": [0, 8, 1, 10.5], "texture": "#0"},
+				"west": {"uv": [8.5, 0, 9.5, 2.5], "texture": "#0"},
+				"up": {"uv": [12.5, 2.5, 11.5, 1.5], "texture": "#0"},
+				"down": {"uv": [12.5, 3, 11.5, 4], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.35, 20.6, 8.45],
+			"to": [8.65, 25.6, 9.95],
+			"rotation": {"angle": 22.5, "axis": "x", "origin": [7, 20.6, 8.2]},
+			"faces": {
+				"north": {"uv": [8.5, 9, 9.25, 11.5], "texture": "#0"},
+				"east": {"uv": [10, 0, 10.75, 2.5], "texture": "#0"},
+				"south": {"uv": [10, 3, 10.75, 5.5], "texture": "#0"},
+				"west": {"uv": [10, 6, 10.75, 8.5], "texture": "#0"},
+				"up": {"uv": [12.25, 8.25, 11.5, 7.5], "texture": "#0"},
+				"down": {"uv": [12.25, 9, 11.5, 9.75], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.75, 1, 11],
+			"to": [8.25, 24, 11.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7.2, 0, 11]},
+			"faces": {
+				"north": {"uv": [1.5, 4, 1.75, 15.5], "texture": "#0"},
+				"east": {"uv": [2.5, 4, 2.75, 15.5], "texture": "#0"},
+				"south": {"uv": [3.5, 4, 3.75, 15.5], "texture": "#0"},
+				"west": {"uv": [4.5, 0, 4.75, 11.5], "texture": "#0"},
+				"up": {"uv": [11.75, 10.75, 11.5, 10.5], "texture": "#0"},
+				"down": {"uv": [11.75, 11.5, 11.5, 11.75], "texture": "#0"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"thirdperson_lefthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"firstperson_righthand": {
+			"rotation": [20, 15, -75],
+			"translation": [-10, -1.25, -1.5]
+		},
+		"firstperson_lefthand": {
+			"rotation": [20, -15, -75],
+			"translation": [-6, 1.25, -5.75]
+		},
+		"ground": {
+			"rotation": [40, 0, 0],
+			"translation": [0, 3.75, 0]
+		},
+		"gui": {
+			"rotation": [0, 90, 0],
+			"translation": [0, -3.75, 0]
+		},
+		"fixed": {
+			"rotation": [0, 90, 0],
+			"translation": [-0.75, -4.25, 0]
+		}
+	},
+	"groups": [
+		{
+			"name": "weakling_bow_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3, 4, 5]
+		}
+	]
+}
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3d.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull0.json -----
 {
@@ -7455,17 +8129,167 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\balance\levels.json
 
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\balance\spells.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\copper_ring.json -----
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json -----
 {
-  "type": "grimfate:copper_ring",
-  "chance": 0.95,
+  "type": "neoforge:add_item",
   "conditions": [
-    { "condition": "random_chance", "chance": 1.0 }
+    {
+      "condition": "neoforge:loot_table_id",
+      "loot_table_id": [
+        "minecraft:blocks/grass",
+        "minecraft:blocks/tall_grass"
+      ]
+    },
+    { "condition": "minecraft:random_chance", "chance": 0.125 }
+  ],
+  "item": "grimfate:fiber",
+  "count": 1
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\global_loot_modifiers.json -----
+{
+  "replace": false,
+  "entries": [
+    "grimfate:fiber_from_grass",
+    "grimfate:pork_fat_from_pig",
+    "grimfate:jewelry_from_chests"
   ]
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\copper_ring.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\apprentice_staff.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\global_loot_modifiers.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\jewelry_from_chests.json -----
+{
+  "type": "neoforge:add_table",
+  "conditions": [
+    {
+      "condition": "neoforge:loot_table_id",
+      "loot_table_id": [
+        "minecraft:chests/simple_dungeon",
+        "minecraft:chests/abandoned_mineshaft",
+        "minecraft:chests/shipwreck_treasure",
+        "minecraft:chests/jungle_temple",
+
+        "minecraft:chests/village/village_weaponsmith",
+        "minecraft:chests/village/village_armorer",
+        "minecraft:chests/village/village_temple",
+        "minecraft:chests/village/village_cartographer",
+        "minecraft:chests/village/village_fletcher",
+        "minecraft:chests/village/village_tannery",
+        "minecraft:chests/village/village_toolsmith",
+        "minecraft:chests/village/village_fisher",
+        "minecraft:chests/village/village_butcher",
+
+        "minecraft:chests/village/village_desert_house",
+        "minecraft:chests/village/village_plains_house",
+        "minecraft:chests/village/village_savanna_house",
+        "minecraft:chests/village/village_snowy_house",
+        "minecraft:chests/village/village_taiga_house"
+      ]
+    }
+  ],
+  "table": "grimfate:gameplay/jewelry_pool"
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\jewelry_from_chests.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json -----
+{
+  "type": "neoforge:add_item",
+  "conditions": [
+    {
+      "condition": "neoforge:loot_table_id",
+      "loot_table_id": [ "minecraft:entities/pig" ]
+    },
+    { "condition": "minecraft:random_chance", "chance": 0.5 }
+  ],
+  "item": "grimfate:pork_fat",
+  "count": 1
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\gameplay\jewelry_pool.json -----
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "conditions": [
+        { "condition": "minecraft:random_chance", "chance": 0.20 }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:tag",
+          "name": "grimfate:jewelry",
+          "expand": true
+        }
+      ]
+    }
+  ]
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\gameplay\jewelry_pool.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabric.json -----
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FF",
+    "FF"
+  ],
+  "key": {
+    "F": { "item": "grimfate:fiber" }
+  },
+  "result": { "item": "grimfate:canvas_fabric", "count": 1 }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabric.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json -----
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "C",
+    "C",
+    "H"
+  ],
+  "key": {
+    "C": { "item": "minecraft:copper_ingot" },
+    "H": { "item": "grimfate:canvas_fabric" }
+  },
+  "result": { "item": "grimfate:copper_sword", "count": 1 }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copperforced_shield.json -----
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CRC",
+    "R R",
+    "CRC"
+  ],
+  "key": {
+    "C": { "item": "minecraft:copper_ingot" },
+    "R": { "item": "grimfate:rawhide" }
+  },
+  "result": { "item": "grimfate:copperforced_shield", "count": 1 }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copperforced_shield.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\rawhide.json -----
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FF",
+    "LL"
+  ],
+  "key": {
+    "F": { "item": "grimfate:pork_fat" },
+    "L": { "item": "minecraft:leather" }
+  },
+  "result": { "item": "grimfate:rawhide", "count": 1 }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\rawhide.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\scholar_staff.json -----
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
@@ -7479,31 +8303,24 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\copp
   },
   "result": {"id": "grimfate:apprentice_staff", "count": 1}
 }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\apprentice_staff.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\scholar_staff.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\weakling_bow.json -----
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": [" S ", " R ", "W  "],
+  "pattern": [
+    "  C",
+    " S ",
+    "S  "
+  ],
   "key": {
-    "S": {"item": "grimfate:linen_cloth"},
-    "R": {"item": "grimfate:copper_rivet"},
-    "W": {"item": "grimfate:hardwood_shaft"}
+    "S": { "item": "minecraft:stick" },
+    "C": { "item": "grimfate:canvas_fabric" }
   },
-  "result": {"id": "grimfate:apprentice_staff", "count": 1}
+  "result": { "item": "grimfate:scholar_staff", "count": 1 }
 }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\hunters_bow.json -----
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": ["  S", " R ", "W  "],
-  "key": {
-    "S": {"item": "grimfate:linen_cloth"},
-    "R": {"item": "grimfate:copper_rivet"},
-    "W": {"item": "grimfate:hardwood_shaft"}
-  },
-  "result": {"id": "grimfate:apprentice_staff", "count": 1}
-}
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\hunters_bow.json -----n
+
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\weakling_bow.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\boots.json -----
 { "values": ["grimfate:copper_boots", "grimfate:linen_shoes", "grimfate:rawhide_boots"] }
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\boots.json -----n
@@ -7564,6 +8381,18 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\greatswo
 ] }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\hammers.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\jewelry.json -----
+{
+  "replace": false,
+  "values": [
+    "grimfate:copper_ring",
+    "grimfate:bronze_ring",
+    "grimfate:copper_necklace",
+    "grimfate:copper_necklace"
+  ]
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\jewelry.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\archer.json -----
 { "values": [] }
 
@@ -7576,6 +8405,11 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\mag
 { "values": [] }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\melee.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\shields.json -----
+{ "replace": false, "values": [
+
+] }
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\shields.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\staves.json -----
 { "replace": false, "values": [
   "grimfate:scholar_staff"

@@ -9,11 +9,11 @@ import com.doomspire.grimcore.stat.ResistTypes;
 import com.doomspire.grimcore.stat.StatSnapshot;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-//NOTE: Централизованный пайплайн урона - задаем игре последовательность расчета урона от каждого hit
-
+// NOTE: Централизованный пайплайн урона — последовательность расчёта каждого hit.
 public final class DamageEngine {
     private DamageEngine() {}
 
@@ -26,7 +26,10 @@ public final class DamageEngine {
         if (targetIsPlayer) {
             PlayerStatsAttachment tAtt = target.getData(ModAttachments.PLAYER_STATS.get());
             if (tAtt == null) return 0f;
-            tSnap = tAtt.getSnapshot();
+            // ВАЖНО: берём снапшот с аффиксами владельца
+            tSnap = (target instanceof Player pT)
+                    ? tAtt.getSnapshotWithAffixes(pT)
+                    : tAtt.getSnapshot();
             // Evade
             if (ThreadLocalRandom.current().nextFloat() < tSnap.evasionChance) {
                 return 0f;
@@ -44,8 +47,11 @@ public final class DamageEngine {
         StatSnapshot aSnap = null;
         if (ctx.attacker != null) {
             var aPlayer = ctx.attacker.getData(ModAttachments.PLAYER_STATS.get());
-            if (aPlayer != null) aSnap = aPlayer.getSnapshot();
-            else {
+            if (aPlayer != null) {
+                aSnap = (ctx.attacker instanceof Player pA)
+                        ? aPlayer.getSnapshotWithAffixes(pA)
+                        : aPlayer.getSnapshot();
+            } else {
                 var aMob = ctx.attacker.getData(ModAttachments.MOB_STATS.get());
                 if (aMob != null) aSnap = aMob.getSnapshot();
             }
@@ -157,25 +163,18 @@ public final class DamageEngine {
 
     // ===== helpers =====
 
-    /**
-     * Чтение глобальной редукции урона. До того как поле появится в StatSnapshot,
-     * метод вернёт 0f, чтобы не ломать компиляцию.
-     */
+    /** Чтение глобальной редукции урона. До того как поле появится в StatSnapshot — вернёт 0f. */
     private static float readDamageReductionAll(StatSnapshot snap) {
         try {
-            // Публичное поле
-            var f = snap.getClass().getField("damageReductionAll");
+            var f = snap.getClass().getField("damageReductionAll"); // публичное поле
             Object v = f.get(snap);
             if (v instanceof Number n) return n.floatValue();
         } catch (Throwable ignored) {
-            // попробуем геттер
-            try {
+            try { // попробуем геттер на всякий случай
                 var m = snap.getClass().getMethod("damageReductionAll");
                 Object v = m.invoke(snap);
                 if (v instanceof Number n) return n.floatValue();
-            } catch (Throwable ignored2) {
-                // поля нет — используем 0
-            }
+            } catch (Throwable ignored2) {}
         }
         return 0f;
     }
