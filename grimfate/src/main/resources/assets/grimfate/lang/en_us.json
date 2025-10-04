@@ -27,7 +27,40 @@
   "attr.tip.evasion": "Dodge chance.",
 
   "grimfate.ui.stats.open": "Open Attributes",
+  "itemGroup.grimfate.equipment": "Grimfate • Equipment",
+  "itemGroup.grimfate.materials": "Grimfate • Materials",
+  "itemGroup.grimfate.mobs": "Grimfate • Mobs",
 
-"item.grimfate.rusty_ring": "Rusty Ring"
+  "item.grimfate.copper_sword": "Copper Sword",
+  "item.grimfate.scholar_staff": "Scholar's Staff",
+  "item.grimfate.weakling_bow": "Weakling Bow",
+  "item.grimfate.copperforced_shield": "Copperforced Shield",
+
+  "item.grimfate.copper_helmet": "Copper Helmet",
+  "item.grimfate.copper_chestplate": "Copper Chestplate",
+  "item.grimfate.copper_leggings": "Copper Leggings",
+  "item.grimfate.copper_boots": "Copper Boots",
+
+  "item.grimfate.rawhide_hood": "Rawhide Hood",
+  "item.grimfate.rawhide_jacket": "Rawhide Jacket",
+  "item.grimfate.rawhide_wraps": "Rawhide Wraps",
+  "item.grimfate.rawhide_boots": "Rawhide Boots",
+
+  "item.grimfate.linen_hat": "Linen Hat",
+  "item.grimfate.linen_cape": "Linen Cape",
+  "item.grimfate.linen_pants": "Linen Pants",
+  "item.grimfate.linen_shoes": "Linen Shoes",
+
+  "item.grimfate.copper_ring": "Copper Ring",
+  "item.grimfate.bronze_ring": "Bronze Ring",
+  "item.grimfate.copper_necklace": "Copper Necklace",
+  "item.grimfate.bronze_necklace": "Bronze Necklace",
+
+  "item.grimfate.fiber": "Fiber",
+  "item.grimfate.canvas_fabric": "Canvas Fabric",
+  "item.grimfate.pork_fat": "Pork Fat",
+  "item.grimfate.rawhide": "Rawhide",
+
+  "entity.grimfate.bolt": "Bolt"
 }
 

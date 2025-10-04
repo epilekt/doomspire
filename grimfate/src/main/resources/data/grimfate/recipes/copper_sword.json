@@ -1,13 +1,15 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "C",
-    "C",
-    "H"
+    " I ",
+    " I ",
+    "PSC"
   ],
   "key": {
-    "C": { "item": "minecraft:copper_ingot" },
-    "H": { "item": "grimfate:canvas_fabric" }
+    "I": { "item": "minecraft:copper_ingot" },
+    "C": { "item": "grimfate:canvas_fabric" },
+    "P": {"item": "grimfate:pork_fat"},
+    "S": {"item": "minecraft:stick"}
   },
   "result": { "item": "grimfate:copper_sword", "count": 1 }
 }

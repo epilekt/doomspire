@@ -3,7 +3,7 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
-		"0": "block/copperforced_shield_3d",
+		"0": "grimfate:item/copperforced_shield_3d",
 		"particle": "block/copperforced_shield_3d"
 	},
 	"elements": [

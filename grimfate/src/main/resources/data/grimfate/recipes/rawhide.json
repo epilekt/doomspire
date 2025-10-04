@@ -1,8 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "FF",
-    "LL"
+    "LLF",
+    "FFF"
   ],
   "key": {
     "F": { "item": "grimfate:pork_fat" },

@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   { "parent": "grimfate:item/copperforced_shield_3d" },
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/copperforced_shield_2d" },
+    "fixed":  { "parent": "grimfate:item/copperforced_shield_2d" },
+    "ground": { "parent": "grimfate:item/copperforced_shield_2d" },
+    "head":   { "parent": "grimfate:item/copperforced_shield_2d" }
+  }
+}

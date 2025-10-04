@@ -1,13 +1,15 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "CRC",
-    "R R",
-    "CRC"
+    "MFM",
+    "MCM",
+    "MRM"
   ],
   "key": {
     "C": { "item": "minecraft:copper_ingot" },
-    "R": { "item": "grimfate:rawhide" }
+    "R": { "item": "grimfate:rawhide" },
+    "P": {"item": "grimfate:pork_fat"},
+    "M": {"tag": "minecraft:planks"}
   },
   "result": { "item": "grimfate:copperforced_shield", "count": 1 }
 }

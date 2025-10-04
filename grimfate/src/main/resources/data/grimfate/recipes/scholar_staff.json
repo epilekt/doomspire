@@ -1,13 +1,13 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    " S  ",
-    " R ",
-    "W  "],
+    "PFP",
+    " S ",
+    " S "],
   "key": {
-    "S": {"item": "minecraft:copper_ingot"},
-    "R": {"item": "grimfate:copper_rivet"},
-    "W": {"item": "grimfate:hardwood_shaft"}
+    "S": {"item": "minecraft:stick"},
+    "P": {"item": "grimfate:pork_fat"},
+    "F": {"item": "grimfate:fiber"}
   },
-  "result": {"id": "grimfate:apprentice_staff", "count": 1}
+  "result": {"id": "grimfate:scholar_staff", "count": 1}
 }

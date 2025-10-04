@@ -2,8 +2,10 @@
   "parent": "minecraft:item/handheld",
   "loader": "neoforge:separate_transforms",
   "base":   { "parent": "grimfate:item/scholar_staff_3d" },
-  "gui":    { "parent": "grimfate:item/scholar_staff_2d" },
-  "fixed":  { "parent": "grimfate:item/scholar_staff_2d" },
-  "ground": { "parent": "grimfate:item/scholar_staff_2d" },
-  "head":   { "parent": "grimfate:item/scholar_staff_2d" }
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/scholar_staff_2d" },
+    "fixed":  { "parent": "grimfate:item/scholar_staff_2d" },
+    "ground": { "parent": "grimfate:item/scholar_staff_2d" },
+    "head":   { "parent": "grimfate:item/scholar_staff_2d" }
+  }
 }

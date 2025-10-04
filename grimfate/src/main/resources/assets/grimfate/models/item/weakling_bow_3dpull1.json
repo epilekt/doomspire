@@ -3,7 +3,7 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
-		"3": "weakling_bow_3dpull1",
+		"3": "grimfate:item/weakling_bow_3dpull1",
 		"particle": "block/weakling_bow_3d"
 	},
 	"elements": [

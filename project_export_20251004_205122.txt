@@ -5,9 +5,11 @@
 .\grimcore\src\main\java\com\doomspire\grimcore\affix\ModAffixes.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatCalculator.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatsAttachment.java
+.\grimcore\src\main\java\com\doomspire\grimcore\attach\MobThreatAttachment.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerLoadoutAttachment.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerProgressAttachment.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerStatsAttachment.java
+.\grimcore\src\main\java\com\doomspire\grimcore\attach\ThreatService.java
 .\grimcore\src\main\java\com\doomspire\grimcore\combat\DamageContext.java
 .\grimcore\src\main\java\com\doomspire\grimcore\combat\DamageEngine.java
 .\grimcore\src\main\java\com\doomspire\grimcore\combat\EnvironmentalDamage.java
@@ -64,6 +66,7 @@
 .\grimcore\src\main\java\com\doomspire\grimcore\xp\Rewards.java
 .\grimcore\src\main\resources\data\grimcore\mobs\minecraft\zombie.json
 .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java
+.\grimfate\src\main\java\com\doomspire\grimfate\client\BowModelProperties.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\CustomHudOverlay.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryTabsButtons.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryWithStatsScreen.java
@@ -113,6 +116,7 @@
 .\grimfate\src\main\resources\assets\grimfate\lang\ru_ru.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\bronze_necklace.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\bronze_ring.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\canvas_fabric.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\copper_boots.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\copper_chestplate.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\copper_helmet.json
@@ -122,11 +126,16 @@
 .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_2d.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_3d.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_2d.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_3d.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\fiber.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\linen_cape.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\linen_hat.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\linen_pants.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\linen_shoes.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\pork_fat.json
+.\grimfate\src\main\resources\assets\grimfate\models\item\rawhide.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_boots.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_hood.json
 .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_jacket.json
@@ -190,6 +199,9 @@
 .\grimfate\src\main\resources\data\grimfate\tags\items\shields.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\staves.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\swords.json
+.\grimfate\src\main\resources\data\grimfate\weapon_attributes\copper_sword.json
+.\grimfate\src\main\resources\data\grimfate\weapon_attributes\scholar_staff.json
+.\grimfate\src\main\resources\data\grimfate\weapon_attributes\weakling_bow.json
 .\grimfate\src\main\resources\data\neoforge\loot_modifiers\global_loot_modifiers.json
 n=== CONCATENATED CONTENTS ===n
 ----- BEGIN FILE: .\gradle.properties -----
@@ -638,6 +650,249 @@ public class MobStatsAttachment {
 
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatsAttachment.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobThreatAttachment.java -----
+package com.doomspire.grimcore.attach;
+
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+
+import java.util.*;
+
+/**
+ * Таблица угрозы для одной боевой единицы (обычно — для моба).
+ *
+ * Модель:
+ *  - БАЗОВАЯ угроза (накапливается от урона, постоянных статов и т.п.) — не "тает".
+ *  - ВРЕМЕННЫЕ модификаторы (таунт/умения) — каждый с суммой и временем истечения.
+ *  - Целью считается игрок с максимальной актуальной угрозой (base + активные temp).
+ *
+ * Никакого общего decay по тикам нет.
+ */
+public final class MobThreatAttachment {
+
+    /** Порог «пыли», ниже которого записи очищаются. */
+    public static final float EPSILON = 0.05f;
+
+    /** Базовая угроза по игроку. */
+    private final Map<UUID, Float> baseThreat = new HashMap<>();
+
+    /** Временные модификаторы по игроку. */
+    private final Map<UUID, List<TempBonus>> tempThreats = new HashMap<>();
+
+    /** Момент последнего боевого события (для эвристик AI/логов). */
+    private long lastCombatMs = 0L;
+
+    /** Запись временного бонуса. */
+    public static final class TempBonus {
+        public float amount;
+        public long expiresAtMs;
+
+        public TempBonus(float amount, long expiresAtMs) {
+            this.amount = amount;
+            this.expiresAtMs = expiresAtMs;
+        }
+    }
+
+    // ======== Мутации ========
+
+    /** + к БАЗОВОЙ угрозе. Возвращает новое базовое значение. */
+    public float addBaseThreat(UUID playerId, float amount) {
+        if (playerId == null || amount <= 0f) return getBaseThreat(playerId);
+        float next = Math.max(0f, baseThreat.getOrDefault(playerId, 0f) + amount);
+        if (next < EPSILON) {
+            baseThreat.remove(playerId);
+        } else {
+            baseThreat.put(playerId, next);
+        }
+        lastCombatMs = System.currentTimeMillis();
+        return next;
+    }
+
+    /** Установить БАЗОВУЮ угрозу конкретного игрока. */
+    public void setBaseThreat(UUID playerId, float value) {
+        if (playerId == null) return;
+        float v = Math.max(0f, value);
+        if (v < EPSILON) baseThreat.remove(playerId);
+        else baseThreat.put(playerId, v);
+    }
+
+    /** Добавить ВРЕМЕННУЮ угрозу (таунт/скилл) с длительностью в миллисекундах. */
+    public void addTempThreat(UUID playerId, float amount, long durationMs) {
+        if (playerId == null || amount <= 0f || durationMs <= 0L) return;
+        long now = System.currentTimeMillis();
+        long exp = now + durationMs;
+
+        var list = tempThreats.computeIfAbsent(playerId, k -> new ArrayList<>());
+        list.add(new TempBonus(amount, exp));
+        lastCombatMs = now;
+    }
+
+    /** Очистить все угрозы конкретного игрока (base + temp). */
+    public void clearFor(UUID playerId) {
+        if (playerId == null) return;
+        baseThreat.remove(playerId);
+        tempThreats.remove(playerId);
+    }
+
+    /** Полная очистка. */
+    public void clearAll() {
+        baseThreat.clear();
+        tempThreats.clear();
+        lastCombatMs = 0L;
+    }
+
+    // ======== Чтение/вычисления ========
+
+    /** БАЗОВАЯ угроза (без временных бонусов). */
+    public float getBaseThreat(UUID playerId) {
+        if (playerId == null) return 0f;
+        return baseThreat.getOrDefault(playerId, 0f);
+    }
+
+    /** Полная угроза (base + актуальные temp), с ленивой очисткой просроченных бонусов. */
+    public float totalThreatFor(UUID playerId, long nowMs) {
+        if (playerId == null) return 0f;
+        float base = baseThreat.getOrDefault(playerId, 0f);
+        float sumTemp = sumAndPruneTemps(playerId, nowMs);
+        float total = base + sumTemp;
+        if (total < EPSILON) {
+            // зачистим пустышки
+            baseThreat.remove(playerId);
+            if (sumTemp == 0f) tempThreats.remove(playerId);
+            return 0f;
+        }
+        return total;
+    }
+
+    /** UUID игрока с максимальной актуальной угрозой (или null). */
+    public UUID topThreatPlayer(long nowMs) {
+        // объединённый набор ключей (у кого есть либо base, либо temp)
+        Set<UUID> keys = new HashSet<>(baseThreat.keySet());
+        keys.addAll(tempThreats.keySet());
+
+        UUID bestId = null;
+        float bestVal = 0f;
+
+        for (UUID id : keys) {
+            float val = totalThreatFor(id, nowMs);
+            if (val > bestVal) {
+                bestVal = val;
+                bestId = id;
+            }
+        }
+        // небольшая чистка глобальных карт, если всё осыпалось
+        if (bestId == null) {
+            baseThreat.entrySet().removeIf(e -> e.getValue() < EPSILON);
+            tempThreats.entrySet().removeIf(e -> {
+                float s = sumAndPruneTemps(e.getKey(), nowMs);
+                return s < EPSILON;
+            });
+        }
+        return bestId;
+    }
+
+    /** Топ-N (id, total) по убыванию, для отладки/UI. */
+    public List<Map.Entry<UUID, Float>> topN(int n, long nowMs) {
+        Set<UUID> keys = new HashSet<>(baseThreat.keySet());
+        keys.addAll(tempThreats.keySet());
+        ArrayList<Map.Entry<UUID, Float>> list = new ArrayList<>(keys.size());
+        for (UUID id : keys) {
+            float v = totalThreatFor(id, nowMs);
+            if (v >= EPSILON) list.add(Map.entry(id, v));
+        }
+        list.sort((a, b) -> Float.compare(b.getValue(), a.getValue()));
+        return list.size() > n ? list.subList(0, n) : list;
+    }
+
+    /** Были ли бои в последние timeoutMs миллисекунд. */
+    public boolean isInCombat(long nowMs, long timeoutMs) {
+        return lastCombatMs > 0L && (nowMs - lastCombatMs) <= Math.max(0L, timeoutMs);
+    }
+
+    // ======== Вспомогательное ========
+
+    private float sumAndPruneTemps(UUID playerId, long nowMs) {
+        var list = tempThreats.get(playerId);
+        if (list == null || list.isEmpty()) return 0f;
+
+        float sum = 0f;
+        // лениво чистим просроченные
+        list.removeIf(tb -> tb == null || tb.expiresAtMs <= nowMs || tb.amount < EPSILON);
+        for (TempBonus tb : list) sum += tb.amount;
+
+        if (list.isEmpty()) tempThreats.remove(playerId);
+        return sum;
+    }
+
+    // ======== Сериализация (StreamCodec) ========
+
+    /**
+     * Формат:
+     *  base: varInt size, затем (UUID hi, UUID lo, float base)
+     *  temps: varInt size, затем для каждого ключа:
+     *         (UUID hi, UUID lo, varInt listSize, повторить listSize раз: float amount, long expiresAtMs)
+     *  lastCombatMs: long
+     */
+    public static final StreamCodec<RegistryFriendlyByteBuf, MobThreatAttachment> STREAM_CODEC =
+            StreamCodec.of(MobThreatAttachment::encode, MobThreatAttachment::decode);
+
+    private static void encode(RegistryFriendlyByteBuf buf, MobThreatAttachment att) {
+        // base
+        buf.writeVarInt(att.baseThreat.size());
+        for (var e : att.baseThreat.entrySet()) {
+            UUID id = e.getKey();
+            buf.writeLong(id.getMostSignificantBits());
+            buf.writeLong(id.getLeastSignificantBits());
+            buf.writeFloat(e.getValue());
+        }
+        // temps
+        buf.writeVarInt(att.tempThreats.size());
+        for (var e : att.tempThreats.entrySet()) {
+            UUID id = e.getKey();
+            buf.writeLong(id.getMostSignificantBits());
+            buf.writeLong(id.getLeastSignificantBits());
+            List<TempBonus> list = e.getValue();
+            buf.writeVarInt(list != null ? list.size() : 0);
+            if (list != null) {
+                for (TempBonus tb : list) {
+                    buf.writeFloat(tb.amount);
+                    buf.writeLong(tb.expiresAtMs);
+                }
+            }
+        }
+        buf.writeLong(att.lastCombatMs);
+    }
+
+    private static MobThreatAttachment decode(RegistryFriendlyByteBuf buf) {
+        MobThreatAttachment a = new MobThreatAttachment();
+        // base
+        int bSize = buf.readVarInt();
+        for (int i = 0; i < bSize; i++) {
+            UUID id = new UUID(buf.readLong(), buf.readLong());
+            float v = buf.readFloat();
+            if (v >= EPSILON) a.baseThreat.put(id, v);
+        }
+        // temps
+        int tSize = buf.readVarInt();
+        for (int i = 0; i < tSize; i++) {
+            UUID id = new UUID(buf.readLong(), buf.readLong());
+            int n = buf.readVarInt();
+            if (n > 0) {
+                ArrayList<TempBonus> list = new ArrayList<>(n);
+                for (int j = 0; j < n; j++) {
+                    float amt = buf.readFloat();
+                    long exp = buf.readLong();
+                    if (amt >= EPSILON) list.add(new TempBonus(amt, exp));
+                }
+                if (!list.isEmpty()) a.tempThreats.put(id, list);
+            }
+        }
+        a.lastCombatMs = buf.readLong();
+        return a;
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobThreatAttachment.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerLoadoutAttachment.java -----
 package com.doomspire.grimcore.attach;
 
@@ -1033,6 +1288,78 @@ public class PlayerStatsAttachment {
 }
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerStatsAttachment.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\attach\ThreatService.java -----
+package com.doomspire.grimcore.attach;
+
+import com.doomspire.grimcore.stat.ModAttachments; // ← если пакет другой, поправь импорт
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+
+import java.util.UUID;
+
+/**
+ * Централизованный сервис угрозы без тик-затухания:
+ *  - конвертация нанесённого урона в БАЗОВУЮ угрозу,
+ *  - добавление постоянной (base) угрозы,
+ *  - добавление временной (temp) угрозы с авто-сбросом по таймеру,
+ *  - чтение total/top.
+ *
+ * Событий/подписок тут нет — только прямые вызовы из боёвки/спеллов.
+ */
+public final class ThreatService {
+    private ThreatService() {}
+
+    /** Множитель перевода нанесённого урона в угрозу (баланс). */
+    public static final float THREAT_PER_DAMAGE = 1.0f;
+
+    /** Доп. множитель из статов (когда будет нужный стат — подключим здесь). */
+    public static float threatGenMultiplier(Player source) {
+        return 1.0f;
+    }
+
+    /** Урон → БАЗОВАЯ угроза. */
+    public static void addThreatFromDamage(LivingEntity victim, Player attacker, float damage) {
+        if (!(victim.level() instanceof ServerLevel) || attacker == null || damage <= 0f) return;
+        MobThreatAttachment att = victim.getData(ModAttachments.MOB_THREAT.get());
+        if (att == null) return;
+
+        float mult = THREAT_PER_DAMAGE * threatGenMultiplier(attacker);
+        att.addBaseThreat(attacker.getUUID(), damage * mult);
+    }
+
+    /** Постоянная (base) прибавка угрозы. */
+    public static void addThreatFlat(LivingEntity victim, UUID playerId, float amount) {
+        if (!(victim.level() instanceof ServerLevel) || playerId == null || amount <= 0f) return;
+        MobThreatAttachment att = victim.getData(ModAttachments.MOB_THREAT.get());
+        if (att != null) {
+            att.addBaseThreat(playerId, amount);
+        }
+    }
+
+    /** Временная (temp) угроза: исчезает через durationMs. */
+    public static void addTempThreat(LivingEntity victim, UUID playerId, float amount, long durationMs) {
+        if (!(victim.level() instanceof ServerLevel) || playerId == null || amount <= 0f || durationMs <= 0L) return;
+        MobThreatAttachment att = victim.getData(ModAttachments.MOB_THREAT.get());
+        if (att != null) {
+            att.addTempThreat(playerId, amount, durationMs);
+        }
+    }
+
+    /** Текущее total-значение угрозы по игроку. */
+    public static float getThreat(LivingEntity victim, UUID playerId) {
+        MobThreatAttachment att = victim.getData(ModAttachments.MOB_THREAT.get());
+        return (att != null) ? att.totalThreatFor(playerId, System.currentTimeMillis()) : 0f;
+    }
+
+    /** Игрок с наибольшей актуальной угрозой. */
+    public static UUID topThreatPlayer(LivingEntity victim) {
+        MobThreatAttachment att = victim.getData(ModAttachments.MOB_THREAT.get());
+        return (att != null) ? att.topThreatPlayer(System.currentTimeMillis()) : null;
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\attach\ThreatService.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\combat\DamageContext.java -----
 package com.doomspire.grimcore.combat;
 
@@ -1070,6 +1397,7 @@ package com.doomspire.grimcore.combat;
 
 import com.doomspire.grimcore.attach.MobStatsAttachment;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.attach.ThreatService;
 import com.doomspire.grimcore.net.GrimcoreNetworking;
 import com.doomspire.grimcore.stat.DamageTypes;
 import com.doomspire.grimcore.stat.ModAttachments;
@@ -1082,6 +1410,7 @@ import net.minecraft.world.entity.player.Player;
 import java.util.concurrent.ThreadLocalRandom;
 
 // NOTE: Централизованный пайплайн урона — последовательность расчёта каждого hit.
+// NOTE: Генерация угрозы тоже подключена здесь
 public final class DamageEngine {
     private DamageEngine() {}
 
@@ -1193,6 +1522,11 @@ public final class DamageEngine {
                 tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
                 tAtt.markDirty();
             }
+        }
+
+        // === НОВОЕ: генерация угрозы по фактически нанесённому урону ===
+        if (applied > 0 && ctx.attacker instanceof Player pA) {
+            ThreatService.addThreatFromDamage(target, pA, applied);
         }
 
         // --- lifesteal/manasteal по фактически нанесённому урону ---
@@ -2053,6 +2387,7 @@ package com.doomspire.grimcore.events;
 
 import com.doomspire.grimcore.attach.MobStatsAttachment;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.attach.ThreatService;            // ← добавлено
 import com.doomspire.grimcore.combat.DamageContext;
 import com.doomspire.grimcore.combat.DamageEngine;
 import com.doomspire.grimcore.combat.EnvironmentalDamage;
@@ -2064,6 +2399,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;               // ← добавлено
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
@@ -2153,10 +2489,18 @@ public final class CoreDamageEvents {
             }
             MobStatsAttachment tStats = living.getData(ModAttachments.MOB_STATS.get());
             if (tStats != null) {
-                tStats.setCurrentHealth(tStats.getCurrentHealth() - Math.round(base));
+                int before = tStats.getCurrentHealth();
+                int applied = Math.max(0, Math.min(before, Math.round(base))); // фактически нанесённый урон
+
+                // === НОВОЕ: угроза от урона игрока ===
+                if (applied > 0 && src instanceof Player pA) {
+                    ThreatService.addThreatFromDamage(living, pA, applied);
+                }
+
+                tStats.setCurrentHealth(before - applied);
                 tStats.markDirty();
                 event.setNewDamage(0f);
-                if (tStats.getCurrentHealth() <= 0) killByGeneric(living);
+                if ((before - applied) <= 0) killByGeneric(living);
             }
         }
     }
@@ -2448,10 +2792,7 @@ n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\events\XpEvents
 package com.doomspire.grimcore;
 
 import com.doomspire.grimcore.data.ModDataComponents;
-import com.doomspire.grimcore.events.CoreDamageEvents;
-import com.doomspire.grimcore.events.CorePlayerEvents;
-import com.doomspire.grimcore.events.MobSpawnInit;
-import com.doomspire.grimcore.events.RegenTicker;
+import com.doomspire.grimcore.events.*;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -2469,6 +2810,7 @@ public final class Grimcore {
         NeoForge.EVENT_BUS.register(CorePlayerEvents.class);
         NeoForge.EVENT_BUS.register(MobSpawnInit.class);
         NeoForge.EVENT_BUS.register(RegenTicker.class);
+
 
     }
 }
@@ -3417,14 +3759,11 @@ n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\DamageType
 package com.doomspire.grimcore.stat;
 
 import com.doomspire.grimcore.Grimcore;
-import com.doomspire.grimcore.attach.MobStatsAttachment;
-import com.doomspire.grimcore.attach.PlayerLoadoutAttachment;
-import com.doomspire.grimcore.attach.PlayerProgressAttachment;
+import com.doomspire.grimcore.attach.*;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.attachment.AttachmentType;
-import com.doomspire.grimcore.attach.PlayerStatsAttachment;
 
 public final class ModAttachments {
     private ModAttachments() {}
@@ -3460,6 +3799,15 @@ public final class ModAttachments {
                             .serialize(PlayerLoadoutAttachment.CODEC)      // хот-бар сохраняется
                             .sync(PlayerLoadoutAttachment.STREAM_CODEC)     // ВАЖНО: клиент видит изменения
                             .build());
+
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<MobThreatAttachment>> MOB_THREAT =
+            ATTACHMENT_TYPES.register("mob_threat",
+                    () -> AttachmentType.builder(MobThreatAttachment::new)
+                            .sync(MobThreatAttachment.STREAM_CODEC) // сеть
+                            //.serialize(MobThreatAttachment.CODEC) // добавим позже, если нужно сохранять в сейв
+                            .build());
+
+
 }
 
 
@@ -3887,6 +4235,45 @@ public final class GrimfateAffixExtraction {
 
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\BowModelProperties.java -----
+package com.doomspire.grimfate.client;
+
+import com.doomspire.grimfate.item.weapons.Weapons;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+
+public final class BowModelProperties {
+    private BowModelProperties() {}
+
+    public static void register() {
+        // Зарегистрируй для всех своих луков:
+        registerBow(Weapons.WEAKLING_BOW.get());
+        // Когда появятся другие луки — добавь сюда registerBow(...)
+    }
+
+    private static void registerBow(net.minecraft.world.item.Item item) {
+        // "pull" — 0..1, насколько натянута тетива
+        ItemProperties.register(item, ResourceLocation.withDefaultNamespace("pull"),
+                (ItemStack stack, ClientLevel level, LivingEntity entity, int seed) -> {
+                    if (entity == null) return 0.0F;
+                    if (entity.getUseItem() != stack) return 0.0F;
+                    // стабильная формула: сколько тиков тянем / 20.0F
+                    int used = entity.getTicksUsingItem();
+                    return Math.min(1.0F, used / 20.0F);
+                });
+
+
+        // "pulling" — 1.0 когда игрок тянет тетиву
+        ItemProperties.register(item, ResourceLocation.withDefaultNamespace("pulling"),
+                (ItemStack stack, ClientLevel level, LivingEntity entity, int seed) ->
+                        (entity != null && entity.isUsingItem() && entity.getUseItem() == stack) ? 1.0F : 0.0F);
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\BowModelProperties.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\CustomHudOverlay.java -----
 package com.doomspire.grimfate.client;
 
@@ -5114,12 +5501,21 @@ import com.doomspire.grimcore.affix.AffixAggregator;
 import com.doomspire.grimcore.affix.ModAffixes;
 import com.doomspire.grimfate.commands.AddSpellCommand;
 import com.doomspire.grimfate.config.ClientConfig;
+import com.doomspire.grimfate.item.armor.Armors;
+import com.doomspire.grimfate.item.jewelry.Jewelry;
+import com.doomspire.grimfate.item.materials.Materials;
+import com.doomspire.grimfate.item.weapons.Weapons;
 import com.doomspire.grimfate.network.ModNetworking;
 import com.doomspire.grimfate.registry.*;
 import com.mojang.logging.LogUtils;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -5129,6 +5525,7 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.slf4j.Logger;
 
@@ -5139,6 +5536,31 @@ public class Grimfate {
 
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+
+    // Вкладка 1: Снаряжение (оружие/броня/бижутерия)
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB_EQUIPMENT =
+            CREATIVE_MODE_TABS.register("equipment", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.grimfate.equipment"))
+                    .icon(() -> new ItemStack(Weapons.COPPER_SWORD.get()))
+                    .withSearchBar()
+                    .build());
+
+    // Вкладка 2: Материалы и блоки
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB_MATERIALS =
+            CREATIVE_MODE_TABS.register("materials", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.grimfate.materials"))
+                    // Иконка — попытаемся взять fiber, если нет — fallback на медный меч
+                    .icon(() -> new ItemStack(Materials.RAWHIDE.get()))
+                    .withSearchBar()
+                    .build());
+
+    // Вкладка 3: Мобы (пока пусто, но таб будет готов)
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB_MOBS =
+            CREATIVE_MODE_TABS.register("mobs", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.grimfate.mobs"))
+                    .icon(() -> new ItemStack(Materials.PORK_FAT.get()))
+                    .withSearchBar()
+                    .build());
 
     public Grimfate(IEventBus modEventBus, ModContainer modContainer) {
         // Конфиги
@@ -5156,6 +5578,11 @@ public class Grimfate {
         com.doomspire.grimfate.loot.ModLootModifiers.init(modEventBus);
         ModDataComponents.DATA_COMPONENT_TYPES.register(modEventBus);
 
+        com.doomspire.grimfate.item.weapons.Weapons.init(modEventBus);
+        com.doomspire.grimfate.item.armor.Armors.init(modEventBus);
+        com.doomspire.grimfate.item.materials.Materials.init(modEventBus);
+        com.doomspire.grimfate.item.jewelry.Jewelry.init(modEventBus);
+
         // Фазы
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::addCreative);
@@ -5168,22 +5595,83 @@ public class Grimfate {
 
     private void commonSetup(final FMLCommonSetupEvent e) {
         e.enqueueWork(() -> {
+            // Two-hand резолвер для WeaponGate (читает профили из data-компонента)
             com.doomspire.grimcore.spell.api.WeaponGate.setTwoHandedResolver((stack, player) -> {
                 var comp = stack.get(com.doomspire.grimfate.registry.ModDataComponents.WEAPON_PROFILE.get());
                 return comp != null && comp.twoHanded();
             });
+
+            // Интеграции
             com.doomspire.grimfate.compat.bettercombat.BetterCombatBridge.init();
             com.doomspire.grimfate.registry.ModCurios.init();
-            // 1) Базовые аффиксы ядра (dr_all, max_mana_flat, fire_resist и т.д.)
+
+            // Аффиксы
             ModAffixes.bootstrap();
-            // 2) Подключаем экстрактор аффиксов со стороны контента
             AffixAggregator.setExtractor(com.doomspire.grimfate.affix.GrimfateAffixExtraction::extractFromEntity);
 
-            LOGGER.info("[Grimfate] AffixAggregator hooked and ModAffixes bootstrapped.");
+            LOGGER.info("[Grimfate] Creative tabs registered; AffixAggregator hooked; integrations bootstrapped.");
         });
     }
 
-    private void addCreative(final BuildCreativeModeTabContentsEvent e) { /* ... */ }
+    // Наполнение вкладок
+    private void addCreative(final BuildCreativeModeTabContentsEvent e) {
+        if (e.getTab() == TAB_EQUIPMENT.get()) {
+
+            safeAdd(e, Weapons.COPPER_SWORD);
+            safeAdd(e, Weapons.SCHOLAR_STAFF);
+            safeAdd(e, Weapons.WEAKLING_BOW);
+            safeAdd(e, Weapons.COPPERFORCED_SHIELD);
+            safeAdd(e, Armors.COPPER_BOOTS);
+            safeAdd(e, Armors.COPPER_CHESTPLATE);
+            safeAdd(e, Armors.COPPER_LEGGINGS);
+            safeAdd(e, Armors.COPPER_HELMET);
+            safeAdd(e, Jewelry.COPPER_RING);
+            safeAdd(e, Jewelry.COPPER_NECKLACE);
+            safeAdd(e, Jewelry.BRONZE_RING);
+            safeAdd(e, Jewelry.BRONZE_NECKLACE);
+            safeAdd(e, Armors.LINEN_SHOES);
+            safeAdd(e, Armors.LINEN_CAPE);
+            safeAdd(e, Armors.LINEN_PANTS);
+            safeAdd(e, Armors.LINEN_HAT);
+            safeAdd(e, Armors.RAWHIDE_BOOTS);
+            safeAdd(e, Armors.RAWHIDE_JACKET);
+            safeAdd(e, Armors.RAWHIDE_WRAPS);
+            safeAdd(e, Armors.RAWHIDE_HOOD);
+
+        }
+        else if (e.getTab() == TAB_MATERIALS.get()) {
+            // Материалы по id (без жёсткой зависимости на класс подмодуля)
+            acceptIfPresent(e, rl("fiber"));
+            acceptIfPresent(e, rl("canvas_fabric.json"));
+            acceptIfPresent(e, rl("pork_fat"));
+            acceptIfPresent(e, rl("rawhide"));
+            // Блоки добавим позже, когда появятся
+        }
+        else if (e.getTab() == TAB_MOBS.get()) {
+            // Пока пусто — добавим яйца призыва и дропы, когда появятся сущности
+        }
+    }
+
+    // ==== Helpers ============================================================
+
+    private static void safeAdd(BuildCreativeModeTabContentsEvent e, DeferredHolder<Item, ? extends Item> h) {
+        if (h != null && h.isBound()) e.accept(h.get());
+    }
+
+    private static void acceptIfPresent(BuildCreativeModeTabContentsEvent e, ResourceLocation id) {
+        Item item = lookupItem(id);
+        if (item != null) e.accept(item);
+    }
+
+    private static ItemStack stackOrFallback(ResourceLocation prefer, Item fallback) {
+        Item item = lookupItem(prefer);
+        return new ItemStack(item != null ? item : fallback);
+    }
+
+    private static Item lookupItem(ResourceLocation id) {
+        return BuiltInRegistries.ITEM.getOptional(id).orElse(null);
+    }
+
 
     @net.neoforged.bus.api.SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent e) {
@@ -5221,6 +5709,9 @@ public final class GrimfateClient {
         modBus.addListener(GrimfateClient::onClientSetup);
         // Ключевая строка: регистрируем KeyMappings только отсюда
         modBus.addListener(Hotkeys::onRegisterKeys);
+        modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) ->
+                e.enqueueWork(com.doomspire.grimfate.client.BowModelProperties::register));
+
     }
 
     static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers e) {
@@ -5439,20 +5930,20 @@ public final class Armors {
                             ArmorItem.Type.BOOTS, new Item.Properties(), copperVisual()));
 
     // ===== RAWHIDE =====
-    public static final DeferredHolder<Item, Item> RAWHIDE_HELMET =
-            ModItems.ITEMS.register("rawhide_helmet",
+    public static final DeferredHolder<Item, Item> RAWHIDE_HOOD =
+            ModItems.ITEMS.register("rawhide_hood",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.rawhideHolder(),
                             ArmorItem.Type.HELMET, new Item.Properties(), rawhideVisual()));
 
-    public static final DeferredHolder<Item, Item> RAWHIDE_CHESTPLATE =
-            ModItems.ITEMS.register("rawhide_chestplate",
+    public static final DeferredHolder<Item, Item> RAWHIDE_JACKET =
+            ModItems.ITEMS.register("rawhide_jacket",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.rawhideHolder(),
                             ArmorItem.Type.CHESTPLATE, new Item.Properties(), rawhideVisual()));
 
-    public static final DeferredHolder<Item, Item> RAWHIDE_LEGGINGS =
-            ModItems.ITEMS.register("rawhide_leggings",
+    public static final DeferredHolder<Item, Item> RAWHIDE_WRAPS =
+            ModItems.ITEMS.register("rawhide_wraps",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.rawhideHolder(),
                             ArmorItem.Type.LEGGINGS, new Item.Properties(), rawhideVisual()));
@@ -5464,26 +5955,26 @@ public final class Armors {
                             ArmorItem.Type.BOOTS, new Item.Properties(), rawhideVisual()));
 
     // ===== LINEN =====
-    public static final DeferredHolder<Item, Item> LINEN_HELMET =
-            ModItems.ITEMS.register("linen_helmet",
+    public static final DeferredHolder<Item, Item> LINEN_HAT =
+            ModItems.ITEMS.register("linen_hat",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.HELMET, new Item.Properties(), linenVisual()));
 
-    public static final DeferredHolder<Item, Item> LINEN_CHESTPLATE =
-            ModItems.ITEMS.register("linen_chestplate",
+    public static final DeferredHolder<Item, Item> LINEN_CAPE =
+            ModItems.ITEMS.register("linen_cape",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.CHESTPLATE, new Item.Properties(), linenVisual()));
 
-    public static final DeferredHolder<Item, Item> LINEN_LEGGINGS =
-            ModItems.ITEMS.register("linen_leggings",
+    public static final DeferredHolder<Item, Item> LINEN_PANTS =
+            ModItems.ITEMS.register("linen_pants",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.LEGGINGS, new Item.Properties(), linenVisual()));
 
-    public static final DeferredHolder<Item, Item> LINEN_BOOTS =
-            ModItems.ITEMS.register("linen_boots",
+    public static final DeferredHolder<Item, Item> LINEN_SHOES =
+            ModItems.ITEMS.register("linen_shoes",
                     () -> new GenericGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.BOOTS, new Item.Properties(), linenVisual()));
@@ -5766,7 +6257,7 @@ public final class Materials {
             ModItems.ITEMS.register("fiber", () -> new Item(new Item.Properties()));
 
     public static final DeferredHolder<Item, Item> CANVAS_FABRIC =
-            ModItems.ITEMS.register("canvas_fabric", () -> new Item(new Item.Properties()));
+            ModItems.ITEMS.register("canvas_fabric.json", () -> new Item(new Item.Properties()));
 
     public static final DeferredHolder<Item, Item> RAWHIDE =
             ModItems.ITEMS.register("rawhide", () -> new Item(new Item.Properties()));
@@ -5906,53 +6397,48 @@ n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\ModLootMod
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\network\AutoBoltServer.java -----
 package com.doomspire.grimfate.network;
 
-import com.doomspire.grimcore.attach.PlayerStatsAttachment;
-import com.doomspire.grimcore.net.GrimcoreNetworking;
-import com.doomspire.grimcore.stat.ModAttachments;
-import com.doomspire.grimfate.combat.WeaponPredicates;
 import com.doomspire.grimfate.entity.BoltProjectileEntity;
+import com.doomspire.grimcore.spell.autobolt.AutoBoltResult;
+import com.doomspire.grimcore.spell.autobolt.AutoBoltService;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-/** Серверная реализация авто-болта (ПКМ). ЛКМ — ванильное «копание». */
 public final class AutoBoltServer {
     private AutoBoltServer() {}
 
-    public static void tryCast(ServerPlayer sp) {
-        ItemStack main = sp.getMainHandItem();
-        ItemStack off  = sp.getOffhandItem();
+    public static void tryCast(ServerPlayer sp, InteractionHand hand) {
+        if (sp == null) return;
 
-        ItemStack used = ItemStack.EMPTY;
-        if (WeaponPredicates.isStaff(main)) used = main;
-        else if (WeaponPredicates.isStaff(off)) used = off;
+        ServerLevel level = sp.serverLevel();
+        ItemStack used = sp.getItemInHand(hand);
         if (used.isEmpty()) return;
 
+        // Все проверки/расходы делает сервис ядра
+        AutoBoltResult result = AutoBoltService.computeAndConsume(sp, used);
+        if (result == null || !result.ok()) {
+            // при желании можно отправить локализованный отказ по result.reason()
+            return;
+        }
+
+        // Спавним снаряд
+        BoltProjectileEntity bolt = new BoltProjectileEntity(level, sp);
+        bolt.shootFromRotation(sp, sp.getXRot(), sp.getYRot(), 0.0f, result.projectileSpeed(), 0.0f);
+        level.addFreshEntity(bolt);
+
+        // Кулдаун на использованный предмет
         Item usedItem = used.getItem();
-        if (sp.getCooldowns().isOnCooldown(usedItem)) return;
+        int cd = result.cooldownTicks();
+        if (cd > 0) {
+            sp.getCooldowns().addCooldown(usedItem, cd);
+        }
 
-        PlayerStatsAttachment stats = sp.getData(ModAttachments.PLAYER_STATS.get());
-        if (stats == null) return;
-
-        // Баланс №0 (в дальнейшем читаем из spells.json: auto_bolt_staff)
-        final int manaCost = 8;
-        final int cdTicks  = 40;
-        final float speed  = 1.6f;
-
-        if (stats.getCurrentMana() < manaCost) return;
-
-        stats.setCurrentMana(stats.getCurrentMana() - manaCost);
-        stats.markDirty();
-        GrimcoreNetworking.syncPlayerStats(sp, stats);
-
-        var bolt = new BoltProjectileEntity(sp.level(), sp);
-        bolt.shootForward(sp, speed);
-        sp.level().addFreshEntity(bolt);
-
-        sp.getCooldowns().addCooldown(usedItem, cdTicks);
-        sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+        // Звук
+        level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                 SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 0.6f, 1.0f);
     }
 }
@@ -6968,6 +7454,14 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\bronz
 }
 
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\bronze_ring.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\canvas_fabric.json -----
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/canvas_fabric"
+  }
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\canvas_fabric.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_boots.json -----
 { "parent": "item/generated", "textures": { "layer0": "grimfate:item/copper_boots" } }
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_boots.json -----n
@@ -7004,10 +7498,12 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\coppe
   "parent": "minecraft:item/handheld",
   "loader": "neoforge:separate_transforms",
   "base":   { "parent": "grimfate:item/copper_sword_3d" },
-  "gui":    { "parent": "grimfate:item/copper_sword_2d" },
-  "fixed":  { "parent": "grimfate:item/copper_sword_2d" },
-  "ground": { "parent": "grimfate:item/copper_sword_2d" },
-  "head":   { "parent": "grimfate:item/copper_sword_2d" }
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/copper_sword_2d" },
+    "fixed":  { "parent": "grimfate:item/copper_sword_2d" },
+    "ground": { "parent": "grimfate:item/copper_sword_2d" },
+    "head":   { "parent": "grimfate:item/copper_sword_2d" }
+  }
 }
 
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword.json -----n
@@ -7015,7 +7511,7 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\coppe
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "grimfate:item/weakling_bow_2d"
+    "layer0": "grimfate:item/copper_sword_2d"
   }
 }
 
@@ -7026,7 +7522,7 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\coppe
 	"credit": "Made with Blockbench",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "block/copper_sword_3d",
+		"0": "grimfate:item/copper_sword_3d",
 		"particle": "block/copper_sword_3d"
 	},
 	"elements": [
@@ -7137,13 +7633,34 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\coppe
 	]
 }
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_3d.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield.json -----
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   { "parent": "grimfate:item/copperforced_shield_3d" },
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/copperforced_shield_2d" },
+    "fixed":  { "parent": "grimfate:item/copperforced_shield_2d" },
+    "ground": { "parent": "grimfate:item/copperforced_shield_2d" },
+    "head":   { "parent": "grimfate:item/copperforced_shield_2d" }
+  }
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_2d.json -----
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/copperforced_shield_2d"
+  }
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_2d.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_3d.json -----
 {
 	"format_version": "1.9.0",
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
-		"0": "block/copperforced_shield_3d",
+		"0": "grimfate:item/copperforced_shield_3d",
 		"particle": "block/copperforced_shield_3d"
 	},
 	"elements": [
@@ -7243,6 +7760,14 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\coppe
 	]
 }
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_3d.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\fiber.json -----
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/fiber"
+  }
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\fiber.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\linen_cape.json -----
 { "parent": "item/generated", "textures": { "layer0": "grimfate:item/linen_cape" } }
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\linen_cape.json -----n
@@ -7255,6 +7780,22 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\linen
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\linen_shoes.json -----
 { "parent": "item/generated", "textures": { "layer0": "grimfate:item/linen_shoes" } }
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\linen_shoes.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\pork_fat.json -----
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/pork_fat"
+  }
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\pork_fat.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide.json -----
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/rawhide"
+  }
+}
+n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_boots.json -----
 { "parent": "item/generated", "textures": { "layer0": "grimfate:item/rawhide_boots" } }
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_boots.json -----n
@@ -7272,10 +7813,12 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\rawhi
   "parent": "minecraft:item/handheld",
   "loader": "neoforge:separate_transforms",
   "base":   { "parent": "grimfate:item/scholar_staff_3d" },
-  "gui":    { "parent": "grimfate:item/scholar_staff_2d" },
-  "fixed":  { "parent": "grimfate:item/scholar_staff_2d" },
-  "ground": { "parent": "grimfate:item/scholar_staff_2d" },
-  "head":   { "parent": "grimfate:item/scholar_staff_2d" }
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/scholar_staff_2d" },
+    "fixed":  { "parent": "grimfate:item/scholar_staff_2d" },
+    "ground": { "parent": "grimfate:item/scholar_staff_2d" },
+    "head":   { "parent": "grimfate:item/scholar_staff_2d" }
+  }
 }
 
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff.json -----n
@@ -7283,7 +7826,7 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\schol
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "grimfate:item/weakling_bow_2d"
+    "layer0": "grimfate:item/scholar_staff_2d"
   }
 }
 
@@ -7294,7 +7837,7 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\schol
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
-		"0": "block/scholar_staff_3d",
+		"0": "grimfate:item/scholar_staff_3d",
 		"particle": "block/scholar_staff_3d"
 	},
 	"elements": [
@@ -7383,15 +7926,19 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\schol
 {
   "parent": "minecraft:item/handheld",
   "loader": "neoforge:separate_transforms",
-  "base":   { "parent": "grimfate:item/weakling_bow_3d" },
-  "gui":    { "parent": "grimfate:item/weakling_bow_2d" },
-  "fixed":  { "parent": "grimfate:item/weakling_bow_2d" },
-  "ground": { "parent": "grimfate:item/weakling_bow_2d" },
-  "head":   { "parent": "grimfate:item/weakling_bow_2d" },
+  "base":   {
+    "parent": "grimfate:item/weakling_bow_3d"
+  },
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/weakling_bow_2d" },
+    "fixed":  { "parent": "grimfate:item/weakling_bow_2d" },
+    "ground": { "parent": "grimfate:item/weakling_bow_2d" },
+    "head":   { "parent": "grimfate:item/weakling_bow_2d" }
+  },
   "overrides": [
-    { "predicate": { "pulling": 1 },                 "model": "grimfate:item/weakling_bow_3dpull2" },
-    { "predicate": { "pull": 0.65, "pulling": 1 },   "model": "grimfate:item/weakling_bow_3dpull1" },
-    { "predicate": { "pull": 0.1,  "pulling": 1 },   "model": "grimfate:item/weakling_bow_3dpull0" }
+    { "predicate": { "pull": 0.65, "pulling": 1 }, "model": "grimfate:item/weakling_bow_3dpull2" },
+    { "predicate": { "pull": 0.10, "pulling": 1 }, "model": "grimfate:item/weakling_bow_3dpull1" },
+    { "predicate": { "pulling": 1 },               "model": "grimfate:item/weakling_bow_3dpull0" }
   ]
 }
 
@@ -7411,7 +7958,7 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakl
 	"credit": "Made with Blockbench",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "block/weakling_bow_3d",
+		"0": "grimfate:item/weakling_bow_3d",
 		"particle": "block/weakling_bow_3d"
 	},
 	"elements": [
@@ -7539,7 +8086,7 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakl
 	"credit": "Made with Blockbench",
 	"texture_size": [32, 32],
 	"textures": {
-		"3": "weakling_bow_3dpull0",
+		"3": "grimfate:item/weakling_bow_3dpull0",
 		"particle": "block/weakling_bow_3d"
 	},
 	"elements": [
@@ -7693,7 +8240,7 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakl
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
-		"3": "weakling_bow_3dpull1",
+		"3": "grimfate:item/weakling_bow_3dpull1",
 		"particle": "block/weakling_bow_3d"
 	},
 	"elements": [
@@ -7847,7 +8394,7 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\weakl
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
-		"2": "weakling_bow_3dpull2",
+		"2": "grimfate:item/weakling_bow_3dpull2",
 		"particle": "block/weakling_bow_3d"
 	},
 	"elements": [
@@ -8232,11 +8779,13 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\gamepla
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "FF",
-    "FF"
+    "FFF",
+    "FPF",
+    "FFF"
   ],
   "key": {
-    "F": { "item": "grimfate:fiber" }
+    "F": { "item": "grimfate:fiber" },
+    "P": {"item": "grimfate:pork_fat"}
   },
   "result": { "item": "grimfate:canvas_fabric", "count": 1 }
 }
@@ -8246,13 +8795,15 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabr
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "C",
-    "C",
-    "H"
+    " I ",
+    " I ",
+    "PSC"
   ],
   "key": {
-    "C": { "item": "minecraft:copper_ingot" },
-    "H": { "item": "grimfate:canvas_fabric" }
+    "I": { "item": "minecraft:copper_ingot" },
+    "C": { "item": "grimfate:canvas_fabric" },
+    "P": {"item": "grimfate:pork_fat"},
+    "S": {"item": "minecraft:stick"}
   },
   "result": { "item": "grimfate:copper_sword", "count": 1 }
 }
@@ -8262,13 +8813,15 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copper_swor
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "CRC",
-    "R R",
-    "CRC"
+    "MFM",
+    "MCM",
+    "MRM"
   ],
   "key": {
     "C": { "item": "minecraft:copper_ingot" },
-    "R": { "item": "grimfate:rawhide" }
+    "R": { "item": "grimfate:rawhide" },
+    "P": {"item": "grimfate:pork_fat"},
+    "M": {"tag": "minecraft:planks"}
   },
   "result": { "item": "grimfate:copperforced_shield", "count": 1 }
 }
@@ -8278,8 +8831,8 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copperforce
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "FF",
-    "LL"
+    "LLF",
+    "FFF"
   ],
   "key": {
     "F": { "item": "grimfate:pork_fat" },
@@ -8293,30 +8846,32 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\rawhide.jso
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    " S  ",
-    " R ",
-    "W  "],
+    "PFP",
+    " S ",
+    " S "],
   "key": {
-    "S": {"item": "minecraft:copper_ingot"},
-    "R": {"item": "grimfate:copper_rivet"},
-    "W": {"item": "grimfate:hardwood_shaft"}
+    "S": {"item": "minecraft:stick"},
+    "P": {"item": "grimfate:pork_fat"},
+    "F": {"item": "grimfate:fiber"}
   },
-  "result": {"id": "grimfate:apprentice_staff", "count": 1}
+  "result": {"id": "grimfate:scholar_staff", "count": 1}
 }
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\scholar_staff.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\weakling_bow.json -----
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "  C",
-    " S ",
-    "S  "
+    "GS ",
+    "GFC",
+    "GS "
   ],
   "key": {
     "S": { "item": "minecraft:stick" },
-    "C": { "item": "grimfate:canvas_fabric" }
+    "C": { "item": "grimfate:canvas_fabric" },
+    "F": {"item": "grimfate:pork_fat"},
+    "G": {"item": "grimfate:fiber"}
   },
-  "result": { "item": "grimfate:scholar_staff", "count": 1 }
+  "result": { "item": "grimfate:weakling_bow", "count": 1 }
 }
 
 
@@ -8422,11 +8977,25 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\staves.j
 ] }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\swords.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\weapon_attributes\copper_sword.json -----
+{ "parent": "bettercombat:sword" }
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\weapon_attributes\copper_sword.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\weapon_attributes\scholar_staff.json -----
+{ "parent": "bettercombat:staff" }
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\weapon_attributes\scholar_staff.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\weapon_attributes\weakling_bow.json -----
+{ "parent": "bettercombat:bow_two_handed_heavy" }
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\weapon_attributes\weakling_bow.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\neoforge\loot_modifiers\global_loot_modifiers.json -----
 {
   "replace": false,
   "entries": [
-    "grimfate:rusty_ring"
+    "grimfate:fiber_from_grass",
+    "grimfate:pork_fat_from_pig",
+    "grimfate:jewelry_from_chests"
   ]
 }
 

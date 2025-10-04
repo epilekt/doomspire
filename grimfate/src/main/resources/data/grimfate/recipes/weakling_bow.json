@@ -1,14 +1,16 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "  C",
-    " S ",
-    "S  "
+    "GS ",
+    "GFC",
+    "GS "
   ],
   "key": {
     "S": { "item": "minecraft:stick" },
-    "C": { "item": "grimfate:canvas_fabric" }
+    "C": { "item": "grimfate:canvas_fabric" },
+    "F": {"item": "grimfate:pork_fat"},
+    "G": {"item": "grimfate:fiber"}
   },
-  "result": { "item": "grimfate:scholar_staff", "count": 1 }
+  "result": { "item": "grimfate:weakling_bow", "count": 1 }
 }
 

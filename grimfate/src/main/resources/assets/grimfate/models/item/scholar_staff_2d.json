@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "grimfate:item/weakling_bow_2d"
+    "layer0": "grimfate:item/scholar_staff_2d"
   }
 }

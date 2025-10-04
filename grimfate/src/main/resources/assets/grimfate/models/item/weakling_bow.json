@@ -1,14 +1,18 @@
 {
   "parent": "minecraft:item/handheld",
   "loader": "neoforge:separate_transforms",
-  "base":   { "parent": "grimfate:item/weakling_bow_3d" },
-  "gui":    { "parent": "grimfate:item/weakling_bow_2d" },
-  "fixed":  { "parent": "grimfate:item/weakling_bow_2d" },
-  "ground": { "parent": "grimfate:item/weakling_bow_2d" },
-  "head":   { "parent": "grimfate:item/weakling_bow_2d" },
+  "base":   {
+    "parent": "grimfate:item/weakling_bow_3d"
+  },
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/weakling_bow_2d" },
+    "fixed":  { "parent": "grimfate:item/weakling_bow_2d" },
+    "ground": { "parent": "grimfate:item/weakling_bow_2d" },
+    "head":   { "parent": "grimfate:item/weakling_bow_2d" }
+  },
   "overrides": [
-    { "predicate": { "pulling": 1 },                 "model": "grimfate:item/weakling_bow_3dpull2" },
-    { "predicate": { "pull": 0.65, "pulling": 1 },   "model": "grimfate:item/weakling_bow_3dpull1" },
-    { "predicate": { "pull": 0.1,  "pulling": 1 },   "model": "grimfate:item/weakling_bow_3dpull0" }
+    { "predicate": { "pull": 0.65, "pulling": 1 }, "model": "grimfate:item/weakling_bow_3dpull2" },
+    { "predicate": { "pull": 0.10, "pulling": 1 }, "model": "grimfate:item/weakling_bow_3dpull1" },
+    { "predicate": { "pulling": 1 },               "model": "grimfate:item/weakling_bow_3dpull0" }
   ]
 }

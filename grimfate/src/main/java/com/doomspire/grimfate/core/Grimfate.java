@@ -145,7 +145,7 @@ public class Grimfate {
         else if (e.getTab() == TAB_MATERIALS.get()) {
             // Материалы по id (без жёсткой зависимости на класс подмодуля)
             acceptIfPresent(e, rl("fiber"));
-            acceptIfPresent(e, rl("canvas_fabric"));
+            acceptIfPresent(e, rl("canvas_fabric.json"));
             acceptIfPresent(e, rl("pork_fat"));
             acceptIfPresent(e, rl("rawhide"));
             // Блоки добавим позже, когда появятся

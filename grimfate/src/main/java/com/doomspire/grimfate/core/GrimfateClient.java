@@ -19,6 +19,9 @@ public final class GrimfateClient {
         modBus.addListener(GrimfateClient::onClientSetup);
         // Ключевая строка: регистрируем KeyMappings только отсюда
         modBus.addListener(Hotkeys::onRegisterKeys);
+        modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) ->
+                e.enqueueWork(com.doomspire.grimfate.client.BowModelProperties::register));
+
     }
 
     static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers e) {
