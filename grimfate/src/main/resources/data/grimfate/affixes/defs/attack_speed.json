@@ -1,0 +1,11 @@
+{
+  "id": "grimfate:attack_speed",
+  "display_key": "affix.grimfate.attack_speed",
+  "unit": "PERCENT",
+  "min": 0.02,
+  "max": 0.10,
+  "curve": { "type": "UNIFORM" },
+  "allow_sources": ["WEAPON","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}

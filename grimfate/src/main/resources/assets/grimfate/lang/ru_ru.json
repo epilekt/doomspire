@@ -61,5 +61,19 @@
   "item.grimfate.pork_fat": "Свиной жир",
   "item.grimfate.rawhide": "Сыромять",
 
+  "rarity.grimfate.common": "Обычное",
+  "rarity.grimfate.uncommon": "Необычное",
+  "rarity.grimfate.rare": "Редкое",
+  "rarity.grimfate.epic": "Эпическое",
+  "rarity.grimfate.legendary": "Легендарное",
+
+  "affix.grimfate.plus_vitality": "+%s к Стойкости",
+  "affix.grimfate.plus_strength": "+%s к Силе",
+  "affix.grimfate.phys_damage_percent": "+%s к Физическому урону",
+  "affix.grimfate.attack_speed": "+%s к Скорости атаки",
+  "affix.grimfate.armor_flat": "+%s Броня",
+  "affix.grimfate.resist_all_percent": "+%s Все сопротивления",
+  "affix.grimfate.crit_chance_percent": "+%s Шанс крит. удара",
+
   "entity.grimfate.bolt": "Bolt"
 }

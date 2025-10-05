@@ -1,0 +1,15 @@
+{
+  "id": "grimfate:jewelry_support",
+  "entries": [
+    { "affix_id": "grimfate:plus_strength",       "weight": 30, "min_item_level": 1 },
+    { "affix_id": "grimfate:plus_vitality",       "weight": 30, "min_item_level": 1 },
+    { "affix_id": "grimfate:attack_speed",        "weight": 20, "min_item_level": 1 },
+    { "affix_id": "grimfate:resist_all_percent",  "weight": 20, "min_item_level": 1 }
+  ],
+  "allow_sources": ["JEWELRY"],
+  "required_item_tags": [],
+  "min_item_level": 1,
+  "max_item_level": 0,
+  "unique_types": true,
+  "max_affixes_override": { "type": "constant", "value": 2 }
+}

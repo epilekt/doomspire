@@ -11,7 +11,6 @@ import com.doomspire.grimfate.item.weapons.Weapons;
 import com.doomspire.grimfate.network.ModNetworking;
 import com.doomspire.grimfate.registry.*;
 import com.mojang.logging.LogUtils;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -31,6 +30,9 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.slf4j.Logger;
+import net.neoforged.neoforge.common.NeoForge;
+
+
 
 @Mod(Grimfate.MODID)
 public class Grimfate {
@@ -52,7 +54,6 @@ public class Grimfate {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB_MATERIALS =
             CREATIVE_MODE_TABS.register("materials", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.grimfate.materials"))
-                    // Иконка — попытаемся взять fiber, если нет — fallback на медный меч
                     .icon(() -> new ItemStack(Materials.RAWHIDE.get()))
                     .withSearchBar()
                     .build());
@@ -65,6 +66,13 @@ public class Grimfate {
                     .withSearchBar()
                     .build());
 
+    //NOTE: Регистрируем загрузчики датапаков (редкости/аффиксы/пулы) на MOD-басе.
+    private void onAddReloadListeners(net.neoforged.neoforge.event.AddReloadListenerEvent event) {
+        // grimcore: датадрайв движка аффиксов
+        com.doomspire.grimcore.affix.rarity.RarityDataManager.onAddReloadListeners(event);
+        com.doomspire.grimcore.affix.def.AffixDataManager.onAddReloadListeners(event);
+        com.doomspire.grimcore.affix.pool.AffixPoolDataManager.onAddReloadListeners(event);
+    }
     public Grimfate(IEventBus modEventBus, ModContainer modContainer) {
         // Конфиги
         modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
@@ -80,6 +88,7 @@ public class Grimfate {
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         com.doomspire.grimfate.loot.ModLootModifiers.init(modEventBus);
         ModDataComponents.DATA_COMPONENT_TYPES.register(modEventBus);
+        NeoForge.EVENT_BUS.addListener(this::onAddReloadListeners);
 
         com.doomspire.grimfate.item.weapons.Weapons.init(modEventBus);
         com.doomspire.grimfate.item.armor.Armors.init(modEventBus);
@@ -145,7 +154,7 @@ public class Grimfate {
         else if (e.getTab() == TAB_MATERIALS.get()) {
             // Материалы по id (без жёсткой зависимости на класс подмодуля)
             acceptIfPresent(e, rl("fiber"));
-            acceptIfPresent(e, rl("canvas_fabric.json"));
+            acceptIfPresent(e, rl("canvas_fabric"));
             acceptIfPresent(e, rl("pork_fat"));
             acceptIfPresent(e, rl("rawhide"));
             // Блоки добавим позже, когда появятся

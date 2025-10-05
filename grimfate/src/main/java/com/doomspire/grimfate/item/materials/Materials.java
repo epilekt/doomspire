@@ -14,7 +14,7 @@ public final class Materials {
             ModItems.ITEMS.register("fiber", () -> new Item(new Item.Properties()));
 
     public static final DeferredHolder<Item, Item> CANVAS_FABRIC =
-            ModItems.ITEMS.register("canvas_fabric.json", () -> new Item(new Item.Properties()));
+            ModItems.ITEMS.register("canvas_fabric", () -> new Item(new Item.Properties()));
 
     public static final DeferredHolder<Item, Item> RAWHIDE =
             ModItems.ITEMS.register("rawhide", () -> new Item(new Item.Properties()));

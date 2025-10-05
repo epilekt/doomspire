@@ -1,0 +1,11 @@
+{
+  "id": "grimfate:crit_chance_percent",
+  "display_key": "affix.grimfate.crit_chance_percent",
+  "unit": "PERCENT",
+  "min": 0.02,
+  "max": 0.10,
+  "curve": { "type": "BIAS_HIGH", "power": 2.0 },
+  "allow_sources": ["WEAPON","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}

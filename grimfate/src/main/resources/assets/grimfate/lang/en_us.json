@@ -61,6 +61,20 @@
   "item.grimfate.pork_fat": "Pork Fat",
   "item.grimfate.rawhide": "Rawhide",
 
+  "rarity.grimfate.common": "Common",
+  "rarity.grimfate.uncommon": "Uncommon",
+  "rarity.grimfate.rare": "Rare",
+  "rarity.grimfate.epic": "Epic",
+  "rarity.grimfate.legendary": "Legendary",
+
+  "affix.grimfate.plus_vitality": "+%s Vitality",
+  "affix.grimfate.plus_strength": "+%s Strength",
+  "affix.grimfate.phys_damage_percent": "+%s Physical Damage",
+  "affix.grimfate.attack_speed": "+%s Attack Speed",
+  "affix.grimfate.armor_flat": "+%s Armor",
+  "affix.grimfate.resist_all_percent": "+%s All Resistances",
+  "affix.grimfate.crit_chance_percent": "+%s Critical Chance",
+
   "entity.grimfate.bolt": "Bolt"
 }
 

@@ -1,0 +1,11 @@
+{
+  "id": "grimfate:plus_vitality",
+  "display_key": "affix.grimfate.plus_vitality",
+  "unit": "FLAT",
+  "min": 2.0,
+  "max": 6.0,
+  "curve": { "type": "BIAS_LOW", "power": 2.0 },
+  "allow_sources": ["ARMOR","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}

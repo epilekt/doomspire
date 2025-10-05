@@ -2,7 +2,14 @@
 .\gradle.properties
 .\grimcore\src\main\java\com\doomspire\grimcore\affix\Affix.java
 .\grimcore\src\main\java\com\doomspire\grimcore\affix\AffixAggregator.java
+.\grimcore\src\main\java\com\doomspire\grimcore\affix\codec\AffixSourceSetCodec.java
+.\grimcore\src\main\java\com\doomspire\grimcore\affix\def\AffixDataManager.java
+.\grimcore\src\main\java\com\doomspire\grimcore\affix\def\AffixDef.java
 .\grimcore\src\main\java\com\doomspire\grimcore\affix\ModAffixes.java
+.\grimcore\src\main\java\com\doomspire\grimcore\affix\pool\AffixPoolDataManager.java
+.\grimcore\src\main\java\com\doomspire\grimcore\affix\pool\AffixPoolDef.java
+.\grimcore\src\main\java\com\doomspire\grimcore\affix\rarity\RarityDataManager.java
+.\grimcore\src\main\java\com\doomspire\grimcore\affix\rarity\RarityDef.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatCalculator.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatsAttachment.java
 .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobThreatAttachment.java
@@ -65,7 +72,9 @@
 .\grimcore\src\main\java\com\doomspire\grimcore\xp\LevelTable.java
 .\grimcore\src\main\java\com\doomspire\grimcore\xp\Rewards.java
 .\grimcore\src\main\resources\data\grimcore\mobs\minecraft\zombie.json
+.\grimfate\src\main\java\com\doomspire\grimfate\affix\AffixImbueService.java
 .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java
+.\grimfate\src\main\java\com\doomspire\grimfate\affix\RollService.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\BowModelProperties.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\CustomHudOverlay.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryTabsButtons.java
@@ -89,12 +98,15 @@
 .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\GenericGeoArmorItem.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\BaseBowItem.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListComponent.java
+.\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListHelper.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\WeaponProfileComponent.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\jewelry\Jewelry.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\materials\Materials.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\StaffItem.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\weapons\Weapons.java
+.\grimfate\src\main\java\com\doomspire\grimfate\loot\InjectTagItemsLootModifier.java
 .\grimfate\src\main\java\com\doomspire\grimfate\loot\ModLootModifiers.java
+.\grimfate\src\main\java\com\doomspire\grimfate\loot\RollAffixesLootModifier.java
 .\grimfate\src\main\java\com\doomspire\grimfate\network\AutoBoltServer.java
 .\grimfate\src\main\java\com\doomspire\grimfate\network\ModNetworking.java
 .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\C2SAllocatePointPayload.java
@@ -164,13 +176,30 @@
 .\grimfate\src\main\resources\data\curios\tags\items\belt.json
 .\grimfate\src\main\resources\data\curios\tags\items\necklace.json
 .\grimfate\src\main\resources\data\curios\tags\items\ring.json
+.\grimfate\src\main\resources\data\grimfate\affixes\defs\armor_flat.json
+.\grimfate\src\main\resources\data\grimfate\affixes\defs\attack_speed.json
+.\grimfate\src\main\resources\data\grimfate\affixes\defs\crit_chance_percent.json
+.\grimfate\src\main\resources\data\grimfate\affixes\defs\phys_damage_percent.json
+.\grimfate\src\main\resources\data\grimfate\affixes\defs\plus_strenght.json
+.\grimfate\src\main\resources\data\grimfate\affixes\defs\plus_vitality.json
+.\grimfate\src\main\resources\data\grimfate\affixes\defs\resist_all_percent.json
+.\grimfate\src\main\resources\data\grimfate\affixes\pools\armor_defensive.json
+.\grimfate\src\main\resources\data\grimfate\affixes\pools\jewelry_support.json
+.\grimfate\src\main\resources\data\grimfate\affixes\pools\weapon_primary.json
+.\grimfate\src\main\resources\data\grimfate\affixes\rarities\common.json
+.\grimfate\src\main\resources\data\grimfate\affixes\rarities\epic.json
+.\grimfate\src\main\resources\data\grimfate\affixes\rarities\legendary.json
+.\grimfate\src\main\resources\data\grimfate\affixes\rarities\rare.json
+.\grimfate\src\main\resources\data\grimfate\affixes\rarities\uncommon.json
 .\grimfate\src\main\resources\data\grimfate\balance\attributes.json
 .\grimfate\src\main\resources\data\grimfate\balance\levels.json
 .\grimfate\src\main\resources\data\grimfate\balance\spells.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\global_loot_modifiers.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\jewelry_from_chests.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_armors_to_chests.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_fiber_from_grass.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_jewelry_to_chests.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_pork_fat_from_pig.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_weapons_to_chests.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\roll_affixes.json
 .\grimfate\src\main\resources\data\grimfate\loot_tables\gameplay\jewelry_pool.json
 .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabric.json
 .\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json
@@ -193,6 +222,11 @@
 .\grimfate\src\main\resources\data\grimfate\tags\items\greatswords.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\hammers.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\jewelry.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\loot\armors.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\loot\fiber.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\loot\jewelry.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\loot\pork_fat.json
+.\grimfate\src\main\resources\data\grimfate\tags\items\loot\weapons.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\role\archer.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\role\mage.json
 .\grimfate\src\main\resources\data\grimfate\tags\items\role\melee.json
@@ -208,7 +242,7 @@ n=== CONCATENATED CONTENTS ===n
 # ------------------------------
 # Gradle performance
 # ------------------------------
-org.gradle.jvmargs=-Xmx2G
+org.gradle.jvmargs=-Xmx4G
 org.gradle.daemon=true
 org.gradle.parallel=true
 org.gradle.caching=true
@@ -237,7 +271,7 @@ mod_version=0.0.1
 mod_license=All Rights Reserved
 mod_group_id=com.doomspire
 mod_authors=Epilekt
-mod_description=RPG ??? Grimfate. ????????? ??????, ??????, ????? ? ????? ????????? ? Minecraft.
+mod_description=Defay your Grimfate.
 
 # ------------------------------
 # Mod metadata (?????????? grimcore)
@@ -247,7 +281,7 @@ core_mod_name=Grimcore
 core_mod_version=0.0.1
 core_mod_group_id=com.doomspire
 core_mod_authors=Epilekt
-core_mod_description=Core library with shared RPG systems for Grimfate
+core_mod_description=Core library with shared systems for Grimfate
 
 geckolib_version=4.7.7
 
@@ -440,6 +474,400 @@ public final class AffixAggregator {
     }
 }
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\AffixAggregator.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\codec\AffixSourceSetCodec.java -----
+package com.doomspire.grimcore.affix.codec;
+
+import com.doomspire.grimcore.affix.Affix;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Locale;
+import java.util.Set;
+
+/*
+//NOTE: Codec для множеств Affix.Source. Поддерживает: строку, массив строк, спец-значение "ALL".
+ *
+ * Поддерживаемые формы JSON:
+ *   "allow_sources": "WEAPON"
+ *   "allow_sources": ["WEAPON", "ARMOR", "JEWELRY"]
+ *   "allow_sources": "ALL"
+ *
+ * Регистр не важен (weapon == WEAPON).
+ */
+public final class AffixSourceSetCodec implements Codec<Set<Affix.Source>> {
+
+    public static final AffixSourceSetCodec INSTANCE = new AffixSourceSetCodec();
+
+    private static final Codec<Set<Affix.Source>> ARRAY =
+            Codec.STRING.listOf().flatXmap(
+                    list -> {
+                        try {
+                            final EnumSet<Affix.Source> out = EnumSet.noneOf(Affix.Source.class);
+                            for (String s : list) {
+                                parseTokenInto(out, s);
+                            }
+                            return DataResult.success(out);
+                        } catch (IllegalArgumentException ex) {
+                            return DataResult.error(() -> "Affix.Source parse error: " + ex.getMessage());
+                        }
+                    },
+                    set -> DataResult.success(set.stream().map(Enum::name).toList())
+            );
+
+    private static final Codec<Set<Affix.Source>> SINGLE =
+            Codec.STRING.flatXmap(
+                    s -> {
+                        try {
+                            final EnumSet<Affix.Source> out = EnumSet.noneOf(Affix.Source.class);
+                            parseTokenInto(out, s);
+                            return DataResult.success(out);
+                        } catch (IllegalArgumentException ex) {
+                            return DataResult.error(() -> "Affix.Source parse error: " + ex.getMessage());
+                        }
+                    },
+                    set -> {
+                        // для сериализации одной строкой берём либо "ALL", либо первую константу
+                        if (set.size() == Affix.Source.values().length) {
+                            return DataResult.success("ALL");
+                        }
+                        final String first = set.iterator().next().name();
+                        return DataResult.success(first);
+                    }
+            );
+
+    private AffixSourceSetCodec() {}
+
+    @Override
+    public <T> DataResult<T> encode(Set<Affix.Source> input, com.mojang.serialization.DynamicOps<T> ops, T prefix) {
+        // если выбраны все значения — сериализуем как "ALL" (короче и нагляднее)
+        if (input != null && input.size() == Affix.Source.values().length) {
+            return Codec.STRING.encode("ALL", ops, prefix);
+        }
+        // иначе — массив строк
+        return ARRAY.encode(input == null ? EnumSet.noneOf(Affix.Source.class) : input, ops, prefix);
+    }
+
+    @Override
+    public <T> DataResult<Pair<Set<Affix.Source>, T>> decode(DynamicOps<T> ops, T input) {
+        // пробуем как строку; если не строка — как массив
+        final DataResult<String> asString = Codec.STRING.parse(ops, input);
+        if (asString.result().isPresent()) {
+            return SINGLE.decode(ops, input);
+        }
+        return ARRAY.decode(ops, input);
+    }
+
+    private static void parseTokenInto(EnumSet<Affix.Source> out, String token) {
+        final String t = token.trim().toUpperCase(Locale.ROOT);
+        if (t.isEmpty()) throw new IllegalArgumentException("empty token");
+
+        if ("ALL".equals(t)) {
+            out.addAll(Arrays.asList(Affix.Source.values()));
+            return;
+        }
+        try {
+            out.add(Affix.Source.valueOf(t));
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("unknown source '" + token + "'. Allowed: " +
+                    "'ALL', " + Arrays.toString(Affix.Source.values()));
+        }
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\codec\AffixSourceSetCodec.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\def\AffixDataManager.java -----
+package com.doomspire.grimcore.affix.def;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+/*
+//NOTE: Менеджер дефиниций аффиксов. Грузит data, валидирует, даёт быстрый доступ по id. Поддерживает hot-reload.
+ *
+ * Data-driven загрузчик AffixDef. Папка: data/<ns>/affixes/defs/*.json
+ * Регистрируется на MOD bus через AddReloadListenerEvent (см. onAddReloadListeners).
+ */
+public final class AffixDataManager extends SimpleJsonResourceReloadListener {
+    public static final String FOLDER = "affixes/defs";
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
+
+    private final Map<ResourceLocation, AffixDef> byId = new ConcurrentHashMap<>();
+    public static final AffixDataManager INSTANCE = new AffixDataManager();
+
+    private AffixDataManager() {
+        super(GSON, FOLDER);
+    }
+
+    // ---------- Public API ----------
+
+    /** Получить определение аффикса по id. */
+    public Optional<AffixDef> get(ResourceLocation id) {
+        return Optional.ofNullable(byId.get(id));
+    }
+
+    /** Признак наличия аффикса. */
+    public boolean contains(ResourceLocation id) {
+        return byId.containsKey(id);
+    }
+
+    /** Все аффиксы (неизменяемая копия). */
+    public Map<ResourceLocation, AffixDef> all() {
+        return Collections.unmodifiableMap(byId);
+    }
+
+    // ---------- Reload pipeline ----------
+
+    @Override
+    protected void apply(Map<ResourceLocation, JsonElement> jsons,
+                         ResourceManager resourceManager,
+                         ProfilerFiller profiler) {
+        profiler.push("grimcore_affix_defs_parse");
+
+        final Map<ResourceLocation, AffixDef> parsed = new HashMap<>();
+        final Set<ResourceLocation> duplicateCheck = new HashSet<>();
+
+        for (Map.Entry<ResourceLocation, JsonElement> e : jsons.entrySet()) {
+            final ResourceLocation fileKey = e.getKey();
+            final var json = e.getValue();
+
+            final var result = AffixDef.CODEC.parse(JsonOps.INSTANCE, json).result();
+            if (result.isEmpty()) {
+                throw new IllegalStateException("Failed to parse AffixDef from " + fileKey);
+            }
+
+            final AffixDef def = result.get();
+            final ResourceLocation id = def.id();
+
+            if (!duplicateCheck.add(id)) {
+                throw new IllegalStateException("Duplicate affix id detected: " + id + " (from " + fileKey + ")");
+            }
+
+            // Доп. валидации связей (минимальные, остальное — на этапе роллинга/агрегации):
+            if (def.min() == def.max() && def.unit() == AffixDef.ValueUnit.PERCENT && def.min() == 0f) {
+                // «пустой» процентный аффикс — скорее всего ошибка данных
+                throw new IllegalStateException("Suspicious zero-percent affix: " + id + " in " + fileKey);
+            }
+
+            parsed.put(id, def);
+        }
+
+        byId.clear();
+        byId.putAll(parsed);
+
+        profiler.pop();
+    }
+
+    // ---------- Registration ----------
+
+    /** Регистрируем менеджер как ресурс-лоадер (Bus.MOD). Вызывать один раз при старте. */
+    public static void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(INSTANCE);
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\def\AffixDataManager.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\def\AffixDef.java -----
+package com.doomspire.grimcore.affix.def;
+
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimcore.affix.codec.AffixSourceSetCodec;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+
+import java.util.EnumSet;
+import java.util.Locale;
+import java.util.Set;
+
+/*
+//NOTE: Data-driven описание одного аффикса (границы величины, единицы, кривые ролла, ограничения по источникам).
+ */
+public record AffixDef(
+        ResourceLocation id,
+        String displayKey,
+        ValueUnit unit,
+        float min,
+        float max,
+        Curve curve,
+        Set<Affix.Source> allowSources,
+        boolean stackable,
+        boolean clampTotal
+) {
+    // ---- Codecs ----
+
+    public static final Codec<AffixDef> CODEC = RecordCodecBuilder.create(i -> i.group(
+            ResourceLocation.CODEC.fieldOf("id").forGetter(AffixDef::id),
+            Codec.STRING.fieldOf("display_key").forGetter(AffixDef::displayKey),
+            ValueUnit.CODEC.fieldOf("unit").forGetter(AffixDef::unit),
+            Codec.FLOAT.fieldOf("min").forGetter(AffixDef::min),
+            Codec.FLOAT.fieldOf("max").forGetter(AffixDef::max),
+            Curve.CODEC.fieldOf("curve").forGetter(AffixDef::curve),
+            AffixSourceSetCodec.INSTANCE.optionalFieldOf("allow_sources", allSources()).forGetter(AffixDef::allowSources),
+            Codec.BOOL.optionalFieldOf("stackable", false).forGetter(AffixDef::stackable),
+            Codec.BOOL.optionalFieldOf("clamp_total", true).forGetter(AffixDef::clampTotal)
+    ).apply(i, AffixDef::new));
+
+    private static Set<Affix.Source> allSources() {
+        EnumSet<Affix.Source> s = EnumSet.noneOf(Affix.Source.class);
+        for (Affix.Source v : Affix.Source.values()) s.add(v);
+        return s;
+    }
+
+    // ---- Invariants ----
+
+    public AffixDef {
+        if (displayKey == null || displayKey.isBlank())
+            throw new IllegalArgumentException("display_key must be non-empty for " + id);
+        if (Float.isNaN(min) || Float.isNaN(max) || Float.isInfinite(min) || Float.isInfinite(max))
+            throw new IllegalArgumentException("min/max must be finite for " + id + " (min=" + min + ", max=" + max + ")");
+        if (max < min)
+            throw new IllegalArgumentException("max < min for " + id + " (min=" + min + ", max=" + max + ")");
+        if (allowSources == null || allowSources.isEmpty())
+            throw new IllegalArgumentException("allow_sources cannot be empty for " + id);
+    }
+
+    // ---- Sampling helpers ----
+
+    /** Семпл «сырого» значения в [min; max] по заданной кривой. */
+    public float sampleBase(RandomSource rng) {
+        final float t = Mth.clamp(curve.sample01(rng), 0f, 1f);
+        return min + (max - min) * t;
+    }
+
+    /** Кламп суммарного значения (например после масштабирования редкостью). */
+    public float clampTotal(float value) {
+        return clampTotal ? Mth.clamp(value, min, max) : value;
+    }
+
+    // ---- Units ----
+
+    public enum ValueUnit {
+        FLAT,
+        PERCENT;
+
+        public static final Codec<ValueUnit> CODEC =
+                Codec.STRING.xmap(
+                        s -> ValueUnit.valueOf(s.trim().toUpperCase(Locale.ROOT)),
+                        e -> e.name().toLowerCase(Locale.ROOT)
+                );
+    }
+
+    // ---- Curves ----
+
+    /**
+     * Кривая распределения t в [0..1], чтобы управлять «редкостью» высоких/низких роллов.
+     * Реализовано через dispatch по полю "type" (важно: вызываем ИМЕННО С КОДЕКА СТРОК — Codec.STRING.dispatch(...)).
+     */
+    public sealed interface Curve permits Curve.Uniform, Curve.Gaussian, Curve.Logistic, Curve.BiasLow, Curve.BiasHigh {
+        public static final com.mojang.serialization.Codec<Curve> CODEC = com.mojang.serialization.Codec.STRING.dispatch(
+                "type",
+                Curve::typeKey,
+                key -> switch (key) {
+                    case "UNIFORM" -> Uniform.CODEC;
+                    case "GAUSSIAN" -> Gaussian.CODEC;
+                    case "LOGISTIC" -> Logistic.CODEC;
+                    case "BIAS_LOW" -> BiasLow.CODEC;
+                    case "BIAS_HIGH" -> BiasHigh.CODEC;
+                    default -> Uniform.CODEC; // безопасный дефолт
+                }
+        );
+
+        /** Строковый идентификатор типа (например, "UNIFORM"). */
+        String typeKey();
+
+        /** Вернуть значение t в диапазоне [0..1]. */
+        float sample01(RandomSource rng);
+
+        // --- Реализации ---
+
+        /** Равномерное распределение. { "type": "UNIFORM" } */
+        record Uniform() implements Curve {
+            static final com.mojang.serialization.MapCodec<Uniform> CODEC =
+                    com.mojang.serialization.MapCodec.unit(new Uniform());
+            @Override public String typeKey() { return "UNIFORM"; }
+            @Override public float sample01(RandomSource rng) { return rng.nextFloat(); }
+        }
+
+        /** Гауссово распределение (центр 0.5). { "type":"GAUSSIAN", "spread": 1.0 } */
+        record Gaussian(float spread) implements Curve {
+            static final com.mojang.serialization.MapCodec<Gaussian> CODEC =
+                    RecordCodecBuilder.mapCodec(i -> i.group(
+                            Codec.FLOAT.optionalFieldOf("spread", 1.0f).forGetter(Gaussian::spread)
+                    ).apply(i, Gaussian::new));
+            @Override public String typeKey() { return "GAUSSIAN"; }
+            @Override public float sample01(RandomSource rng) {
+                double u1 = Math.max(1e-7, rng.nextDouble());
+                double u2 = rng.nextDouble();
+                double z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                double sigma = Math.max(1e-4, spread) / 6.0;
+                double x = 0.5 + z0 * sigma;
+                return (float) Mth.clamp(x, 0.0, 1.0);
+            }
+        }
+
+        /** Логистическое распределение (S-curve). { "type":"LOGISTIC", "spread": 1.0 } */
+        record Logistic(float spread) implements Curve {
+            static final com.mojang.serialization.MapCodec<Logistic> CODEC =
+                    RecordCodecBuilder.mapCodec(i -> i.group(
+                            Codec.FLOAT.optionalFieldOf("spread", 1.0f).forGetter(Logistic::spread)
+                    ).apply(i, Logistic::new));
+            @Override public String typeKey() { return "LOGISTIC"; }
+            @Override public float sample01(RandomSource rng) {
+                double u = Mth.clamp(rng.nextDouble(), 1e-7, 1 - 1e-7);
+                double k = Math.max(1e-4, spread);
+                double t = 1.0 / (1.0 + Math.pow(1.0 / u - 1.0, 1.0 / k));
+                return (float) Mth.clamp(t, 0.0, 1.0);
+            }
+        }
+
+        /** Смещение к низким значениям. { "type":"BIAS_LOW", "power": 2.0 } */
+        record BiasLow(float power) implements Curve {
+            static final com.mojang.serialization.MapCodec<BiasLow> CODEC =
+                    RecordCodecBuilder.mapCodec(i -> i.group(
+                            Codec.FLOAT.optionalFieldOf("power", 2.0f).forGetter(BiasLow::power)
+                    ).apply(i, BiasLow::new));
+            @Override public String typeKey() { return "BIAS_LOW"; }
+            @Override public float sample01(RandomSource rng) {
+                float u = rng.nextFloat();
+                float p = Math.max(1.0f, power);
+                return (float) Math.pow(u, p);
+            }
+        }
+
+        /** Смещение к высоким значениям. { "type":"BIAS_HIGH", "power": 2.0 } */
+        record BiasHigh(float power) implements Curve {
+            static final com.mojang.serialization.MapCodec<BiasHigh> CODEC =
+                    RecordCodecBuilder.mapCodec(i -> i.group(
+                            Codec.FLOAT.optionalFieldOf("power", 2.0f).forGetter(BiasHigh::power)
+                    ).apply(i, BiasHigh::new));
+            @Override public String typeKey() { return "BIAS_HIGH"; }
+            @Override public float sample01(RandomSource rng) {
+                float u = rng.nextFloat();
+                float p = Math.max(1.0f, power);
+                return 1.0f - (float) Math.pow(1.0f - u, p);
+            }
+        }
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\def\AffixDef.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\ModAffixes.java -----
 package com.doomspire.grimcore.affix;
 
@@ -523,6 +951,427 @@ public final class ModAffixes {
 
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\ModAffixes.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\pool\AffixPoolDataManager.java -----
+package com.doomspire.grimcore.affix.pool;
+
+import com.doomspire.grimcore.affix.Affix;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.item.Item;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.minecraft.util.random.WeightedEntry;
+import net.minecraft.util.random.WeightedRandomList;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+/*
+//NOTE: Менеджер пулов аффиксов. Загружает data кэширует и даёт API для фильтрации и случайного выбора.
+// Поддерживает hot-reload через AddReloadListenerEvent.
+*/
+public final class AffixPoolDataManager extends SimpleJsonResourceReloadListener {
+    public static final String FOLDER = "affixes/pools";
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
+
+    private final Map<ResourceLocation, AffixPoolDef> byId = new ConcurrentHashMap<>();
+    public static final AffixPoolDataManager INSTANCE = new AffixPoolDataManager();
+
+    private AffixPoolDataManager() { super(GSON, FOLDER); }
+
+    // ---------- Public API ----------
+
+    /** Получить пул по id. */
+    public Optional<AffixPoolDef> get(ResourceLocation id) {
+        return Optional.ofNullable(byId.get(id));
+    }
+
+    /** Все пулы (readonly). */
+    public Map<ResourceLocation, AffixPoolDef> all() {
+        return Collections.unmodifiableMap(byId);
+    }
+
+    /**
+     * Вернёт список пулов, удовлетворяющих фильтрам:
+     * источник (оружие, броня и т.д.), теги предмета и уровень.
+     */
+    public List<AffixPoolDef> filterApplicable(Item item, Set<TagKey<Item>> itemTags, Affix.Source src, int itemLevel) {
+        final List<AffixPoolDef> result = new ArrayList<>();
+        for (AffixPoolDef pool : byId.values()) {
+            // фильтр источника
+            if (!pool.allowSources().contains(src)) continue;
+            // фильтр уровня
+            if (!pool.matchesItemLevel(itemLevel)) continue;
+            // фильтр тегов (все указанные должны присутствовать)
+            if (!itemTags.containsAll(pool.requiredItemTags())) continue;
+            result.add(pool);
+        }
+        return result;
+    }
+
+    /**
+     * Извлекает взвешенный список всех записей из данного пула.
+     * Позволяет затем выбрать случайный аффикс с учётом весов.
+     */
+    public WeightedRandomList<WeightedEntry.Wrapper<AffixPoolDef.Entry>> buildWeightedEntries(AffixPoolDef pool) {
+        final List<WeightedEntry.Wrapper<AffixPoolDef.Entry>> list = new ArrayList<>();
+        for (AffixPoolDef.Entry e : pool.entries()) {
+            list.add(WeightedEntry.wrap(e, Math.max(1, e.weight())));
+        }
+        return WeightedRandomList.create(list);
+    }
+
+    /**
+     * Выбрать случайный аффикс из пула, учитывая веса и фильтр уровня.
+     * Возвращает Optional.empty(), если ничего не подошло.
+     */
+    public Optional<AffixPoolDef.Entry> sample(AffixPoolDef pool, int itemLevel, RandomSource random) {
+        var candidates = pool.entries().stream()
+                .filter(e -> e.levelOk(itemLevel))
+                .toList();
+        if (candidates.isEmpty()) return Optional.empty();
+
+        var weighted = WeightedRandomList.create(
+                candidates.stream()
+                        .map(e -> WeightedEntry.wrap(e, Math.max(1, e.weight())))
+                        .toList()
+        );
+        return weighted.getRandom(random).map(WeightedEntry.Wrapper::data);
+    }
+
+    // ---------- Reload pipeline ----------
+
+    @Override
+    protected void apply(Map<ResourceLocation, JsonElement> jsons, ResourceManager manager, ProfilerFiller profiler) {
+        profiler.push("grimcore_affix_pools_parse");
+
+        final Map<ResourceLocation, AffixPoolDef> parsed = new HashMap<>();
+        final Set<ResourceLocation> duplicateCheck = new HashSet<>();
+
+        for (var e : jsons.entrySet()) {
+            final ResourceLocation fileKey = e.getKey();
+            var json = e.getValue();
+
+            var result = AffixPoolDef.CODEC.parse(JsonOps.INSTANCE, json).result();
+            if (result.isEmpty()) {
+                throw new IllegalStateException("Failed to parse AffixPoolDef from " + fileKey);
+            }
+            var def = result.get();
+            var id = def.id();
+
+            if (!duplicateCheck.add(id))
+                throw new IllegalStateException("Duplicate pool id: " + id);
+
+            parsed.put(id, def);
+        }
+
+        byId.clear();
+        byId.putAll(parsed);
+        profiler.pop();
+    }
+
+    // ---------- Registration ----------
+
+    /** Регистрируем менеджер на AddReloadListenerEvent (bus = MOD). */
+    public static void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(INSTANCE);
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\pool\AffixPoolDataManager.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\pool\AffixPoolDef.java -----
+package com.doomspire.grimcore.affix.pool;
+
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimcore.affix.codec.AffixSourceSetCodec;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.world.item.Item;
+
+import java.util.List;
+import java.util.Set;
+
+/*
+//NOTE: Data-driven пул аффиксов для роллинга лута/имбуинга.
+// Содержит записи (affix_id + вес), фильтры по источнику, тегам предмета и уровню itemLevel.
+*/
+public record AffixPoolDef(
+        ResourceLocation id,
+        List<Entry> entries,
+        Set<Affix.Source> allowSources,
+        List<TagKey<Item>> requiredItemTags,
+        int minItemLevel,
+        int maxItemLevel,
+        boolean uniqueTypes,
+        IntProvider maxAffixesOverride
+) {
+    public static final Codec<TagKey<Item>> ITEM_TAG_CODEC =
+            ResourceLocation.CODEC.xmap(rl -> TagKey.create(Registries.ITEM, rl), TagKey::location);
+
+    public static final Codec<AffixPoolDef> CODEC = RecordCodecBuilder.create(i -> i.group(
+            ResourceLocation.CODEC.fieldOf("id").forGetter(AffixPoolDef::id),
+            Entry.CODEC.listOf().fieldOf("entries").forGetter(AffixPoolDef::entries),
+            AffixSourceSetCodec.INSTANCE.optionalFieldOf("allow_sources", Set.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.SHIELD, Affix.Source.JEWELRY, Affix.Source.OTHER)).forGetter(AffixPoolDef::allowSources),
+            ITEM_TAG_CODEC.listOf().optionalFieldOf("required_item_tags", List.of()).forGetter(AffixPoolDef::requiredItemTags),
+            Codec.INT.optionalFieldOf("min_item_level", 1).forGetter(AffixPoolDef::minItemLevel),
+            Codec.INT.optionalFieldOf("max_item_level", 0).forGetter(AffixPoolDef::maxItemLevel),
+            Codec.BOOL.optionalFieldOf("unique_types", true).forGetter(AffixPoolDef::uniqueTypes),
+            IntProvider.CODEC.optionalFieldOf("max_affixes_override", ConstantInt.of(0)).forGetter(AffixPoolDef::maxAffixesOverride)
+    ).apply(i, AffixPoolDef::new));
+
+    public boolean matchesItemLevel(int itemLevel) {
+        if (itemLevel < Math.max(1, minItemLevel)) return false;
+        if (maxItemLevel > 0 && itemLevel > maxItemLevel) return false;
+        return true;
+    }
+
+    public record Entry(
+            ResourceLocation affixId,
+            int weight,
+            int perItemMinLevel,
+            int perItemMaxLevel,
+            IntProvider rollsPerAffixOverride
+    ) {
+        public static final Codec<Entry> CODEC = RecordCodecBuilder.create(i -> i.group(
+                ResourceLocation.CODEC.fieldOf("affix_id").forGetter(Entry::affixId),
+                Codec.intRange(1, Integer.MAX_VALUE).fieldOf("weight").forGetter(Entry::weight),
+                Codec.INT.optionalFieldOf("min_item_level", 1).forGetter(Entry::perItemMinLevel),
+                Codec.INT.optionalFieldOf("max_item_level", 0).forGetter(Entry::perItemMaxLevel),
+                IntProvider.CODEC.optionalFieldOf("rolls_override", ConstantInt.of(0)).forGetter(Entry::rollsPerAffixOverride)
+        ).apply(i, Entry::new));
+
+        public boolean levelOk(int itemLevel) {
+            if (itemLevel < Math.max(1, perItemMinLevel)) return false;
+            if (perItemMaxLevel > 0 && itemLevel > perItemMaxLevel) return false;
+            return true;
+        }
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\pool\AffixPoolDef.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\rarity\RarityDataManager.java -----
+package com.doomspire.grimcore.affix.rarity;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.util.random.WeightedEntry;
+import net.minecraft.util.random.WeightedRandomList;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ //NOTE: Менеджер редкостей (Rarity) — грузит RarityDef из datapack, валидирует и даёт API выбора по весам.
+ *
+ * Data-driven загрузчик RarityDef с поддержкой hot-reload.
+ * Путь в датапаке: data/<namespace>/affixes/rarities/*.json
+ *
+ * Требуется регистрация на событие {@link AddReloadListenerEvent} (см. метод onAddReloadListeners).
+ */
+public final class RarityDataManager extends SimpleJsonResourceReloadListener {
+    public static final String FOLDER = "affixes/rarities";
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
+
+    // По id редкости (из поля "id" в JSON)
+    private final Map<ResourceLocation, RarityDef> byId = new ConcurrentHashMap<>();
+
+    // Предсобранный взвешенный список для быстрого выбора
+    private volatile WeightedRandomList<WeightedEntry.Wrapper<ResourceLocation>> weighted = WeightedRandomList.create();
+
+    // Синглтон-экземпляр менеджера (ядро grimcore, без знания о grimfate)
+    public static final RarityDataManager INSTANCE = new RarityDataManager();
+
+    private RarityDataManager() {
+        super(GSON, FOLDER);
+    }
+
+    // ---------- Public API ----------
+
+    /** Вернёт определение редкости по её логическому id. */
+    public Optional<RarityDef> get(ResourceLocation id) {
+        return Optional.ofNullable(byId.get(id));
+    }
+
+    /** Все редкости (иммутабельная копия). */
+    public Map<ResourceLocation, RarityDef> all() {
+        return Collections.unmodifiableMap(byId);
+    }
+
+    /**
+     * Выбор случайной редкости по весам. Если список пуст — Optional.empty().
+     * NB: возвращает именно id, чтобы потребитель мог повторно достать актуальное определение.
+     */
+    public Optional<ResourceLocation> sampleId(RandomSource random) {
+        return weighted.getRandom(random).map(WeightedEntry.Wrapper::data);
+    }
+
+    /** Удобство: сразу вернуть сам RarityDef, если найден. */
+    public Optional<RarityDef> sample(RandomSource random) {
+        return sampleId(random).flatMap(this::get);
+    }
+
+    // ---------- Reload pipeline ----------
+
+    @Override
+    protected void apply(Map<ResourceLocation, JsonElement> jsons,
+                         ResourceManager resourceManager,
+                         ProfilerFiller profiler) {
+        profiler.push("grimcore_rarities_parse");
+
+        final Map<ResourceLocation, RarityDef> parsed = new HashMap<>();
+        final Set<ResourceLocation> duplicateCheck = new HashSet<>();
+        final List<Pair<ResourceLocation, Integer>> weights = new ArrayList<>();
+
+        for (Map.Entry<ResourceLocation, JsonElement> e : jsons.entrySet()) {
+            final ResourceLocation fileKey = e.getKey(); // data/<ns>/<FOLDER>/<path>.json
+            final var json = e.getValue();
+
+            final var result = RarityDef.CODEC.parse(JsonOps.INSTANCE, json).result();
+            if (result.isEmpty()) {
+                // Жёсткая диагностика: указываем файл, чтобы быстро найти ошибку
+                throw new IllegalStateException("Failed to parse RarityDef from " + fileKey + " (see logs for details)");
+            }
+
+            final RarityDef def = result.get();
+            final ResourceLocation id = def.id();
+
+            // Валидация уникальности id между файлами
+            if (!duplicateCheck.add(id)) {
+                throw new IllegalStateException("Duplicate rarity id detected: " + id + " (from " + fileKey + ")");
+            }
+
+            parsed.put(id, def);
+            weights.add(Pair.of(id, Math.max(0, def.weight())));
+        }
+
+        // Сборка взвешенного списка
+        final List<WeightedEntry.Wrapper<ResourceLocation>> wrappers = new ArrayList<>(weights.size());
+        for (Pair<ResourceLocation, Integer> p : weights) {
+            final int w = p.getSecond();
+            if (w > 0) {
+                wrappers.add(WeightedEntry.wrap(p.getFirst(), w));
+            }
+        }
+
+        // Публикуем атомарно
+        byId.clear();
+        byId.putAll(parsed);
+        weighted = wrappers.isEmpty() ? WeightedRandomList.create() : WeightedRandomList.create(wrappers);
+
+        profiler.pop();
+    }
+
+    // ---------- Registration ----------
+
+    /**
+     * Зарегистрировать менеджер как ресурс-лоадер. Вызвать один раз на старте (common-setup),
+     * например из grimcore Main или из grimfate, если у тебя там центральная точка инициализации ядра.
+     */
+    public static void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(INSTANCE);
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\rarity\RarityDataManager.java -----n
+----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\rarity\RarityDef.java -----
+package com.doomspire.grimcore.affix.rarity;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.IntProvider;
+
+/*
+//NOTE: Data-driven описание тира редкости для системы аффиксов.
+// Хранится и грузится через JSON (датапак), без UI-зависимостей.
+//
+// Ожидаемый JSON (совместим с примерами, что мы добавили):
+// {
+//   "id": "grimfate:rare",
+//   "weight": 10,
+//   "max_affixes": { "type": "uniform", "min_inclusive": 2, "max_inclusive": 3 },
+//   "rolls_per_affix": { "type": "constant", "value": 1 },
+//   "magnitude_scale": 1.15,
+//   "display_key": "rarity.grimfate.rare",
+//   "text_color": 16755200,
+//   "allow_duplicates": false
+// }
+*/
+public record RarityDef(
+        ResourceLocation id,
+        int weight,
+        IntProvider maxAffixes,
+        IntProvider rollsPerAffix,
+        float magnitudeScale,
+        String displayKey,
+        int textColor,
+        boolean allowDuplicates
+) {
+    public static final Codec<RarityDef> CODEC = RecordCodecBuilder.create(i -> i.group(
+            ResourceLocation.CODEC.fieldOf("id").forGetter(RarityDef::id),
+            Codec.intRange(0, Integer.MAX_VALUE).fieldOf("weight").forGetter(RarityDef::weight),
+            IntProvider.CODEC.optionalFieldOf("max_affixes", ConstantInt.of(0)).forGetter(RarityDef::maxAffixes),
+            IntProvider.CODEC.optionalFieldOf("rolls_per_affix", ConstantInt.of(1)).forGetter(RarityDef::rollsPerAffix),
+            Codec.FLOAT.optionalFieldOf("magnitude_scale", 1.0f).forGetter(RarityDef::magnitudeScale),
+            Codec.STRING.optionalFieldOf("display_key", "").forGetter(RarityDef::displayKey),
+            Codec.INT.optionalFieldOf("text_color", 0xFFFFFF).forGetter(RarityDef::textColor),
+            Codec.BOOL.optionalFieldOf("allow_duplicates", false).forGetter(RarityDef::allowDuplicates)
+    ).apply(i, RarityDef::new));
+
+    // --- Invariants / guards ---
+    public RarityDef {
+        if (id == null) throw new IllegalArgumentException("rarity.id is null");
+        if (weight < 0) throw new IllegalArgumentException("rarity.weight < 0 for " + id);
+        if (Float.isNaN(magnitudeScale) || Float.isInfinite(magnitudeScale)) {
+            throw new IllegalArgumentException("rarity.magnitude_scale must be finite for " + id);
+        }
+    }
+
+    // --- Helpers used by RollService ---
+
+    /** Выбрать «сколько аффиксов» даёт эта редкость. */
+    public int sampleMaxAffixes(RandomSource rng) {
+        int v = maxAffixes.sample(rng);
+        return Math.max(0, v);
+    }
+
+    /** Выбрать «сколько роллов» делать на один аффикс при генерации (среднее увеличивает точность/сглаженность). */
+    public int sampleRollsPerAffix(RandomSource rng) {
+        int v = rollsPerAffix.sample(rng);
+        return Mth.clamp(v, 1, 16); // разумный предел
+    }
+
+    /** Применить множитель «силы» редкости к сэмплу аффикса. */
+    public float scaleMagnitude(float value) {
+        return value * magnitudeScale;
+    }
+}
+
+n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\affix\rarity\RarityDef.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatCalculator.java -----
 package com.doomspire.grimcore.attach;
 
@@ -4135,6 +4984,182 @@ n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\xp\Rewards.java
 }
 
 n----- END FILE: .\grimcore\src\main\resources\data\grimcore\mobs\minecraft\zombie.json -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\AffixImbueService.java -----
+package com.doomspire.grimfate.affix;
+
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimfate.item.comp.AffixListHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.*;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.EnumSet;
+import java.util.Locale;
+import java.util.Objects;
+
+/*
+//NOTE: Сервис имбью (наполнение аффиксами крафтового снаряжения) — мягкий шаблон под будущего Идола.
+// Работает сервер-сайд. Не занимается GUI/эффектами, только валидацией и записью компонента аффиксов.
+ /**
+  * Основная идея:
+  *  • Крафтовые предметы рождаются пустыми (без AffixListComponent).
+  *  • Ритуал (Идол) вызывает этот сервис — он валидирует цель и записывает сгенерированные аффиксы.
+  *  • Вся генерация делегируется в RollService, а запись — в AffixListHelper.
+  *
+  * Хуки:
+  *  • ItemLevelResolver — внешний провайдер уровня предмета (прогрессия мира/игрока).
+  *  • Policy — политика имбью (разрешать ли перезапись уже «насыщенных» предметов и т.п.).
+  *
+  * Не трогает лут — за лут отвечает Global Loot Modifier.
+  */
+public final class AffixImbueService {
+    private AffixImbueService() {}
+
+    // ---------- Политика и параметры ----------
+
+    /** Политика имбью: базовые правила, которые может настроить «Идол». */
+    public record Policy(
+            boolean allowOverwrite,  // можно ли перезаписывать уже «наполненные» предметы
+            boolean requireEmpty,    // требовать отсутствия аффиксов (обычно true для крафтового пути)
+            boolean strictSource     // вычислять источник строго (false — использовать эвристику guessSource)
+    ) {
+        public static final Policy DEFAULT = new Policy(false, true, true);
+    }
+
+    /** Контекст вызова имбью (для логов/ауры/ритуала). Здесь только то, что реально нужно сервису. */
+    public record Context(
+            ServerLevel level,
+            RandomSource random,
+            @Nullable Player actor
+    ) {
+        public Context {
+            Objects.requireNonNull(level, "level");
+            Objects.requireNonNull(random, "random");
+        }
+    }
+
+    /** Внешний способ вычислить itemLevel для конкретного случая (зона, прогресс игрока и т.п.). */
+    @FunctionalInterface
+    public interface ItemLevelResolver {
+        int resolve(Context ctx, ItemStack stack, int defaultLevel);
+    }
+
+    /** Глобальный резолвер уровня (мягкий хук; можно заменить из инициализации Идола). */
+    private static volatile ItemLevelResolver ITEM_LEVEL_RESOLVER =
+            (ctx, stack, def) -> def;
+
+    public static void setItemLevelResolver(ItemLevelResolver resolver) {
+        if (resolver != null) ITEM_LEVEL_RESOLVER = resolver;
+    }
+
+    // ---------- Публичное API ----------
+
+    /**
+     * Имбью одного предмета. Пишет AffixListComponent внутрь ItemStack при успехе.
+     * @param stack   целевой предмет
+     * @param ctx     серверный контекст
+     * @param policy  политика (см. {@link Policy})
+     * @param defaultItemLevel базовый уровень, если резолвер вернёт дефолт
+     * @return результат операции
+     */
+    public static Result imbue(ItemStack stack, Context ctx, Policy policy, int defaultItemLevel) {
+        if (stack == null || stack.isEmpty()) return Result.fail(Reason.EMPTY_STACK);
+
+        // Проверка состояния предмета перед имбью
+        boolean alreadyHas = AffixListHelper.has(stack);
+        if (policy.requireEmpty && alreadyHas && !policy.allowOverwrite) {
+            return Result.fail(Reason.ALREADY_IMBUED);
+        }
+        if (alreadyHas && !policy.allowOverwrite) {
+            return Result.fail(Reason.ALREADY_IMBUED);
+        }
+
+        // Определяем источник аффиксов (оружие/броня/щит/бижу)
+        Affix.Source src = policy.strictSource ? strictSourceOrFail(stack) : guessSource(stack);
+        if (src == null) return Result.fail(Reason.UNSUPPORTED_ITEM);
+
+        // Уровень предмета
+        int itemLevel = Math.max(1, ITEM_LEVEL_RESOLVER.resolve(ctx, stack, Math.max(1, defaultItemLevel)));
+
+        // Генерация и запись
+        AffixListHelper.rollAndApply(stack, src, itemLevel, ctx.random());
+
+        return Result.success(src, itemLevel);
+    }
+
+    /** Быстрый помощник с дефолтной политикой. */
+    public static Result imbue(ItemStack stack, Context ctx, int defaultItemLevel) {
+        return imbue(stack, ctx, Policy.DEFAULT, defaultItemLevel);
+    }
+
+    // ---------- Вспомогательные методы ----------
+
+    /** Строгое сопоставление типа предмета к Source; null если не поддерживается. */
+    private static @Nullable Affix.Source strictSourceOrFail(ItemStack stack) {
+        var item = stack.getItem();
+        if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
+        if (item instanceof ShieldItem) return Affix.Source.SHIELD;
+
+        // Оружие: ванильные примеры; специальные типы добавим позже тегами grimfate
+        if (item instanceof SwordItem)  return Affix.Source.WEAPON;
+        if (item instanceof BowItem)    return Affix.Source.WEAPON;
+        if (item instanceof CrossbowItem) return Affix.Source.WEAPON;
+        if (item instanceof TridentItem)  return Affix.Source.WEAPON;
+
+        // TODO: позже — StaffItem / DaggerItem / Jewelry через теги и интеграции
+        return null;
+    }
+
+    /** Эвристика для «мягкого» режима. */
+    private static Affix.Source guessSource(ItemStack stack) {
+        var item = stack.getItem();
+        if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
+        if (item instanceof ShieldItem) return Affix.Source.SHIELD;
+        return Affix.Source.WEAPON;
+    }
+
+    // ---------- Результат ----------
+
+    public enum Reason {
+        OK,
+        EMPTY_STACK,
+        ALREADY_IMBUED,
+        UNSUPPORTED_ITEM
+    }
+
+    public record Result(Reason reason, @Nullable Affix.Source source, int itemLevel) {
+        public static Result success(Affix.Source src, int lvl) { return new Result(Reason.OK, src, Math.max(1, lvl)); }
+        public static Result fail(Reason r) { return new Result(r, null, 0); }
+        public boolean ok() { return reason == Reason.OK; }
+
+        @Override
+        public String toString() {
+            if (ok()) return "Imbue OK{source=" + source + ", level=" + itemLevel + "}";
+            return "Imbue FAIL{" + reason + "}";
+        }
+    }
+
+    // ---------- Утилита: парс источника из строки (может пригодиться для будущих команд/датапаков ритуалов) ----------
+
+    public static Affix.Source parseSource(String s, Affix.Source fallback) {
+        if (s == null || s.isBlank()) return fallback;
+        try {
+            return Affix.Source.valueOf(s.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return fallback;
+        }
+    }
+
+    // ---------- Набор поддерживаемых source для быстрых проверок (можно расширять позже) ----------
+
+    public static EnumSet<Affix.Source> supportedSources() {
+        return EnumSet.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.SHIELD/*, Affix.Source.JEWELRY (после интеграции)*/);
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\AffixImbueService.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java -----
 package com.doomspire.grimfate.affix;
 
@@ -4235,6 +5260,95 @@ public final class GrimfateAffixExtraction {
 
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\RollService.java -----
+package com.doomspire.grimfate.affix;
+
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimcore.affix.def.AffixDataManager;
+import com.doomspire.grimcore.affix.def.AffixDef;
+import com.doomspire.grimcore.affix.pool.AffixPoolDataManager;
+import com.doomspire.grimcore.affix.pool.AffixPoolDef;
+import com.doomspire.grimcore.affix.rarity.RarityDataManager;
+import com.doomspire.grimcore.affix.rarity.RarityDef;
+import com.doomspire.grimfate.item.comp.AffixListComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.*;
+
+/*
+//NOTE: Сервис роллинга предметов. Генерирует редкость и аффиксы на основе пулов, уровня и источника. Пишет в AffixListComponent.
+*/
+public final class RollService {
+    private RollService() {}
+
+    public static AffixListComponent roll(Item item, Set<TagKey<Item>> itemTags, Affix.Source source, int itemLevel, RandomSource random) {
+        // 1) Редкость
+        Optional<RarityDef> rarityOpt = RarityDataManager.INSTANCE.sample(random);
+        if (rarityOpt.isEmpty()) {
+            // предмет без аффиксов
+            return new AffixListComponent(List.of());
+        }
+        RarityDef rarity = rarityOpt.get();
+
+        int maxAffixes = rarity.sampleMaxAffixes(random);
+        if (maxAffixes <= 0) {
+            return new AffixListComponent(List.of());
+        }
+
+        // 2) Пулы
+        List<AffixPoolDef> pools = AffixPoolDataManager.INSTANCE.filterApplicable(item, itemTags, source, itemLevel);
+        if (pools.isEmpty()) {
+            return new AffixListComponent(List.of());
+        }
+
+        // 3) Генерация
+        List<AffixListComponent.Entry> entries = new ArrayList<>(maxAffixes);
+        Set<ResourceLocation> used = new HashSet<>();
+
+        for (int i = 0; i < maxAffixes; i++) {
+            AffixPoolDef pool = pools.get(random.nextInt(pools.size()));
+            var affixOpt = AffixPoolDataManager.INSTANCE.sample(pool, itemLevel, random);
+            if (affixOpt.isEmpty()) continue;
+
+            var entry = affixOpt.get();
+            var affixId = entry.affixId();
+
+            if (!pool.uniqueTypes() && used.contains(affixId)) {
+                // повторы разрешены — ничего
+            } else if (used.contains(affixId)) {
+                continue;
+            }
+
+            Optional<AffixDef> defOpt = AffixDataManager.INSTANCE.get(affixId);
+            if (defOpt.isEmpty()) continue;
+            AffixDef def = defOpt.get();
+
+            if (!def.allowSources().contains(source)) continue;
+
+            int rolls = entry.rollsPerAffixOverride().sample(random);
+            if (rolls <= 0) rolls = rarity.sampleRollsPerAffix(random);
+
+            float valueSum = 0f;
+            for (int r = 0; r < rolls; r++) {
+                valueSum += def.sampleBase(random);
+            }
+            float avg = valueSum / rolls;
+            float scaled = rarity.scaleMagnitude(avg);
+            float clamped = def.clampTotal(scaled);
+
+            entries.add(new AffixListComponent.Entry(affixId.toString(), List.of(clamped)));
+            used.add(affixId);
+        }
+
+        return new AffixListComponent(entries);
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\RollService.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\BowModelProperties.java -----
 package com.doomspire.grimfate.client;
 
@@ -5508,7 +6622,6 @@ import com.doomspire.grimfate.item.weapons.Weapons;
 import com.doomspire.grimfate.network.ModNetworking;
 import com.doomspire.grimfate.registry.*;
 import com.mojang.logging.LogUtils;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -5528,6 +6641,9 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.slf4j.Logger;
+import net.neoforged.neoforge.common.NeoForge;
+
+
 
 @Mod(Grimfate.MODID)
 public class Grimfate {
@@ -5549,7 +6665,6 @@ public class Grimfate {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB_MATERIALS =
             CREATIVE_MODE_TABS.register("materials", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.grimfate.materials"))
-                    // Иконка — попытаемся взять fiber, если нет — fallback на медный меч
                     .icon(() -> new ItemStack(Materials.RAWHIDE.get()))
                     .withSearchBar()
                     .build());
@@ -5562,6 +6677,13 @@ public class Grimfate {
                     .withSearchBar()
                     .build());
 
+    //NOTE: Регистрируем загрузчики датапаков (редкости/аффиксы/пулы) на MOD-басе.
+    private void onAddReloadListeners(net.neoforged.neoforge.event.AddReloadListenerEvent event) {
+        // grimcore: датадрайв движка аффиксов
+        com.doomspire.grimcore.affix.rarity.RarityDataManager.onAddReloadListeners(event);
+        com.doomspire.grimcore.affix.def.AffixDataManager.onAddReloadListeners(event);
+        com.doomspire.grimcore.affix.pool.AffixPoolDataManager.onAddReloadListeners(event);
+    }
     public Grimfate(IEventBus modEventBus, ModContainer modContainer) {
         // Конфиги
         modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
@@ -5577,6 +6699,7 @@ public class Grimfate {
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         com.doomspire.grimfate.loot.ModLootModifiers.init(modEventBus);
         ModDataComponents.DATA_COMPONENT_TYPES.register(modEventBus);
+        NeoForge.EVENT_BUS.addListener(this::onAddReloadListeners);
 
         com.doomspire.grimfate.item.weapons.Weapons.init(modEventBus);
         com.doomspire.grimfate.item.armor.Armors.init(modEventBus);
@@ -6150,6 +7273,86 @@ public record AffixListComponent(List<Entry> entries) {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListComponent.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListHelper.java -----
+package com.doomspire.grimfate.item.comp;
+
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimfate.affix.RollService;
+import com.doomspire.grimfate.registry.ModDataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+/*
+//NOTE: Утилиты для чтения/записи компонента аффиксов на ItemStack и удобный «имбью» (ролл + запись).
+/**
+ * Работает поверх data-component'а {@link AffixListComponent}, зарегистрированного как
+ * {@code ModDataComponents.AFFIX_LIST}. Сторона контента (grimfate). См. регистрацию компонентов: ModDataComponents. :contentReference[oaicite:0]{index=0}
+ *
+ * Поток использования:
+ *  - {@link #get(ItemStack)} / {@link #has(ItemStack)} — проверка и чтение.
+ *  - {@link #set(ItemStack, AffixListComponent)} / {@link #clear(ItemStack)} — запись/очистка.
+ *  - {@link #rollAndApply(ItemStack, Affix.Source, int, RandomSource)} — единый «имбью»: выбрать редкость/аффиксы и записать их в предмет.
+ *
+ * Совместимость:
+ *  - Чтение используется в GrimfateAffixExtraction.readFromStack() (ядро агрегатора читает аффиксы из компонента). :contentReference[oaicite:1]{index=1}
+ */
+public final class AffixListHelper {
+    private AffixListHelper() {}
+
+    public static boolean has(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        return stack.get(ModDataComponents.AFFIX_LIST.get()) != null;
+    }
+
+    public static Optional<AffixListComponent> get(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return Optional.empty();
+        return Optional.ofNullable(stack.get(ModDataComponents.AFFIX_LIST.get()));
+    }
+
+    public static void set(ItemStack stack, AffixListComponent comp) {
+        if (stack == null || stack.isEmpty()) return;
+        stack.set(ModDataComponents.AFFIX_LIST.get(), comp);
+    }
+
+    public static void clear(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return;
+        stack.remove(ModDataComponents.AFFIX_LIST.get());
+    }
+
+    /** Собрать набор item-тегов предмета (используется при фильтрации пулов RollService'ом). */
+    public static Set<TagKey<Item>> collectItemTags(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return Collections.emptySet();
+        var holder = stack.getItem().builtInRegistryHolder();
+        // Фильтруем только item-теги
+        return holder.tags()
+                .filter(t -> t.registry().location().equals(Registries.ITEM.location()))
+                .map(t -> (TagKey<Item>) t)
+                .collect(Collectors.toCollection(HashSet::new));
+    }
+
+    /**
+     * Имбью: сгенерировать редкость и аффиксы и записать их в предмет.
+     * Никаких эвристик по источнику — вызывающий код обязан передать корректный {@link Affix.Source}.
+     */
+    public static void rollAndApply(ItemStack stack, Affix.Source source, int itemLevel, RandomSource random) {
+        if (stack == null || stack.isEmpty()) return;
+        var tags = collectItemTags(stack);
+        var comp = RollService.roll(stack.getItem(), tags, source, itemLevel, random);
+        set(stack, comp);
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListHelper.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\WeaponProfileComponent.java -----
 package com.doomspire.grimfate.item.comp;
 
@@ -6370,30 +7573,230 @@ public final class Weapons {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\weapons\Weapons.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\InjectTagItemsLootModifier.java -----
+package com.doomspire.grimfate.loot;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.neoforged.neoforge.common.loot.LootModifier;
+
+import java.util.List;
+
+/*
+//NOTE: GLM-инжектор — добавляет предметы из item-тега в сгенерированный лут.
+// Важно: если тега нет — молча выходим (никаких крэшей).
+*/
+public final class InjectTagItemsLootModifier extends LootModifier {
+
+    public static final MapCodec<InjectTagItemsLootModifier> CODEC = RecordCodecBuilder.mapCodec(i -> codecStart(i)
+            .and(ResourceLocation.CODEC.fieldOf("tag").forGetter(m -> m.tag.location()))
+            .and(Codec.FLOAT.optionalFieldOf("chance", 1.0f).forGetter(m -> m.chance))
+            .and(IntProvider.CODEC.optionalFieldOf("count", UniformInt.of(1, 1)).forGetter(m -> m.count))
+            .and(Codec.BOOL.optionalFieldOf("expand_all", false).forGetter(m -> m.expandAll))
+            .apply(i, (conditions, tagRl, chance, count, expand) ->
+                    new InjectTagItemsLootModifier(conditions, TagKey.create(Registries.ITEM, tagRl), chance, count, expand)));
+
+    private final TagKey<Item> tag;
+    private final float chance;
+    private final IntProvider count;
+    private final boolean expandAll;
+
+    public InjectTagItemsLootModifier(LootItemCondition[] conditionsIn,
+                                      TagKey<Item> tag,
+                                      float chance,
+                                      IntProvider count,
+                                      boolean expandAll) {
+        super(conditionsIn);
+        this.tag = tag;
+        this.chance = Math.max(0f, Math.min(1f, chance));
+        this.count = count;
+        this.expandAll = expandAll;
+    }
+
+    @Override
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
+        final RandomSource rng = context.getRandom();
+        if (rng.nextFloat() > chance) return generatedLoot;
+
+        int rolls = Math.max(0, count.sample(rng));
+        if (rolls == 0) return generatedLoot;
+
+        // Безопасно получаем набор предметов по тегу (если тега нет — выходим)
+        RegistryAccess access = context.getLevel().registryAccess();
+        var itemsLookup = access.lookupOrThrow(Registries.ITEM); // сам реестр есть всегда
+        var setOpt = itemsLookup.get(tag);                       // а вот конкретный тег может отсутствовать
+        if (setOpt.isEmpty()) return generatedLoot;
+
+        HolderSet<Item> set = setOpt.get();
+        if (set.size() == 0) return generatedLoot;
+
+        for (int r = 0; r < rolls; r++) {
+            if (expandAll) {
+                for (Holder<Item> holder : set) {
+                    generatedLoot.add(new ItemStack(holder.value()));
+                }
+            } else {
+                var opt = set.getRandomElement(rng);
+                opt.ifPresent(h -> generatedLoot.add(new ItemStack(h.value())));
+            }
+        }
+        return generatedLoot;
+    }
+
+    @Override
+    public MapCodec<? extends LootModifier> codec() {
+        return CODEC;
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\InjectTagItemsLootModifier.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\ModLootModifiers.java -----
 package com.doomspire.grimfate.loot;
 
 import com.doomspire.grimfate.core.Grimfate;
 import com.mojang.serialization.MapCodec;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
+/*
+//NOTE: Регистрация Global Loot Modifiers для NeoForge 1.21.1 (реестр ожидает MapCodec<? extends IGlobalLootModifier>).
+*/
 public final class ModLootModifiers {
     private ModLootModifiers() {}
 
-    // Регистрируем КОДЕКИ модификаторов лута
+    // Единый реестр кодеков GLM (MapCodec)
     public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> GLM_SERIALIZERS =
             DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, Grimfate.MODID);
 
+    // grimfate:roll_affixes — регистрируем сам MapCodec
+    public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>> ROLL_AFFIXES =
+            GLM_SERIALIZERS.register("roll_affixes", () -> RollAffixesLootModifier.CODEC);
 
-    public static void init(net.neoforged.bus.api.IEventBus modBus) {
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            INJECT_TAG_ITEMS = GLM_SERIALIZERS.register("inject_tag_items", () -> InjectTagItemsLootModifier.CODEC);
+
+    /** Привязать к MOD-басу из инициализации мода grimfate. */
+    public static void init(IEventBus modBus) {
         GLM_SERIALIZERS.register(modBus);
     }
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\ModLootModifiers.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\RollAffixesLootModifier.java -----
+package com.doomspire.grimfate.loot;
+
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimfate.item.comp.AffixListHelper;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.neoforged.neoforge.common.loot.LootModifier;
+
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
+/*
+//NOTE: Global Loot Modifier: навешивает аффиксы на дроп (оружие/броню/щит). Крафтовые предметы не трогаем — их будет «наполнять» Идол.
+*/
+public final class RollAffixesLootModifier extends LootModifier {
+
+    public static final MapCodec<RollAffixesLootModifier> CODEC = RecordCodecBuilder.mapCodec(inst -> codecStart(inst).and(
+            Codec.STRING.listOf().optionalFieldOf("allow_sources", List.of("WEAPON","ARMOR","SHIELD"))
+                    .forGetter(m -> m.allowSources.stream().map(Enum::name).toList())
+    ).and(
+            Codec.BOOL.optionalFieldOf("replace_existing", false).forGetter(m -> m.replaceExisting)
+    ).and(
+            Codec.INT.optionalFieldOf("default_item_level", 1).forGetter(m -> m.defaultItemLevel)
+    ).apply(inst, (conditions, sources, replace, lvl) -> new RollAffixesLootModifier(conditions, parseSources(sources), replace, lvl)));
+
+    private static Set<Affix.Source> parseSources(List<String> tokens) {
+        var set = EnumSet.noneOf(Affix.Source.class);
+        for (String t : tokens) {
+            var key = t.trim().toUpperCase(Locale.ROOT);
+            if (key.equals("ALL")) { for (var s : Affix.Source.values()) set.add(s); break; }
+            set.add(Affix.Source.valueOf(key));
+        }
+        if (set.isEmpty()) { set.add(Affix.Source.WEAPON); set.add(Affix.Source.ARMOR); set.add(Affix.Source.SHIELD); }
+        return Set.copyOf(set);
+    }
+
+    private final Set<Affix.Source> allowSources;
+    private final boolean replaceExisting;
+    private final int defaultItemLevel;
+
+    public RollAffixesLootModifier(LootItemCondition[] conditionsIn,
+                                   Set<Affix.Source> allowSources,
+                                   boolean replaceExisting,
+                                   int defaultItemLevel) {
+        super(conditionsIn);
+        this.allowSources = allowSources;
+        this.replaceExisting = replaceExisting;
+        this.defaultItemLevel = Math.max(1, defaultItemLevel);
+    }
+
+    @FunctionalInterface
+    public interface ItemLevelResolver { int resolve(LootContext ctx, ItemStack stack, int defaultLevel); }
+    private static volatile ItemLevelResolver ITEM_LEVEL_RESOLVER = (ctx, st, def) -> def;
+    public static void setItemLevelResolver(ItemLevelResolver resolver) { if (resolver != null) ITEM_LEVEL_RESOLVER = resolver; }
+
+    @Override
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
+        if (generatedLoot == null || generatedLoot.isEmpty()) return generatedLoot;
+
+        final RandomSource rnd = context.getRandom();
+
+        for (ItemStack stack : generatedLoot) {
+            if (stack == null || stack.isEmpty()) continue;
+            if (!replaceExisting && AffixListHelper.has(stack)) continue;
+
+            Affix.Source src = guessSource(stack);
+            if (!allowSources.contains(src)) continue;
+
+            int itemLevel = ITEM_LEVEL_RESOLVER.resolve(context, stack, defaultItemLevel);
+            AffixListHelper.rollAndApply(stack, src, itemLevel, rnd);
+        }
+        return generatedLoot;
+    }
+
+    @Override
+    public MapCodec<? extends LootModifier> codec() { return CODEC; }
+
+    private static Affix.Source guessSource(ItemStack stack) {
+        var item = stack.getItem();
+        if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
+        if (item instanceof ShieldItem) return Affix.Source.SHIELD;
+        if (item instanceof SwordItem)  return Affix.Source.WEAPON;
+        if (item instanceof BowItem || item instanceof CrossbowItem || item instanceof TridentItem) return Affix.Source.WEAPON;
+        return Affix.Source.WEAPON;
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\RollAffixesLootModifier.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\network\AutoBoltServer.java -----
 package com.doomspire.grimfate.network;
 
@@ -7395,46 +8798,139 @@ n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\geo\armor\rawhide
   "attr.tip.evasion": "Dodge chance.",
 
   "grimfate.ui.stats.open": "Open Attributes",
+  "itemGroup.grimfate.equipment": "Grimfate • Equipment",
+  "itemGroup.grimfate.materials": "Grimfate • Materials",
+  "itemGroup.grimfate.mobs": "Grimfate • Mobs",
 
-"item.grimfate.rusty_ring": "Rusty Ring"
+  "item.grimfate.copper_sword": "Copper Sword",
+  "item.grimfate.scholar_staff": "Scholar's Staff",
+  "item.grimfate.weakling_bow": "Weakling Bow",
+  "item.grimfate.copperforced_shield": "Copperforced Shield",
+
+  "item.grimfate.copper_helmet": "Copper Helmet",
+  "item.grimfate.copper_chestplate": "Copper Chestplate",
+  "item.grimfate.copper_leggings": "Copper Leggings",
+  "item.grimfate.copper_boots": "Copper Boots",
+
+  "item.grimfate.rawhide_hood": "Rawhide Hood",
+  "item.grimfate.rawhide_jacket": "Rawhide Jacket",
+  "item.grimfate.rawhide_wraps": "Rawhide Wraps",
+  "item.grimfate.rawhide_boots": "Rawhide Boots",
+
+  "item.grimfate.linen_hat": "Linen Hat",
+  "item.grimfate.linen_cape": "Linen Cape",
+  "item.grimfate.linen_pants": "Linen Pants",
+  "item.grimfate.linen_shoes": "Linen Shoes",
+
+  "item.grimfate.copper_ring": "Copper Ring",
+  "item.grimfate.bronze_ring": "Bronze Ring",
+  "item.grimfate.copper_necklace": "Copper Necklace",
+  "item.grimfate.bronze_necklace": "Bronze Necklace",
+
+  "item.grimfate.fiber": "Fiber",
+  "item.grimfate.canvas_fabric": "Canvas Fabric",
+  "item.grimfate.pork_fat": "Pork Fat",
+  "item.grimfate.rawhide": "Rawhide",
+
+  "rarity.grimfate.common": "Common",
+  "rarity.grimfate.uncommon": "Uncommon",
+  "rarity.grimfate.rare": "Rare",
+  "rarity.grimfate.epic": "Epic",
+  "rarity.grimfate.legendary": "Legendary",
+
+  "affix.grimfate.plus_vitality": "+%s Vitality",
+  "affix.grimfate.plus_strength": "+%s Strength",
+  "affix.grimfate.phys_damage_percent": "+%s Physical Damage",
+  "affix.grimfate.attack_speed": "+%s Attack Speed",
+  "affix.grimfate.armor_flat": "+%s Armor",
+  "affix.grimfate.resist_all_percent": "+%s All Resistances",
+  "affix.grimfate.crit_chance_percent": "+%s Critical Chance",
+
+  "entity.grimfate.bolt": "Bolt"
 }
 
 
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\lang\en_us.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\lang\ru_ru.json -----
 {
-  "key.categories.grimfate": "GrimFate",
-  "key.grimfate.open_stats": "Открыть характеристики",
+  "key.categories.grimfate": "Grimfate",
+  "key.grimfate.open_stats": "Открыть аттрибуты",
 
-  "key.grimfate.spellslot_1": "Слот умения 1",
-  "key.grimfate.spellslot_2": "Слот умения 2",
-  "key.grimfate.spellslot_3": "Слот умения 3",
-  "key.grimfate.spellslot_4": "Слот умения 4",
-  "key.grimfate.spellslot_5": "Слот умения 5",
-  "key.grimfate.spellslot_6": "Слот умения 6",
+  "key.grimfate.spellslot_1": "Слот заклинания 1",
+  "key.grimfate.spellslot_2": "Слот заклинания 2",
+  "key.grimfate.spellslot_3": "Слот заклинания 3",
+  "key.grimfate.spellslot_4": "Слот заклинания 4",
+  "key.grimfate.spellslot_5": "Слот заклинания 5",
+  "key.grimfate.spellslot_6": "Слот заклинания 6",
 
-  "screen.grimfate.stats_hub": "Attributes",
-  "screen.grimfate.unspent": "Unspent points: %s",
+  "screen.grimfate.stats_hub": "Аттрибуты",
+  "screen.grimfate.unspent": "Непотраченные очки: %s",
 
-  "attr.grimfate.vitality": "Vitality",
-  "attr.grimfate.strength": "Strength",
-  "attr.grimfate.intelligence": "Intelligence",
-  "attr.grimfate.spirit": "Spirit",
-  "attr.grimfate.dexterity": "Dexterity",
-  "attr.grimfate.evasion": "Evasion",
+  "attr.grimfate.vitality": "Стойкость",
+  "attr.grimfate.strength": "Сила",
+  "attr.grimfate.intelligence": "Интеллект",
+  "attr.grimfate.spirit": "Дух",
+  "attr.grimfate.dexterity": "Ловкость",
+  "attr.grimfate.evasion": "Уклонение",
 
-  "attr.tip.vitality": "Increases health and regen.",
-  "attr.tip.strength": "Increases physical melee damage.",
-  "attr.tip.intelligence": "Increases spell power.",
-  "attr.tip.spirit": "Increases max mana and mana regen.",
-  "attr.tip.dexterity": "Increases physical ranged damage.",
-  "attr.tip.evasion": "Dodge chance.",
+  "attr.tip.vitality": "Повышение здоровья и регенерации здоровья.",
+  "attr.tip.strength": "Повышение урона ближнего боя.",
+  "attr.tip.intelligence": "Повышение урона от заклинаний.",
+  "attr.tip.spirit": "Повышение маны и регенерации маны.",
+  "attr.tip.dexterity": "Повышение урона дальнего боя.",
+  "attr.tip.evasion": "Шанс уклонения.",
 
-  "grimfate.ui.stats.open": "Открыть атрибуты",
+  "grimfate.ui.stats.open": "Открыть аттрибуты",
+  "itemGroup.grimfate.equipment": "Grimfate • Снаряжение",
+  "itemGroup.grimfate.materials": "Grimfate • Материалы",
+  "itemGroup.grimfate.mobs": "Grimfate • Мобы и Боссы",
 
-  "item.grimfate.rusty_ring": "Rusty Ring"
+  "item.grimfate.copper_sword": "Медный меч",
+  "item.grimfate.scholar_staff": "Посох школяра",
+  "item.grimfate.weakling_bow": "Слабенький лук",
+  "item.grimfate.copperforced_shield": "Укрпеленный медью щит",
+
+  "item.grimfate.copper_helmet": "Медный шлем",
+  "item.grimfate.copper_chestplate": "Медная грудная пластина",
+  "item.grimfate.copper_leggings": "Медные наколенники",
+  "item.grimfate.copper_boots": "Медные ботинки",
+
+  "item.grimfate.rawhide_hood": "Сыромятный капюшон",
+  "item.grimfate.rawhide_jacket": "Сыромятная куртка",
+  "item.grimfate.rawhide_wraps": "Сыромятные обмотки",
+  "item.grimfate.rawhide_boots": "Сыромятная обувь",
+
+  "item.grimfate.linen_hat": "Холщевая шляпа",
+  "item.grimfate.linen_cape": "Холщевая накидка",
+  "item.grimfate.linen_pants": "Холщевые штаны",
+  "item.grimfate.linen_shoes": "Холщевая обувь",
+
+  "item.grimfate.copper_ring": "Медное кольцо",
+  "item.grimfate.bronze_ring": "Бронзовое кольцо",
+  "item.grimfate.copper_necklace": "Медное ожерелье",
+  "item.grimfate.bronze_necklace": "Бронзовое ожерелье",
+
+  "item.grimfate.fiber": "Волокно",
+  "item.grimfate.canvas_fabric": "Холщевая ткань",
+  "item.grimfate.pork_fat": "Свиной жир",
+  "item.grimfate.rawhide": "Сыромять",
+
+  "rarity.grimfate.common": "Обычное",
+  "rarity.grimfate.uncommon": "Необычное",
+  "rarity.grimfate.rare": "Редкое",
+  "rarity.grimfate.epic": "Эпическое",
+  "rarity.grimfate.legendary": "Легендарное",
+
+  "affix.grimfate.plus_vitality": "+%s к Стойкости",
+  "affix.grimfate.plus_strength": "+%s к Силе",
+  "affix.grimfate.phys_damage_percent": "+%s к Физическому урону",
+  "affix.grimfate.attack_speed": "+%s к Скорости атаки",
+  "affix.grimfate.armor_flat": "+%s Броня",
+  "affix.grimfate.resist_all_percent": "+%s Все сопротивления",
+  "affix.grimfate.crit_chance_percent": "+%s Шанс крит. удара",
+
+  "entity.grimfate.bolt": "Bolt"
 }
-
 n----- END FILE: .\grimfate\src\main\resources\assets\grimfate\lang\ru_ru.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\assets\grimfate\models\item\bronze_necklace.json -----
 {
@@ -8626,6 +10122,221 @@ n----- END FILE: .\grimfate\src\main\resources\data\curios\tags\items\necklace.j
 { "values": ["grimfate:copper_ring","grimfate:bronze_ring"] }
 
 n----- END FILE: .\grimfate\src\main\resources\data\curios\tags\items\ring.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\armor_flat.json -----
+{
+  "id": "grimfate:armor_flat",
+  "display_key": "affix.grimfate.armor_flat",
+  "unit": "FLAT",
+  "min": 1.0,
+  "max": 4.0,
+  "curve": { "type": "BIAS_LOW", "power": 2.0 },
+  "allow_sources": ["ARMOR","SHIELD"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\armor_flat.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\attack_speed.json -----
+{
+  "id": "grimfate:attack_speed",
+  "display_key": "affix.grimfate.attack_speed",
+  "unit": "PERCENT",
+  "min": 0.02,
+  "max": 0.10,
+  "curve": { "type": "UNIFORM" },
+  "allow_sources": ["WEAPON","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\attack_speed.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\crit_chance_percent.json -----
+{
+  "id": "grimfate:crit_chance_percent",
+  "display_key": "affix.grimfate.crit_chance_percent",
+  "unit": "PERCENT",
+  "min": 0.02,
+  "max": 0.10,
+  "curve": { "type": "BIAS_HIGH", "power": 2.0 },
+  "allow_sources": ["WEAPON","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\crit_chance_percent.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\phys_damage_percent.json -----
+{
+  "id": "grimfate:phys_damage_percent",
+  "display_key": "affix.grimfate.phys_damage_percent",
+  "unit": "PERCENT",
+  "min": 0.03,
+  "max": 0.12,
+  "curve": { "type": "GAUSSIAN", "spread": 1.0 },
+  "allow_sources": ["WEAPON"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\phys_damage_percent.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\plus_strenght.json -----
+{
+  "id": "grimfate:plus_strength",
+  "display_key": "affix.grimfate.plus_strength",
+  "unit": "FLAT",
+  "min": 2.0,
+  "max": 6.0,
+  "curve": { "type": "BIAS_LOW", "power": 2.0 },
+  "allow_sources": ["ARMOR","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\plus_strenght.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\plus_vitality.json -----
+{
+  "id": "grimfate:plus_vitality",
+  "display_key": "affix.grimfate.plus_vitality",
+  "unit": "FLAT",
+  "min": 2.0,
+  "max": 6.0,
+  "curve": { "type": "BIAS_LOW", "power": 2.0 },
+  "allow_sources": ["ARMOR","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\plus_vitality.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\resist_all_percent.json -----
+{
+  "id": "grimfate:resist_all_percent",
+  "display_key": "affix.grimfate.resist_all_percent",
+  "unit": "PERCENT",
+  "min": 0.02,
+  "max": 0.08,
+  "curve": { "type": "GAUSSIAN", "spread": 0.8 },
+  "allow_sources": ["ARMOR","JEWELRY","SHIELD"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\resist_all_percent.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\armor_defensive.json -----
+{
+  "id": "grimfate:armor_defensive",
+  "entries": [
+    { "affix_id": "grimfate:plus_vitality",       "weight": 40, "min_item_level": 1 },
+    { "affix_id": "grimfate:armor_flat",          "weight": 35, "min_item_level": 1 },
+    { "affix_id": "grimfate:resist_all_percent",  "weight": 25, "min_item_level": 1 }
+  ],
+  "allow_sources": ["ARMOR","SHIELD"],
+  "required_item_tags": [],
+  "min_item_level": 1,
+  "max_item_level": 0,
+  "unique_types": true,
+  "max_affixes_override": { "type": "constant", "value": 0 }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\armor_defensive.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\jewelry_support.json -----
+{
+  "id": "grimfate:jewelry_support",
+  "entries": [
+    { "affix_id": "grimfate:plus_strength",       "weight": 30, "min_item_level": 1 },
+    { "affix_id": "grimfate:plus_vitality",       "weight": 30, "min_item_level": 1 },
+    { "affix_id": "grimfate:attack_speed",        "weight": 20, "min_item_level": 1 },
+    { "affix_id": "grimfate:resist_all_percent",  "weight": 20, "min_item_level": 1 }
+  ],
+  "allow_sources": ["JEWELRY"],
+  "required_item_tags": [],
+  "min_item_level": 1,
+  "max_item_level": 0,
+  "unique_types": true,
+  "max_affixes_override": { "type": "constant", "value": 2 }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\jewelry_support.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\weapon_primary.json -----
+{
+  "id": "grimfate:weapon_primary",
+  "entries": [
+    { "affix_id": "grimfate:phys_damage_percent", "weight": 50, "min_item_level": 1 },
+    { "affix_id": "grimfate:attack_speed",        "weight": 30, "min_item_level": 1 },
+    { "affix_id": "grimfate:crit_chance_percent",  "weight": 20, "min_item_level": 1 }
+  ],
+  "allow_sources": ["WEAPON"],
+  "required_item_tags": [],
+  "min_item_level": 1,
+  "max_item_level": 0,
+  "unique_types": true,
+  "max_affixes_override": { "type": "constant", "value": 0 }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\weapon_primary.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\common.json -----
+{
+  "id": "grimfate:common",
+  "weight": 60,
+  "max_affixes": { "type": "uniform", "min_inclusive": 0, "max_inclusive": 1 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.00,
+  "display_key": "rarity.grimfate.common",
+  "text_color": 11184810,
+  "allow_duplicates": false
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\common.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\epic.json -----
+{
+  "id": "grimfate:epic",
+  "weight": 2,
+  "max_affixes": { "type": "uniform", "min_inclusive": 3, "max_inclusive": 4 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.30,
+  "display_key": "rarity.grimfate.epic",
+  "text_color": 11141290,
+  "allow_duplicates": false
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\epic.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\legendary.json -----
+{
+  "id": "grimfate:legendary",
+  "weight": 0,
+  "max_affixes": { "type": "uniform", "min_inclusive": 4, "max_inclusive": 5 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.50,
+  "display_key": "rarity.grimfate.legendary",
+  "text_color": 16737280,
+  "allow_duplicates": false
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\legendary.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\rare.json -----
+{
+  "id": "grimfate:rare",
+  "weight": 10,
+  "max_affixes": { "type": "uniform", "min_inclusive": 2, "max_inclusive": 3 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.15,
+  "display_key": "rarity.grimfate.rare",
+  "text_color": 16755200,
+  "allow_duplicates": false
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\rare.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\uncommon.json -----
+{
+  "id": "grimfate:uncommon",
+  "weight": 28,
+  "max_affixes": { "type": "uniform", "min_inclusive": 1, "max_inclusive": 2 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.05,
+  "display_key": "rarity.grimfate.uncommon",
+  "text_color": 5635925,
+  "allow_duplicates": false
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\uncommon.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\balance\attributes.json -----
 {
   "attributes": {
@@ -8676,84 +10387,111 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\balance\levels.json
 
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\balance\spells.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json -----
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_armors_to_chests.json -----
 {
-  "type": "neoforge:add_item",
+  "type": "grimfate:inject_tag_items",
   "conditions": [
     {
-      "condition": "neoforge:loot_table_id",
-      "loot_table_id": [
-        "minecraft:blocks/grass",
-        "minecraft:blocks/tall_grass"
-      ]
-    },
-    { "condition": "minecraft:random_chance", "chance": 0.125 }
-  ],
-  "item": "grimfate:fiber",
-  "count": 1
-}
-
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\global_loot_modifiers.json -----
-{
-  "replace": false,
-  "entries": [
-    "grimfate:fiber_from_grass",
-    "grimfate:pork_fat_from_pig",
-    "grimfate:jewelry_from_chests"
-  ]
-}
-
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\global_loot_modifiers.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\jewelry_from_chests.json -----
-{
-  "type": "neoforge:add_table",
-  "conditions": [
-    {
-      "condition": "neoforge:loot_table_id",
-      "loot_table_id": [
-        "minecraft:chests/simple_dungeon",
-        "minecraft:chests/abandoned_mineshaft",
-        "minecraft:chests/shipwreck_treasure",
-        "minecraft:chests/jungle_temple",
-
-        "minecraft:chests/village/village_weaponsmith",
-        "minecraft:chests/village/village_armorer",
-        "minecraft:chests/village/village_temple",
-        "minecraft:chests/village/village_cartographer",
-        "minecraft:chests/village/village_fletcher",
-        "minecraft:chests/village/village_tannery",
-        "minecraft:chests/village/village_toolsmith",
-        "minecraft:chests/village/village_fisher",
-        "minecraft:chests/village/village_butcher",
-
-        "minecraft:chests/village/village_desert_house",
-        "minecraft:chests/village/village_plains_house",
-        "minecraft:chests/village/village_savanna_house",
-        "minecraft:chests/village/village_snowy_house",
-        "minecraft:chests/village/village_taiga_house"
+      "condition": "minecraft:any_of",
+      "terms": [
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" },
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ruined_portal" }
       ]
     }
   ],
-  "table": "grimfate:gameplay/jewelry_pool"
+  "tag": "grimfate:loot/armors",
+  "chance": 0.50,
+  "count": { "type": "uniform", "min_inclusive": 1, "max_inclusive": 1 },
+  "expand_all": false
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\jewelry_from_chests.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_armors_to_chests.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_fiber_from_grass.json -----
 {
-  "type": "neoforge:add_item",
+  "type": "grimfate:inject_tag_items",
   "conditions": [
     {
-      "condition": "neoforge:loot_table_id",
-      "loot_table_id": [ "minecraft:entities/pig" ]
-    },
-    { "condition": "minecraft:random_chance", "chance": 0.5 }
+      "condition": "minecraft:any_of",
+      "terms": [
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:blocks/grass" },
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:blocks/tall_grass" },
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:blocks/fern" }
+      ]
+    }
   ],
-  "item": "grimfate:pork_fat",
-  "count": 1
+  "tag": "grimfate:loot/fiber",
+  "chance": 0.40,
+  "count": { "type": "uniform", "min_inclusive": 1, "max_inclusive": 2 },
+  "expand_all": false
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json -----n
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_fiber_from_grass.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_jewelry_to_chests.json -----
+{
+  "type": "grimfate:inject_tag_items",
+  "conditions": [
+    {
+      "condition": "minecraft:any_of",
+      "terms": [
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/abandoned_mineshaft" },
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple" },
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_treasure" },
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" }
+      ]
+    }
+  ],
+  "tag": "grimfate:loot/jewelry",
+  "chance": 0.65,
+  "count": { "type": "uniform", "min_inclusive": 1, "max_inclusive": 2 },
+  "expand_all": false
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_jewelry_to_chests.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_pork_fat_from_pig.json -----
+{
+  "type": "grimfate:inject_tag_items",
+  "conditions": [
+    { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:entities/pig" }
+  ],
+  "tag": "grimfate:loot/pork_fat",
+  "chance": 0.25,
+  "count": { "type": "uniform", "min_inclusive": 1, "max_inclusive": 2 },
+  "expand_all": false
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_pork_fat_from_pig.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_weapons_to_chests.json -----
+{
+  "type": "grimfate:inject_tag_items",
+  "conditions": [
+    {
+      "condition": "minecraft:any_of",
+      "terms": [
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" },
+        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/pillager_outpost" }
+      ]
+    }
+  ],
+  "tag": "grimfate:loot/weapons",
+  "chance": 0.55,
+  "count": { "type": "uniform", "min_inclusive": 1, "max_inclusive": 1 },
+  "expand_all": false
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_weapons_to_chests.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\roll_affixes.json -----
+{
+  "type": "grimfate:roll_affixes",
+  "conditions": [],
+  "allow_sources": ["WEAPON", "ARMOR", "SHIELD"],
+  "replace_existing": false,
+  "default_item_level": 1
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\roll_affixes.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\gameplay\jewelry_pool.json -----
 {
   "type": "minecraft:chest",
@@ -8948,6 +10686,67 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\hammers.
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\jewelry.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\armors.json -----
+{
+  "replace": false,
+  "values": [
+    "grimfate:copper_helmet",
+    "grimfate:copper_chestplate",
+    "grimfate:copper_leggings",
+    "grimfate:copper_boots",
+    "grimfate:rawhide_hood",
+    "grimfate:rawhide_jacket",
+    "grimfate:rawhide_wraps",
+    "grimfate:rawhide_boots",
+    "grimfate:linen_hat",
+    "grimfate:linen_cape",
+    "grimfate:linen_pants",
+    "grimfate:linen_shoes"
+  ]
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\armors.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\fiber.json -----
+{
+  "replace": false,
+  "values": [
+    "grimfate:fiber"
+  ]
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\fiber.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\jewelry.json -----
+{
+  "replace": false,
+  "values": [
+    "grimfate:copper_ring",
+    "grimfate:copper_necklace",
+    "grimfate:bronze_ring",
+    "grimfate:bronze_necklace"
+  ]
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\jewelry.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\pork_fat.json -----
+{
+  "replace": false,
+  "values": [
+    "grimfate:pork_fat"
+  ]
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\pork_fat.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\weapons.json -----
+{
+  "replace": false,
+  "values": [
+    "grimfate:copper_sword",
+    "grimfate:weakling_bow",
+    "grimfate:scholar_staff"
+  ]
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\weapons.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\archer.json -----
 { "values": [] }
 
@@ -8993,9 +10792,12 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\weapon_attributes\w
 {
   "replace": false,
   "entries": [
-    "grimfate:fiber_from_grass",
-    "grimfate:pork_fat_from_pig",
-    "grimfate:jewelry_from_chests"
+    "grimfate:inject_fiber_from_grass",
+    "grimfate:inject_pork_fat_from_pig",
+    "grimfate:inject_jewelry_to_chests",
+    "grimfate:inject_weapons_to_chests",
+    "grimfate:inject_armors_to_chests",
+    "grimfate:roll_affixes"
   ]
 }
 

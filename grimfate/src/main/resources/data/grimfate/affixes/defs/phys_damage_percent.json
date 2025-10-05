@@ -1,0 +1,11 @@
+{
+  "id": "grimfate:phys_damage_percent",
+  "display_key": "affix.grimfate.phys_damage_percent",
+  "unit": "PERCENT",
+  "min": 0.03,
+  "max": 0.12,
+  "curve": { "type": "GAUSSIAN", "spread": 1.0 },
+  "allow_sources": ["WEAPON"],
+  "stackable": false,
+  "clamp_total": true
+}

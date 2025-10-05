@@ -1,0 +1,10 @@
+{
+  "id": "grimfate:legendary",
+  "weight": 0,
+  "max_affixes": { "type": "uniform", "min_inclusive": 4, "max_inclusive": 5 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.50,
+  "display_key": "rarity.grimfate.legendary",
+  "text_color": 16737280,
+  "allow_duplicates": false
+}

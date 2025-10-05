@@ -1,0 +1,14 @@
+{
+  "id": "grimfate:weapon_primary",
+  "entries": [
+    { "affix_id": "grimfate:phys_damage_percent", "weight": 50, "min_item_level": 1 },
+    { "affix_id": "grimfate:attack_speed",        "weight": 30, "min_item_level": 1 },
+    { "affix_id": "grimfate:crit_chance_percent",  "weight": 20, "min_item_level": 1 }
+  ],
+  "allow_sources": ["WEAPON"],
+  "required_item_tags": [],
+  "min_item_level": 1,
+  "max_item_level": 0,
+  "unique_types": true,
+  "max_affixes_override": { "type": "constant", "value": 0 }
+}

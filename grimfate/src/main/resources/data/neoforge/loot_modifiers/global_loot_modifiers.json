@@ -1,8 +1,11 @@
 {
   "replace": false,
   "entries": [
-    "grimfate:fiber_from_grass",
-    "grimfate:pork_fat_from_pig",
-    "grimfate:jewelry_from_chests"
+    "grimfate:inject_fiber_from_grass",
+    "grimfate:inject_pork_fat_from_pig",
+    "grimfate:inject_jewelry_to_chests",
+    "grimfate:inject_weapons_to_chests",
+    "grimfate:inject_armors_to_chests",
+    "grimfate:roll_affixes"
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "id": "grimfate:rare",
+  "weight": 10,
+  "max_affixes": { "type": "uniform", "min_inclusive": 2, "max_inclusive": 3 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.15,
+  "display_key": "rarity.grimfate.rare",
+  "text_color": 16755200,
+  "allow_duplicates": false
+}

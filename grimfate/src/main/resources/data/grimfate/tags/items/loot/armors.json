@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "grimfate:copper_helmet",
+    "grimfate:copper_chestplate",
+    "grimfate:copper_leggings",
+    "grimfate:copper_boots",
+    "grimfate:rawhide_hood",
+    "grimfate:rawhide_jacket",
+    "grimfate:rawhide_wraps",
+    "grimfate:rawhide_boots",
+    "grimfate:linen_hat",
+    "grimfate:linen_cape",
+    "grimfate:linen_pants",
+    "grimfate:linen_shoes"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "grimfate:armor_flat",
+  "display_key": "affix.grimfate.armor_flat",
+  "unit": "FLAT",
+  "min": 1.0,
+  "max": 4.0,
+  "curve": { "type": "BIAS_LOW", "power": 2.0 },
+  "allow_sources": ["ARMOR","SHIELD"],
+  "stackable": false,
+  "clamp_total": true
+}

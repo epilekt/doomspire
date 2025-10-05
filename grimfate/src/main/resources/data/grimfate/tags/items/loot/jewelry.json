@@ -2,8 +2,8 @@
   "replace": false,
   "values": [
     "grimfate:copper_ring",
-    "grimfate:bronze_ring",
     "grimfate:copper_necklace",
+    "grimfate:bronze_ring",
     "grimfate:bronze_necklace"
   ]
 }

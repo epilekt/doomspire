@@ -1,0 +1,14 @@
+{
+  "id": "grimfate:armor_defensive",
+  "entries": [
+    { "affix_id": "grimfate:plus_vitality",       "weight": 40, "min_item_level": 1 },
+    { "affix_id": "grimfate:armor_flat",          "weight": 35, "min_item_level": 1 },
+    { "affix_id": "grimfate:resist_all_percent",  "weight": 25, "min_item_level": 1 }
+  ],
+  "allow_sources": ["ARMOR","SHIELD"],
+  "required_item_tags": [],
+  "min_item_level": 1,
+  "max_item_level": 0,
+  "unique_types": true,
+  "max_affixes_override": { "type": "constant", "value": 0 }
+}

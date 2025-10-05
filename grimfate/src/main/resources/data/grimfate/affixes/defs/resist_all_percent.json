@@ -1,0 +1,11 @@
+{
+  "id": "grimfate:resist_all_percent",
+  "display_key": "affix.grimfate.resist_all_percent",
+  "unit": "PERCENT",
+  "min": 0.02,
+  "max": 0.08,
+  "curve": { "type": "GAUSSIAN", "spread": 0.8 },
+  "allow_sources": ["ARMOR","JEWELRY","SHIELD"],
+  "stackable": false,
+  "clamp_total": true
+}
