@@ -9,5 +9,5 @@
     "FPF",
     "FFF"
   ],
-  "result": { "item": "grimfate:canvas_fabric", "count": 1 }
+  "result": { "id": "grimfate:canvas_fabric", "count": 1 }
 }

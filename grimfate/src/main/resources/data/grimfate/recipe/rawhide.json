@@ -8,5 +8,5 @@
     "F": { "item": "grimfate:pork_fat" },
     "L": { "item": "minecraft:leather" }
   },
-  "result": { "item": "grimfate:rawhide", "count": 1 }
+  "result": { "id": "grimfate:rawhide", "count": 1 }
 }

@@ -1,10 +1,11 @@
 {
   "replace": false,
   "entries": [
-    "grimfate:add_fiber_from_grass",
-    "grimfate:add_pork_fat_from_pig",
-    "grimfate:add_global_loot_to_chests",
+    "grimfate:fiber_from_grass",
+    "grimfate:pork_fat_from_pig",
+    "grimfate:add_weapons_to_simple_dungeon",
+    "grimfate:add_armors_to_simple_dungeon",
+    "grimfate:add_jewelry_to_simple_dungeon",
     "grimfate:roll_affixes"
   ]
 }
-

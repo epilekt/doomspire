@@ -11,5 +11,5 @@
     "P": {"item": "grimfate:pork_fat"},
     "S": {"item": "minecraft:stick"}
   },
-  "result": { "item": "grimfate:copper_sword", "count": 1 }
+  "result": { "id": "grimfate:copper_sword", "count": 1 }
 }

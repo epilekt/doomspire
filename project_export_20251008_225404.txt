@@ -92,6 +92,9 @@
 .\grimfate\src\main\java\com\doomspire\grimfate\core\Config.java
 .\grimfate\src\main\java\com\doomspire\grimfate\core\Grimfate.java
 .\grimfate\src\main\java\com\doomspire\grimfate\core\GrimfateClient.java
+.\grimfate\src\main\java\com\doomspire\grimfate\debug\AlwaysLogAndAddBread.java
+.\grimfate\src\main\java\com\doomspire\grimfate\debug\DebugLootModifiers.java
+.\grimfate\src\main\java\com\doomspire\grimfate\debug\DebugLootModsProbe.java
 .\grimfate\src\main\java\com\doomspire\grimfate\entity\BoltProjectileEntity.java
 .\grimfate\src\main\java\com\doomspire\grimfate\events\LoadoutTickEvents.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\Armors.java
@@ -104,8 +107,10 @@
 .\grimfate\src\main\java\com\doomspire\grimfate\item\materials\Materials.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\StaffItem.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\weapons\Weapons.java
-.\grimfate\src\main\java\com\doomspire\grimfate\loot\InjectTagItemsLootModifier.java
-.\grimfate\src\main\java\com\doomspire\grimfate\loot\ModLootModifiers.java
+.\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddItemModifier.java
+.\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddTagItemsModifier.java
+.\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ModLootModifiers.java
+.\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ReplaceItemModifier.java
 .\grimfate\src\main\java\com\doomspire\grimfate\loot\RollAffixesLootModifier.java
 .\grimfate\src\main\java\com\doomspire\grimfate\network\AutoBoltServer.java
 .\grimfate\src\main\java\com\doomspire\grimfate\network\ModNetworking.java
@@ -195,16 +200,13 @@
 .\grimfate\src\main\resources\data\grimfate\balance\attributes.json
 .\grimfate\src\main\resources\data\grimfate\balance\levels.json
 .\grimfate\src\main\resources\data\grimfate\balance\spells.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\_debug_add_to_simple_dungeon.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_armors_to_chests.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_fiber_from_grass.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_gear_to_chests.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_jewelry_to_chests.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_pork_fat_from_pig.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_weapons_to_chests.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\_probe_chest_simple_dungeon_add_item.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_loot_to_chests.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_to_simple_dungeon.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json
 .\grimfate\src\main\resources\data\grimfate\loot_modifiers\roll_affixes.json
-.\grimfate\src\main\resources\data\grimfate\loot_tables\debug\_always_one_fiber.json
-.\grimfate\src\main\resources\data\grimfate\loot_tables\gameplay\jewelry_pool.json
+.\grimfate\src\main\resources\data\grimfate\loot_tables\chests\global_pool.json
 .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabric.json
 .\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json
 .\grimfate\src\main\resources\data\grimfate\recipes\copperforced_shield.json
@@ -6645,7 +6647,7 @@ import com.doomspire.grimfate.item.armor.Armors;
 import com.doomspire.grimfate.item.jewelry.Jewelry;
 import com.doomspire.grimfate.item.materials.Materials;
 import com.doomspire.grimfate.item.weapons.Weapons;
-import com.doomspire.grimfate.loot.ModLootModifiers;
+import com.doomspire.grimfate.loot.modifier.ModLootModifiers;
 import com.doomspire.grimfate.network.ModNetworking;
 import com.doomspire.grimfate.registry.*;
 import com.mojang.logging.LogUtils;
@@ -6710,6 +6712,8 @@ public class Grimfate {
         com.doomspire.grimcore.affix.rarity.RarityDataManager.onAddReloadListeners(event);
         com.doomspire.grimcore.affix.def.AffixDataManager.onAddReloadListeners(event);
         com.doomspire.grimcore.affix.pool.AffixPoolDataManager.onAddReloadListeners(event);
+        //NeoForge.EVENT_BUS.addListener(com.doomspire.grimfate.debug.DebugLootModsProbe::onAddReloadListeners);
+
     }
     public Grimfate(IEventBus modEventBus, ModContainer modContainer) {
         // Конфиги
@@ -6725,6 +6729,8 @@ public class Grimfate {
         ModEntityTypes.init(modEventBus);
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         ModLootModifiers.init(modEventBus);
+        LOGGER.info("[Grimfate] Registering DebugLootModifiers…");
+        com.doomspire.grimfate.debug.DebugLootModifiers.init(modEventBus);
         ModDataComponents.DATA_COMPONENT_TYPES.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::onAddReloadListeners);
 
@@ -6878,6 +6884,110 @@ public final class GrimfateClient {
 
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\core\GrimfateClient.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\debug\AlwaysLogAndAddBread.java -----
+package com.doomspire.grimfate.debug;
+
+import com.mojang.serialization.MapCodec;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public final class AlwaysLogAndAddBread implements IGlobalLootModifier {
+    private static final Logger LOG = LoggerFactory.getLogger("Grimfate/GLM-DEBUG");
+    public static final MapCodec<AlwaysLogAndAddBread> CODEC = MapCodec.unit(new AlwaysLogAndAddBread());
+
+    @Override public MapCodec<? extends IGlobalLootModifier> codec() { return CODEC; }
+
+    @Override
+    public ObjectArrayList<ItemStack> apply(ObjectArrayList<ItemStack> loot, LootContext ctx) {
+        boolean hasBlock  = ctx.hasParam(LootContextParams.BLOCK_STATE);
+        boolean hasEntity = ctx.hasParam(LootContextParams.THIS_ENTITY);
+        boolean hasTool   = ctx.hasParam(LootContextParams.TOOL);
+        var dim = ctx.getLevel().dimension().location();
+        LOG.info("[GLM] apply() called: hasBlock={}, hasEntity={}, hasTool={}, dim={}", hasBlock, hasEntity, hasTool, dim);
+
+        loot.add(new ItemStack(Items.BREAD));
+        return loot;
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\debug\AlwaysLogAndAddBread.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\debug\DebugLootModifiers.java -----
+package com.doomspire.grimfate.debug;
+
+import com.doomspire.grimfate.core.Grimfate;
+import com.mojang.serialization.MapCodec;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public final class DebugLootModifiers {
+    private static final Logger LOG = LoggerFactory.getLogger("Grimfate/GLM-DEBUG");
+
+    public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> REG =
+            DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, Grimfate.MODID);
+
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            ALWAYS_LOG_AND_ADD_BREAD = REG.register("always_log_and_add_bread", () -> AlwaysLogAndAddBread.CODEC);
+
+    public static void init(IEventBus modBus) {
+        LOG.info("[GLM-DEBUG] registering codec grimfate:always_log_and_add_bread");
+        REG.register(modBus);
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\debug\DebugLootModifiers.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\debug\DebugLootModsProbe.java -----
+package com.doomspire.grimfate.debug;
+
+import com.doomspire.grimfate.core.Grimfate;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
+public final class DebugLootModsProbe implements PreparableReloadListener {
+    public static void onAddReloadListeners(AddReloadListenerEvent e) {
+        e.addListener(new DebugLootModsProbe());
+    }
+
+    @Override
+    public CompletableFuture<Void> reload(PreparationBarrier barrier, ResourceManager rm,
+                                          ProfilerFiller prep, ProfilerFiller apply,
+                                          Executor bg, Executor game) {
+        return CompletableFuture
+                .supplyAsync(() -> {
+                    // 1) Проверяем наличие global_loot_modifiers.json
+                    ResourceLocation rl = ResourceLocation.fromNamespaceAndPath(
+                            "neoforge", "loot_modifiers/global_loot_modifiers.json");
+                    boolean exists = rm.getResource(rl).isPresent();
+                    Grimfate.LOGGER.info("[Grimfate][GLM-PROBE] global_loot_modifiers present: {}", exists);
+
+                    // 2) Листинг всего, что найдено под neoforge/loot_modifiers
+                    rm.listResources("loot_modifiers", r -> r.getNamespace().equals("neoforge"))
+                            .forEach((res, _resObj) ->
+                                    Grimfate.LOGGER.info("[Grimfate][GLM-PROBE] found: {}", res));
+
+                    return null;
+                }, bg)
+                .thenCompose(barrier::wait)
+                .thenAcceptAsync(v -> {}, game);
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\debug\DebugLootModsProbe.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\entity\BoltProjectileEntity.java -----
 package com.doomspire.grimfate.entity;
 
@@ -7621,100 +7731,149 @@ public final class Weapons {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\weapons\Weapons.java -----n
------ BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\InjectTagItemsLootModifier.java -----
-package com.doomspire.grimfate.loot;
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddItemModifier.java -----
+package com.doomspire.grimfate.loot.modifier;
 
-import com.mojang.serialization.Codec;
+import com.google.common.base.Suppliers;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.core.Holder;
-import net.minecraft.core.HolderSet;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
-import net.minecraft.util.RandomSource;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.IntProvider;
-import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.LootModifier;
 
-import java.util.List;
+import javax.annotation.Nonnull;
+import java.util.function.Supplier;
 
-/*
-//NOTE: GLM-инжектор — добавляет предметы из item-тега в сгенерированный лут.
-// Важно: если тега нет — молча выходим (никаких крэшей).
-*/
-public final class InjectTagItemsLootModifier extends LootModifier {
+public final class AddItemModifier extends LootModifier {
+    public static final Supplier<MapCodec<AddItemModifier>> CODEC = Suppliers.memoize(() ->
+            RecordCodecBuilder.mapCodec(inst ->
+                    codecStart(inst).and(
+                            inst.group(
+                                    BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(m -> m.addedItem),
+                                    IntProvider.CODEC.optionalFieldOf("count", ConstantInt.of(1)).forGetter(m -> m.count)
+                            )
+                    ).apply(inst, AddItemModifier::new)
+            )
+    );
 
-    public static final MapCodec<InjectTagItemsLootModifier> CODEC = RecordCodecBuilder.mapCodec(i -> codecStart(i)
-            .and(ResourceLocation.CODEC.fieldOf("tag").forGetter(m -> m.tag.location()))
-            .and(Codec.FLOAT.optionalFieldOf("chance", 1.0f).forGetter(m -> m.chance))
-            .and(IntProvider.CODEC.optionalFieldOf("count", UniformInt.of(1, 1)).forGetter(m -> m.count))
-            .and(Codec.BOOL.optionalFieldOf("expand_all", false).forGetter(m -> m.expandAll))
-            .apply(i, (conditions, tagRl, chance, count, expand) ->
-                    new InjectTagItemsLootModifier(conditions, TagKey.create(Registries.ITEM, tagRl), chance, count, expand)));
-
-    private final TagKey<Item> tag;
-    private final float chance;
+    private final Item addedItem;
     private final IntProvider count;
-    private final boolean expandAll;
 
-    public InjectTagItemsLootModifier(LootItemCondition[] conditionsIn,
-                                      TagKey<Item> tag,
-                                      float chance,
-                                      IntProvider count,
-                                      boolean expandAll) {
+    public AddItemModifier(LootItemCondition[] conditionsIn, Item addedItem, IntProvider count) {
         super(conditionsIn);
-        this.tag = tag;
-        this.chance = Math.max(0f, Math.min(1f, chance));
+        this.addedItem = addedItem;
         this.count = count;
-        this.expandAll = expandAll;
     }
 
+    @Nonnull
     @Override
-    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
-        final RandomSource rng = context.getRandom();
-        if (rng.nextFloat() > chance) return generatedLoot;
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> loot, LootContext ctx) {
+        int n = Math.max(0, count.sample(ctx.getRandom()));
+        if (n <= 0) return loot;
 
-        int rolls = Math.max(0, count.sample(rng));
-        if (rolls == 0) return generatedLoot;
-
-        // Безопасно получаем набор предметов по тегу (если тега нет — выходим)
-        RegistryAccess access = context.getLevel().registryAccess();
-        var itemsLookup = access.lookupOrThrow(Registries.ITEM); // сам реестр есть всегда
-        var setOpt = itemsLookup.get(tag);                       // а вот конкретный тег может отсутствовать
-        if (setOpt.isEmpty()) return generatedLoot;
-
-        HolderSet<Item> set = setOpt.get();
-        if (set.size() == 0) return generatedLoot;
-
-        for (int r = 0; r < rolls; r++) {
-            if (expandAll) {
-                for (Holder<Item> holder : set) {
-                    generatedLoot.add(new ItemStack(holder.value()));
-                }
-            } else {
-                var opt = set.getRandomElement(rng);
-                opt.ifPresent(h -> generatedLoot.add(new ItemStack(h.value())));
+        ItemStack stack = new ItemStack(addedItem, n);
+        if (stack.getCount() <= stack.getMaxStackSize()) {
+            loot.add(stack);
+        } else {
+            int left = stack.getCount();
+            while (left > 0) {
+                ItemStack sub = new ItemStack(addedItem, Math.min(left, stack.getMaxStackSize()));
+                left -= sub.getCount();
+                loot.add(sub);
             }
         }
-        return generatedLoot;
+        return loot;
     }
 
     @Override
-    public MapCodec<? extends LootModifier> codec() {
-        return CODEC;
+    public MapCodec<? extends net.neoforged.neoforge.common.loot.IGlobalLootModifier> codec() {
+        return CODEC.get();
     }
 }
 
-n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\InjectTagItemsLootModifier.java -----n
------ BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\ModLootModifiers.java -----
-package com.doomspire.grimfate.loot;
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddItemModifier.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddTagItemsModifier.java -----
+package com.doomspire.grimfate.loot.modifier;
+
+import com.google.common.base.Suppliers;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.neoforged.neoforge.common.loot.LootModifier;
+
+import javax.annotation.Nonnull;
+import java.util.function.Supplier;
+
+public final class AddTagItemsModifier extends LootModifier {
+    public static final Supplier<MapCodec<AddTagItemsModifier>> CODEC = Suppliers.memoize(() ->
+            RecordCodecBuilder.mapCodec(inst ->
+                    codecStart(inst).and(
+                            inst.group(
+                                    ResourceLocation.CODEC.fieldOf("tag").forGetter(m -> m.tagId),
+                                    IntProvider.CODEC.optionalFieldOf("count", ConstantInt.of(1)).forGetter(m -> m.rolls),
+                                    // если true — добавить "rolls" штук (с повторами),
+                                    // если false — добавить только 1 предмет (один выбор)
+                                    com.mojang.serialization.Codec.BOOL.optionalFieldOf("expand_all", false).forGetter(m -> m.expandAll)
+                            )
+                    ).apply(inst, AddTagItemsModifier::new)
+            )
+    );
+
+    private final ResourceLocation tagId;
+    private final IntProvider rolls;
+    private final boolean expandAll;
+
+    public AddTagItemsModifier(LootItemCondition[] cond, ResourceLocation tagId, IntProvider rolls, boolean expandAll) {
+        super(cond);
+        this.tagId = tagId;
+        this.rolls = rolls;
+        this.expandAll = expandAll;
+    }
+
+    @Nonnull
+    @Override
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> loot, LootContext ctx) {
+        var access = ctx.getLevel().registryAccess();
+        var itemRegistry = access.lookupOrThrow(Registries.ITEM);
+        TagKey<Item> key = TagKey.create(Registries.ITEM, tagId);
+        HolderSet<Item> tag = itemRegistry.getOrThrow(key);
+        if (tag.size() == 0) return loot;
+
+        net.minecraft.util.RandomSource rnd = ctx.getRandom();
+        var holder = tag.get(rnd.nextInt(tag.size())); // взять по индексу
+        loot.add(new ItemStack(holder.value()));
+
+        return loot;
+    }
+
+
+    @Override
+    public MapCodec<? extends net.neoforged.neoforge.common.loot.IGlobalLootModifier> codec() {
+        return CODEC.get();
+    }
+}
+
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddTagItemsModifier.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ModLootModifiers.java -----
+package com.doomspire.grimfate.loot.modifier;
 
 import com.doomspire.grimfate.core.Grimfate;
 import com.mojang.serialization.MapCodec;
@@ -7724,31 +7883,106 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
-/*
-//NOTE: Регистрация Global Loot Modifiers для NeoForge 1.21.1 (реестр ждёт MapCodec<? extends IGlobalLootModifier>).
-*/
 public final class ModLootModifiers {
     private ModLootModifiers() {}
 
-    // Единый реестр кодеков GLM (MapCodec)
-    public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> GLM_SERIALIZERS =
+    public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> REG =
             DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, Grimfate.MODID);
 
-    // grimfate:roll_affixes — регистрируем сам MapCodec
-    public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>> ROLL_AFFIXES =
-            GLM_SERIALIZERS.register("roll_affixes", () -> RollAffixesLootModifier.CODEC);
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            ADD_ITEM       = REG.register("add_item",       () -> AddItemModifier.CODEC.get());
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            ADD_TAG_ITEMS  = REG.register("add_tag_items",  () -> AddTagItemsModifier.CODEC.get());
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            REPLACE_ITEM   = REG.register("replace_item",   () -> ReplaceItemModifier.CODEC.get());
+    public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            ROLL_AFFIXES  = REG.register("roll_affixes", () -> com.doomspire.grimfate.loot.RollAffixesLootModifier.CODEC);
 
-    // grimfate:inject_tag_items — наш инжектор предметов из тега в готовый лут
-    public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>> INJECT_TAG_ITEMS =
-            GLM_SERIALIZERS.register("inject_tag_items", () -> InjectTagItemsLootModifier.CODEC);
+    public static void init(IEventBus modBus) { REG.register(modBus); }
+}
 
-    /** Привязать к MOD-басу из инициализации мода grimfate. */
-    public static void init(IEventBus modBus) {
-        GLM_SERIALIZERS.register(modBus);
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ModLootModifiers.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ReplaceItemModifier.java -----
+package com.doomspire.grimfate.loot.modifier;
+
+import com.google.common.base.Suppliers;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.neoforged.neoforge.common.loot.LootModifier;
+
+import javax.annotation.Nonnull;
+import java.util.function.Supplier;
+
+public final class ReplaceItemModifier extends LootModifier {
+    public static final Supplier<MapCodec<ReplaceItemModifier>> CODEC = Suppliers.memoize(() ->
+            RecordCodecBuilder.mapCodec(inst ->
+                    codecStart(inst).and(
+                            inst.group(
+                                    // Выбор цели: либо конкретный item, либо item-тег
+                                    BuiltInRegistries.ITEM.byNameCodec().optionalFieldOf("match_item")
+                                            .forGetter(m -> m.matchItem),
+                                    ResourceLocation.CODEC.optionalFieldOf("match_tag")
+                                            .forGetter(m -> m.matchTagId),
+                                    // Чем заменить:
+                                    BuiltInRegistries.ITEM.byNameCodec().fieldOf("replace_with")
+                                            .forGetter(m -> m.replaceWith)
+                            )
+                    ).apply(inst, ReplaceItemModifier::new)
+            )
+    );
+
+    private final java.util.Optional<Item> matchItem;
+    private final java.util.Optional<ResourceLocation> matchTagId;
+    private final Item replaceWith;
+
+    public ReplaceItemModifier(LootItemCondition[] cond, java.util.Optional<Item> matchItem,
+                               java.util.Optional<ResourceLocation> matchTagId, Item replaceWith) {
+        super(cond);
+        this.matchItem = matchItem;
+        this.matchTagId = matchTagId;
+        this.replaceWith = replaceWith;
+    }
+
+    @Nonnull
+    @Override
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> loot, LootContext ctx) {
+        boolean useTag = matchTagId.isPresent();
+        HolderSet<Item> tag = null;
+
+        if (useTag) {
+            var access = ctx.getLevel().registryAccess().lookupOrThrow(Registries.ITEM);
+            tag = access.getOrThrow(TagKey.create(Registries.ITEM, matchTagId.get()));
+        }
+
+        for (int i = 0; i < loot.size(); i++) {
+            ItemStack s = loot.get(i);
+            boolean match = matchItem.map(it -> s.is(it)).orElse(false)
+                    || (useTag && tag != null && s.is(tag));
+            if (match) {
+                loot.set(i, new ItemStack(replaceWith, s.getCount()));
+            }
+        }
+        return loot;
+    }
+
+    @Override
+    public MapCodec<? extends net.neoforged.neoforge.common.loot.IGlobalLootModifier> codec() {
+        return CODEC.get();
     }
 }
 
-n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\ModLootModifiers.java -----n
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ReplaceItemModifier.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\RollAffixesLootModifier.java -----
 package com.doomspire.grimfate.loot;
 
@@ -10567,300 +10801,73 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\balance\levels.json
 
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\balance\spells.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\_debug_add_to_simple_dungeon.json -----
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\_probe_chest_simple_dungeon_add_item.json -----
+{
+  "type": "grimfate:add_item",
+  "conditions": [
+    { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" }
+  ],
+  "item": "minecraft:netherite_ingot",
+  "count": { "type": "minecraft:constant", "value": 1 }
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\_probe_chest_simple_dungeon_add_item.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_loot_to_chests.json -----
+{
+  "type": "neoforge:add_table",
+  "conditions": [
+    { "condition": "minecraft:any_of", "terms": [
+      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/abandoned_mineshaft" },
+      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" },
+      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/desert_pyramid" },
+      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple" },
+      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_supply" },
+      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_treasure" },
+      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_corridor" },
+      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_crossing" },
+      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_library" }
+    ]},
+    { "condition": "minecraft:random_chance", "chance": 0.95 }
+  ],
+  "table": "grimfate:chests/global_pool"
+}
+
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_loot_to_chests.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_to_simple_dungeon.json -----
 {
   "type": "neoforge:add_table",
   "conditions": [
     { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" }
   ],
-  "table": "grimfate:debug/_always_one_fiber"
+  "table": "grimfate:chests/global_pool"
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\_debug_add_to_simple_dungeon.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_armors_to_chests.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_to_simple_dungeon.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json -----
 {
-  "type": "grimfate:inject_tag_items",
+  "type": "grimfate:add_item",
   "conditions": [
-    {
-      "condition": "minecraft:any_of",
-      "terms": [
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_corridor" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_crossing" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_library" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/desert_pyramid" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple_dispenser" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/pillager_outpost" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_1" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_2" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_3" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/abandoned_mineshaft" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/igloo_chest" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/monster_room" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_supply" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_treasure" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_map" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ocean_ruin_cold" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ocean_ruin_warm" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_armorer" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_butcher" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_cartographer" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_desert_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_fisher" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_fletcher" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_mason" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_plains_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_savanna_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_shepherd" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_snowy_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_taiga_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_tannery" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_temple" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_toolsmith" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_weaponsmith" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/nether_bridge" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_bridge" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_other" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_treasure" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/end_city_treasure" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/woodland_mansion" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_big" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_small" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ruined_portal" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/buried_treasure" }
-      ]
-    }
+    { "condition": "minecraft:block_state_property", "block": "minecraft:short_grass" },
+    { "condition": "minecraft:random_chance", "chance": 0.95 }
   ],
-  "tag": "grimfate:loot/armors",
-  "chance": 0.90,
-  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 1 },
-  "expand_all": false
+  "item": "grimfate:fiber",
+  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 }
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_armors_to_chests.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_fiber_from_grass.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json -----
 {
-  "type": "grimfate:inject_tag_items",
+  "type": "grimfate:add_item",
   "conditions": [
-    { "condition": "minecraft:random_chance", "chance": 0.90 },
-    { "condition": "minecraft:any_of", "terms": [
-      { "condition": "minecraft:block_state_property", "block": "minecraft:short_grass" },
-      { "condition": "minecraft:block_state_property", "block": "minecraft:tall_grass" },
-      { "condition": "minecraft:block_state_property", "block": "minecraft:fern" },
-      { "condition": "minecraft:block_state_property", "block": "minecraft:large_fern" }
-    ]}
+    { "condition": "minecraft:entity_properties", "entity": "this", "predicate": { "type": "minecraft:pig" } },
+    { "condition": "minecraft:random_chance", "chance": 0.95 }
   ],
-  "tag": "grimfate:loot/fiber",
-  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
-  "expand_all": false
+  "item": "grimfate:pork_fat",
+  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 }
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_fiber_from_grass.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_gear_to_chests.json -----
-{
-  "type": "grimfate:inject_tag_items",
-  "conditions": [
-    { "condition": "minecraft:any_of", "terms": [
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_corridor" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_crossing" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_library" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/desert_pyramid" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple_dispenser" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/pillager_outpost" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_1" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_2" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_3" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/abandoned_mineshaft" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/igloo_chest" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/monster_room" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_supply" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_treasure" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_map" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ocean_ruin_cold" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ocean_ruin_warm" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_armorer" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_butcher" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_cartographer" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_desert_house" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_fisher" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_fletcher" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_mason" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_plains_house" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_savanna_house" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_shepherd" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_snowy_house" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_taiga_house" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_tannery" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_temple" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_toolsmith" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_weaponsmith" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/nether_bridge" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_bridge" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_other" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_treasure" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/end_city_treasure" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/woodland_mansion" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_big" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_small" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ruined_portal" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/buried_treasure" }
-    ]
-    }
-  ],
-  "tag": "grimfate:loot/gear",
-  "chance": 0.85,
-  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
-  "expand_all": false
-}
-
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_gear_to_chests.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_jewelry_to_chests.json -----
-{
-  "type": "grimfate:inject_tag_items",
-  "conditions": [
-    {
-      "condition": "minecraft:any_of",
-      "terms": [
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_corridor" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_crossing" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_library" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/desert_pyramid" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple_dispenser" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/pillager_outpost" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_1" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_2" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_3" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/abandoned_mineshaft" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/igloo_chest" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/monster_room" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_supply" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_treasure" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_map" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ocean_ruin_cold" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ocean_ruin_warm" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_armorer" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_butcher" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_cartographer" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_desert_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_fisher" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_fletcher" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_mason" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_plains_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_savanna_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_shepherd" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_snowy_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_taiga_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_tannery" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_temple" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_toolsmith" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_weaponsmith" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/nether_bridge" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_bridge" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_other" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_treasure" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/end_city_treasure" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/woodland_mansion" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_big" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_small" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ruined_portal" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/buried_treasure" }
-      ]
-    }
-  ],
-  "tag": "grimfate:loot/jewelry",
-  "chance": 0.95,
-  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
-  "expand_all": false
-}
-
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_jewelry_to_chests.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_pork_fat_from_pig.json -----
-{
-  "type": "grimfate:inject_tag_items",
-  "conditions": [
-    { "condition": "minecraft:random_chance", "chance": 0.65 },
-    { "condition": "minecraft:entity_properties", "entity": "this",
-      "predicate": { "type": "minecraft:pig" } }
-  ],
-  "tag": "grimfate:loot/pork_fat",
-  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
-  "expand_all": false
-}
-
-
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_pork_fat_from_pig.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_weapons_to_chests.json -----
-{
-  "type": "grimfate:inject_tag_items",
-  "conditions": [
-    {
-      "condition": "minecraft:any_of",
-      "terms": [
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_corridor" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_crossing" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_library" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/desert_pyramid" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple_dispenser" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/pillager_outpost" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_1" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_2" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/trial_chambers/reward_3" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/abandoned_mineshaft" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/igloo_chest" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/monster_room" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_supply" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_treasure" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_map" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ocean_ruin_cold" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ocean_ruin_warm" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_armorer" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_butcher" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_cartographer" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_desert_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_fisher" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_fletcher" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_mason" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_plains_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_savanna_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_shepherd" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_snowy_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_taiga_house" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_tannery" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_temple" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_toolsmith" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/village/village_weaponsmith" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/nether_bridge" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_bridge" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_other" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/bastion_treasure" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/end_city_treasure" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/woodland_mansion" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_big" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/underwater_ruin_small" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ruined_portal" },
-        { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/buried_treasure" }
-      ]
-
-    }
-  ],
-  "tag": "grimfate:loot/weapons",
-  "chance": 0.95,
-  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 1 },
-  "expand_all": false
-}
-
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inject_weapons_to_chests.json -----n
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\roll_affixes.json -----
 {
   "type": "grimfate:roll_affixes",
@@ -10871,38 +10878,31 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\inje
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\roll_affixes.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\debug\_always_one_fiber.json -----
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\chests\global_pool.json -----
 {
   "pools": [
     {
       "rolls": 1,
-      "entries": [{ "type": "minecraft:item", "name": "grimfate:fiber" }]
-    }
-  ]
-}
-
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\debug\_always_one_fiber.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\gameplay\jewelry_pool.json -----
-{
-  "type": "minecraft:chest",
-  "pools": [
-    {
-      "rolls": 1,
-      "conditions": [
-        { "condition": "minecraft:random_chance", "chance": 0.20 }
-      ],
       "entries": [
-        {
-          "type": "minecraft:tag",
-          "name": "grimfate:jewelry",
-          "expand": true
-        }
+        { "type": "minecraft:tag", "name": "grimfate:loot/weapons" }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:tag", "name": "grimfate:loot/armors", "expand": true }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:tag", "name": "grimfate:loot/jewelry", "expand": true }
       ]
     }
   ]
 }
-
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\gameplay\jewelry_pool.json -----n
+, "expand":  true
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\chests\global_pool.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabric.json -----
 {
   "type": "minecraft:crafting_shaped",
@@ -10915,7 +10915,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\gamepla
     "FPF",
     "FFF"
   ],
-  "result": { "item": "grimfate:canvas_fabric", "count": 1 }
+  "result": { "id": "grimfate:canvas_fabric", "count": 1 }
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabric.json -----n
@@ -10933,7 +10933,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabr
     "P": {"item": "grimfate:pork_fat"},
     "S": {"item": "minecraft:stick"}
   },
-  "result": { "item": "grimfate:copper_sword", "count": 1 }
+  "result": { "id": "grimfate:copper_sword", "count": 1 }
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json -----n
@@ -10951,7 +10951,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copper_swor
     "P": {"item": "grimfate:pork_fat"},
     "M": {"tag": "minecraft:planks"}
   },
-  "result": { "item": "grimfate:copperforced_shield", "count": 1 }
+  "result": { "id": "grimfate:copperforced_shield", "count": 1 }
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copperforced_shield.json -----n
@@ -10966,7 +10966,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copperforce
     "F": { "item": "grimfate:pork_fat" },
     "L": { "item": "minecraft:leather" }
   },
-  "result": { "item": "grimfate:rawhide", "count": 1 }
+  "result": { "id": "grimfate:rawhide", "count": 1 }
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\rawhide.json -----n
@@ -10982,7 +10982,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\rawhide.jso
     "P": {"item": "grimfate:pork_fat"},
     "F": {"item": "grimfate:fiber"}
   },
-  "result": {"item": "grimfate:scholar_staff", "count": 1}
+  "result": {"id": "grimfate:scholar_staff", "count": 1}
 }
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\scholar_staff.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\weakling_bow.json -----
@@ -10999,7 +10999,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\scholar_sta
     "F": {"item": "grimfate:pork_fat"},
     "G": {"item": "grimfate:fiber"}
   },
-  "result": { "item": "grimfate:weakling_bow", "count": 1 }
+  "result": { "id": "grimfate:weakling_bow", "count": 1 }
 }
 
 
@@ -11193,14 +11193,14 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\weapon_attributes\w
 {
   "replace": false,
   "entries": [
-    "grimfate:_debug_add_to_simple_dungeon",
-    "grimfate:inject_fiber_from_grass",
-    "grimfate:inject_pork_fat_from_pig",
-    "grimfate:inject_jewelry_to_chests",
-    "grimfate:inject_weapons_to_chests",
-    "grimfate:inject_armors_to_chests",
+    "grimfate:fiber_from_grass",
+    "grimfate:pork_fat_from_pig",
+    "grimfate:_probe_chest_simple_dungeon_add_item",
+    "grimfate:add_global_to_simple_dungeon",
+    "grimfate:add_global_loot_to_chests",
     "grimfate:roll_affixes"
   ]
 }
+
 
 n----- END FILE: .\grimfate\src\main\resources\data\neoforge\loot_modifiers\global_loot_modifiers.json -----n

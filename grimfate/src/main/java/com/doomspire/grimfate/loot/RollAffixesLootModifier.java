@@ -33,7 +33,7 @@ public final class RollAffixesLootModifier extends LootModifier {
     private static final String MODID = "grimfate";
 
     public static final MapCodec<RollAffixesLootModifier> CODEC = RecordCodecBuilder.mapCodec(inst -> codecStart(inst).and(
-            Codec.STRING.listOf().optionalFieldOf("allow_sources", List.of("WEAPON","ARMOR","SHIELD"))
+            Codec.STRING.listOf().optionalFieldOf("allow_sources", List.of("WEAPON","ARMOR","JEWELRy"))
                     .forGetter(m -> m.allowSources.stream().map(Enum::name).toList())
     ).and(
             Codec.BOOL.optionalFieldOf("replace_existing", false).forGetter(m -> m.replaceExisting)

@@ -1,7 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "MFM",
+    "MPM",
     "MCM",
     "MRM"
   ],
@@ -11,5 +11,5 @@
     "P": {"item": "grimfate:pork_fat"},
     "M": {"tag": "minecraft:planks"}
   },
-  "result": { "item": "grimfate:copperforced_shield", "count": 1 }
+  "result": { "id": "grimfate:copperforced_shield", "count": 1 }
 }

@@ -34,7 +34,7 @@ public record AffixPoolDef(
     public static final Codec<AffixPoolDef> CODEC = RecordCodecBuilder.create(i -> i.group(
             ResourceLocation.CODEC.fieldOf("id").forGetter(AffixPoolDef::id),
             Entry.CODEC.listOf().fieldOf("entries").forGetter(AffixPoolDef::entries),
-            AffixSourceSetCodec.INSTANCE.optionalFieldOf("allow_sources", Set.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.SHIELD, Affix.Source.JEWELRY, Affix.Source.OTHER)).forGetter(AffixPoolDef::allowSources),
+            AffixSourceSetCodec.INSTANCE.optionalFieldOf("allow_sources", Set.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.JEWELRY, Affix.Source.OTHER)).forGetter(AffixPoolDef::allowSources),
             ITEM_TAG_CODEC.listOf().optionalFieldOf("required_item_tags", List.of()).forGetter(AffixPoolDef::requiredItemTags),
             Codec.INT.optionalFieldOf("min_item_level", 1).forGetter(AffixPoolDef::minItemLevel),
             Codec.INT.optionalFieldOf("max_item_level", 0).forGetter(AffixPoolDef::maxItemLevel),

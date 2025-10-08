@@ -113,7 +113,6 @@ public final class AffixImbueService {
     private static @Nullable Affix.Source strictSourceOrFail(ItemStack stack) {
         var item = stack.getItem();
         if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
-        if (item instanceof ShieldItem) return Affix.Source.SHIELD;
 
         // Оружие: ванильные примеры; специальные типы добавим позже тегами grimfate
         if (item instanceof SwordItem)  return Affix.Source.WEAPON;
@@ -129,7 +128,6 @@ public final class AffixImbueService {
     private static Affix.Source guessSource(ItemStack stack) {
         var item = stack.getItem();
         if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
-        if (item instanceof ShieldItem) return Affix.Source.SHIELD;
         return Affix.Source.WEAPON;
     }
 
@@ -168,6 +166,6 @@ public final class AffixImbueService {
     // ---------- Набор поддерживаемых source для быстрых проверок (можно расширять позже) ----------
 
     public static EnumSet<Affix.Source> supportedSources() {
-        return EnumSet.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.SHIELD/*, Affix.Source.JEWELRY (после интеграции)*/);
+        return EnumSet.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.SHIELD, Affix.Source.JEWELRY);
     }
 }

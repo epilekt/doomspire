@@ -11,6 +11,6 @@
     "F": {"item": "grimfate:pork_fat"},
     "G": {"item": "grimfate:fiber"}
   },
-  "result": { "item": "grimfate:weakling_bow", "count": 1 }
+  "result": { "id": "grimfate:weakling_bow", "count": 1 }
 }
 

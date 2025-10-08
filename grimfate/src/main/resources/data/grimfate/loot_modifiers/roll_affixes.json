@@ -1,7 +1,7 @@
 {
   "type": "grimfate:roll_affixes",
   "conditions": [],
-  "allow_sources": ["WEAPON", "ARMOR", "SHIELD"],
+  "allow_sources": ["ALL"],
   "replace_existing": false,
   "default_item_level": 1
 }

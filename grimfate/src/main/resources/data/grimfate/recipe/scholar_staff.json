@@ -9,5 +9,5 @@
     "P": {"item": "grimfate:pork_fat"},
     "F": {"item": "grimfate:fiber"}
   },
-  "result": {"item": "grimfate:scholar_staff", "count": 1}
+  "result": {"id": "grimfate:scholar_staff", "count": 1}
 }
