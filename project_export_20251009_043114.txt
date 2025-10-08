@@ -99,6 +99,7 @@
 .\grimfate\src\main\java\com\doomspire\grimfate\events\LoadoutTickEvents.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\Armors.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\GenericGeoArmorItem.java
+.\grimfate\src\main\java\com\doomspire\grimfate\item\armor\NoAnimGeoArmorItem.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\BaseBowItem.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListComponent.java
 .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListHelper.java
@@ -200,46 +201,44 @@
 .\grimfate\src\main\resources\data\grimfate\balance\attributes.json
 .\grimfate\src\main\resources\data\grimfate\balance\levels.json
 .\grimfate\src\main\resources\data\grimfate\balance\spells.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\_probe_chest_simple_dungeon_add_item.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_loot_to_chests.json
-.\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_to_simple_dungeon.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_armors_to_simple_dungeon.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_jewelry_to_simple_dungeon.json
+.\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_weapons_to_simple_dungeon.json
 .\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json
 .\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json
 .\grimfate\src\main\resources\data\grimfate\loot_modifiers\roll_affixes.json
-.\grimfate\src\main\resources\data\grimfate\loot_tables\chests\global_pool.json
-.\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabric.json
-.\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json
-.\grimfate\src\main\resources\data\grimfate\recipes\copperforced_shield.json
-.\grimfate\src\main\resources\data\grimfate\recipes\rawhide.json
-.\grimfate\src\main\resources\data\grimfate\recipes\scholar_staff.json
-.\grimfate\src\main\resources\data\grimfate\recipes\weakling_bow.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\armor\boots.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\armor\chest.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\armor\cloth.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\armor\helm.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\armor\leather.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\armor\legs.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\armor\plate.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\axes.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\bows.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\crossbows.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\daggers.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\greataxes.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\greatswords.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\hammers.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\jewelry.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\loot\armors.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\loot\fiber.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\loot\gear.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\loot\jewelry.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\loot\pork_fat.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\loot\weapons.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\role\archer.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\role\mage.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\role\melee.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\shields.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\staves.json
-.\grimfate\src\main\resources\data\grimfate\tags\items\swords.json
+.\grimfate\src\main\resources\data\grimfate\recipe\canvas_fabric.json
+.\grimfate\src\main\resources\data\grimfate\recipe\copper_sword.json
+.\grimfate\src\main\resources\data\grimfate\recipe\copperforced_shield.json
+.\grimfate\src\main\resources\data\grimfate\recipe\rawhide.json
+.\grimfate\src\main\resources\data\grimfate\recipe\scholar_staff.json
+.\grimfate\src\main\resources\data\grimfate\recipe\weakling_bow.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\armor\boots.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\armor\chest.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\armor\cloth.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\armor\helm.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\armor\leather.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\armor\legs.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\armor\plate.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\axes.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\bows.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\crossbows.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\daggers.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\greataxes.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\greatswords.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\hammers.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\jewelry.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\loot\armors.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\loot\fiber.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\loot\jewelry.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\loot\pork_fat.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\loot\weapons.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\role\archer.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\role\mage.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\role\melee.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\shields.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\staves.json
+.\grimfate\src\main\resources\data\grimfate\tags\item\swords.json
 .\grimfate\src\main\resources\data\grimfate\weapon_attributes\copper_sword.json
 .\grimfate\src\main\resources\data\grimfate\weapon_attributes\scholar_staff.json
 .\grimfate\src\main\resources\data\grimfate\weapon_attributes\weakling_bow.json
@@ -1130,7 +1129,7 @@ public record AffixPoolDef(
     public static final Codec<AffixPoolDef> CODEC = RecordCodecBuilder.create(i -> i.group(
             ResourceLocation.CODEC.fieldOf("id").forGetter(AffixPoolDef::id),
             Entry.CODEC.listOf().fieldOf("entries").forGetter(AffixPoolDef::entries),
-            AffixSourceSetCodec.INSTANCE.optionalFieldOf("allow_sources", Set.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.SHIELD, Affix.Source.JEWELRY, Affix.Source.OTHER)).forGetter(AffixPoolDef::allowSources),
+            AffixSourceSetCodec.INSTANCE.optionalFieldOf("allow_sources", Set.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.JEWELRY, Affix.Source.OTHER)).forGetter(AffixPoolDef::allowSources),
             ITEM_TAG_CODEC.listOf().optionalFieldOf("required_item_tags", List.of()).forGetter(AffixPoolDef::requiredItemTags),
             Codec.INT.optionalFieldOf("min_item_level", 1).forGetter(AffixPoolDef::minItemLevel),
             Codec.INT.optionalFieldOf("max_item_level", 0).forGetter(AffixPoolDef::maxItemLevel),
@@ -5107,7 +5106,6 @@ public final class AffixImbueService {
     private static @Nullable Affix.Source strictSourceOrFail(ItemStack stack) {
         var item = stack.getItem();
         if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
-        if (item instanceof ShieldItem) return Affix.Source.SHIELD;
 
         // Оружие: ванильные примеры; специальные типы добавим позже тегами grimfate
         if (item instanceof SwordItem)  return Affix.Source.WEAPON;
@@ -5123,7 +5121,6 @@ public final class AffixImbueService {
     private static Affix.Source guessSource(ItemStack stack) {
         var item = stack.getItem();
         if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
-        if (item instanceof ShieldItem) return Affix.Source.SHIELD;
         return Affix.Source.WEAPON;
     }
 
@@ -5162,7 +5159,7 @@ public final class AffixImbueService {
     // ---------- Набор поддерживаемых source для быстрых проверок (можно расширять позже) ----------
 
     public static EnumSet<Affix.Source> supportedSources() {
-        return EnumSet.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.SHIELD/*, Affix.Source.JEWELRY (после интеграции)*/);
+        return EnumSet.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.SHIELD, Affix.Source.JEWELRY);
     }
 }
 
@@ -6184,30 +6181,17 @@ n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\Hotkeys.
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\model\armor\BaseArmorGeoModel.java -----
 package com.doomspire.grimfate.client.model.armor;
 
-import com.doomspire.grimfate.item.armor.GenericGeoArmorItem;
+import com.doomspire.grimfate.item.armor.NoAnimGeoArmorItem;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.model.GeoModel;
 
-public class BaseArmorGeoModel extends GeoModel<GenericGeoArmorItem> {
+public class BaseArmorGeoModel extends GeoModel<NoAnimGeoArmorItem> {
 
-    @Override
-    public ResourceLocation getModelResource(GenericGeoArmorItem animatable) {
-        // Берём путь к GEO из Visual (пример: assets/grimfate/geo/armor/copper_armor_set.geo.json)
-        return animatable.visual().geo();
-    }
+    @Override public ResourceLocation getModelResource(NoAnimGeoArmorItem a)   { return a.visual().geo(); }
+    @Override public ResourceLocation getTextureResource(NoAnimGeoArmorItem a) { return a.visual().texture(); }
+    @Override public @Nullable ResourceLocation getAnimationResource(NoAnimGeoArmorItem a) { return null; }
 
-    @Override
-    public ResourceLocation getTextureResource(GenericGeoArmorItem animatable) {
-        // Берём путь к TEXTURE из Visual (пример: assets/grimfate/textures/armor/copper_set.png)
-        return animatable.visual().texture();
-    }
-
-    @Override
-    public @Nullable ResourceLocation getAnimationResource(GenericGeoArmorItem animatable) {
-        // Если анимаций нет — можно вернуть null
-        return null;
-    }
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\model\armor\BaseArmorGeoModel.java -----n
@@ -6216,6 +6200,7 @@ package com.doomspire.grimfate.client.render.armor;
 
 import com.doomspire.grimfate.client.model.armor.BaseArmorGeoModel;
 import com.doomspire.grimfate.item.armor.GenericGeoArmorItem;
+import com.doomspire.grimfate.item.armor.NoAnimGeoArmorItem;
 import software.bernie.geckolib.renderer.GeoArmorRenderer;
 
 /**
@@ -6226,7 +6211,7 @@ import software.bernie.geckolib.renderer.GeoArmorRenderer;
  * Ниже указаны дефолтные/распространённые идентификаторы. Если в ваших моделях другие,
  * просто поправьте строки на ваши bone ids.
  */
-public class BaseArmorRenderer extends GeoArmorRenderer<GenericGeoArmorItem> {
+public class BaseArmorRenderer extends GeoArmorRenderer<NoAnimGeoArmorItem> {
 
     public BaseArmorRenderer() {
         super(new BaseArmorGeoModel());
@@ -7143,21 +7128,21 @@ public final class Armors {
     private Armors() {}
 
     // ===== VISUALS =====
-    private static GenericGeoArmorItem.Visual copperVisual() {
+    private static NoAnimGeoArmorItem.Visual copperVisual() {
         return new GenericGeoArmorItem.Visual(
                 Grimfate.rl("geo/armor/copper_armor_set.geo.json"),
                 Grimfate.rl("textures/armor/copper_armor_set_texture.png")
         );
     }
 
-    private static GenericGeoArmorItem.Visual rawhideVisual() {
+    private static NoAnimGeoArmorItem.Visual rawhideVisual() {
         return new GenericGeoArmorItem.Visual(
                 Grimfate.rl("geo/armor/rawhide_armor_set.geo.json"),
                 Grimfate.rl("textures/armor/rawhide_armor_set.png")
         );
     }
 
-    private static GenericGeoArmorItem.Visual linenVisual() {
+    private static NoAnimGeoArmorItem.Visual linenVisual() {
         return new GenericGeoArmorItem.Visual(
                 Grimfate.rl("geo/armor/linen_armor_set.geo.json"),
                 Grimfate.rl("textures/armor/linen_armor_set.png")
@@ -7167,75 +7152,75 @@ public final class Armors {
     // ===== COPPER =====
     public static final DeferredHolder<Item, Item> COPPER_HELMET =
             ModItems.ITEMS.register("copper_helmet",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.copperHolder(),
                             ArmorItem.Type.HELMET, new Item.Properties(), copperVisual()));
 
     public static final DeferredHolder<Item, Item> COPPER_CHESTPLATE =
             ModItems.ITEMS.register("copper_chestplate",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.copperHolder(),
                             ArmorItem.Type.CHESTPLATE, new Item.Properties(), copperVisual()));
 
     public static final DeferredHolder<Item, Item> COPPER_LEGGINGS =
             ModItems.ITEMS.register("copper_leggings",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.copperHolder(),
                             ArmorItem.Type.LEGGINGS, new Item.Properties(), copperVisual()));
 
     public static final DeferredHolder<Item, Item> COPPER_BOOTS =
             ModItems.ITEMS.register("copper_boots",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.copperHolder(),
                             ArmorItem.Type.BOOTS, new Item.Properties(), copperVisual()));
 
     // ===== RAWHIDE =====
     public static final DeferredHolder<Item, Item> RAWHIDE_HOOD =
             ModItems.ITEMS.register("rawhide_hood",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.rawhideHolder(),
                             ArmorItem.Type.HELMET, new Item.Properties(), rawhideVisual()));
 
     public static final DeferredHolder<Item, Item> RAWHIDE_JACKET =
             ModItems.ITEMS.register("rawhide_jacket",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.rawhideHolder(),
                             ArmorItem.Type.CHESTPLATE, new Item.Properties(), rawhideVisual()));
 
     public static final DeferredHolder<Item, Item> RAWHIDE_WRAPS =
             ModItems.ITEMS.register("rawhide_wraps",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.rawhideHolder(),
                             ArmorItem.Type.LEGGINGS, new Item.Properties(), rawhideVisual()));
 
     public static final DeferredHolder<Item, Item> RAWHIDE_BOOTS =
             ModItems.ITEMS.register("rawhide_boots",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.rawhideHolder(),
                             ArmorItem.Type.BOOTS, new Item.Properties(), rawhideVisual()));
 
     // ===== LINEN =====
     public static final DeferredHolder<Item, Item> LINEN_HAT =
             ModItems.ITEMS.register("linen_hat",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.HELMET, new Item.Properties(), linenVisual()));
 
     public static final DeferredHolder<Item, Item> LINEN_CAPE =
             ModItems.ITEMS.register("linen_cape",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.CHESTPLATE, new Item.Properties(), linenVisual()));
 
     public static final DeferredHolder<Item, Item> LINEN_PANTS =
             ModItems.ITEMS.register("linen_pants",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.LEGGINGS, new Item.Properties(), linenVisual()));
 
     public static final DeferredHolder<Item, Item> LINEN_SHOES =
             ModItems.ITEMS.register("linen_shoes",
-                    () -> new GenericGeoArmorItem(
+                    () -> new NoAnimGeoArmorItem(
                             ModArmorMaterials.linenHolder(),
                             ArmorItem.Type.BOOTS, new Item.Properties(), linenVisual()));
 
@@ -7324,6 +7309,40 @@ public class GenericGeoArmorItem extends ArmorItem implements GeoItem {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\GenericGeoArmorItem.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\NoAnimGeoArmorItem.java -----
+package com.doomspire.grimfate.item.armor;
+
+import net.minecraft.core.Holder;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.Item;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animation.AnimatableManager; // ВАЖНО: этот пакет
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.util.GeckoLibUtil;
+
+//NOTE: Чтобы не спамило в лог про отсутствие анимации для Geo брони. Всю броню регаем через NoAnim
+
+public class NoAnimGeoArmorItem extends GenericGeoArmorItem implements GeoItem {
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+    // Пробрасываем Visual, т.к. GenericGeoArmorItem его требует
+    public NoAnimGeoArmorItem(Holder<ArmorMaterial> material, ArmorItem.Type type, Item.Properties props, Visual visual) {
+        super(material, type, props, visual);
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        // Пусто: контроллеров нет — никто не будет искать "misc.idle"
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\NoAnimGeoArmorItem.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\item\BaseBowItem.java -----
 package com.doomspire.grimfate.item;
 
@@ -7799,13 +7818,16 @@ public final class AddItemModifier extends LootModifier {
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddItemModifier.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddTagItemsModifier.java -----
+// src/main/java/com/doomspire/grimfate/loot/modifier/AddTagItemsModifier.java
 package com.doomspire.grimfate.loot.modifier;
 
 import com.google.common.base.Suppliers;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -7817,59 +7839,77 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.LootModifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public final class AddTagItemsModifier extends LootModifier {
+    private static final Logger LOG = LoggerFactory.getLogger("Grimfate/GLM-AddTagItems");
+
+    // tag: id тега предметов (например, grimfate:loot/weapons)
+    // count: IntProvider количества (по умолчанию 1)
     public static final Supplier<MapCodec<AddTagItemsModifier>> CODEC = Suppliers.memoize(() ->
             RecordCodecBuilder.mapCodec(inst ->
                     codecStart(inst).and(
                             inst.group(
                                     ResourceLocation.CODEC.fieldOf("tag").forGetter(m -> m.tagId),
-                                    IntProvider.CODEC.optionalFieldOf("count", ConstantInt.of(1)).forGetter(m -> m.rolls),
-                                    // если true — добавить "rolls" штук (с повторами),
-                                    // если false — добавить только 1 предмет (один выбор)
-                                    com.mojang.serialization.Codec.BOOL.optionalFieldOf("expand_all", false).forGetter(m -> m.expandAll)
+                                    IntProvider.CODEC.optionalFieldOf("count", ConstantInt.of(1)).forGetter(m -> m.count)
                             )
                     ).apply(inst, AddTagItemsModifier::new)
             )
     );
 
     private final ResourceLocation tagId;
-    private final IntProvider rolls;
-    private final boolean expandAll;
+    private final IntProvider count;
 
-    public AddTagItemsModifier(LootItemCondition[] cond, ResourceLocation tagId, IntProvider rolls, boolean expandAll) {
-        super(cond);
+    public AddTagItemsModifier(LootItemCondition[] conditions, ResourceLocation tagId, IntProvider count) {
+        super(conditions);
         this.tagId = tagId;
-        this.rolls = rolls;
-        this.expandAll = expandAll;
+        this.count = count;
     }
 
     @Nonnull
     @Override
     protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> loot, LootContext ctx) {
-        var access = ctx.getLevel().registryAccess();
-        var itemRegistry = access.lookupOrThrow(Registries.ITEM);
-        TagKey<Item> key = TagKey.create(Registries.ITEM, tagId);
-        HolderSet<Item> tag = itemRegistry.getOrThrow(key);
-        if (tag.size() == 0) return loot;
+        try {
+            var level = ctx.getLevel();
+            if (level == null) return loot;
 
-        net.minecraft.util.RandomSource rnd = ctx.getRandom();
-        var holder = tag.get(rnd.nextInt(tag.size())); // взять по индексу
-        loot.add(new ItemStack(holder.value()));
+            RegistryAccess access = level.registryAccess();
+            var itemsLookup = access.lookupOrThrow(Registries.ITEM);
 
-        return loot;
+            TagKey<Item> key = TagKey.create(Registries.ITEM, tagId);
+
+            // ВАЖНО: используем get(key), не getOrThrow — чтобы не падать, если тег пуст/не найден
+            Optional<HolderSet.Named<Item>> optSet = itemsLookup.get(key);
+            if (optSet.isEmpty()) return loot;
+
+            HolderSet<Item> set = optSet.get();
+            if (set.size() <= 0) return loot;
+
+            RandomSource rnd = ctx.getRandom();
+            Optional<Holder<Item>> picked = set.getRandomElement(rnd);
+            if (picked.isEmpty()) return loot;
+
+            int n = Math.max(0, count.sample(rnd));
+            if (n <= 0) return loot;
+
+            loot.add(new ItemStack(picked.get().value(), n));
+            return loot;
+        } catch (Throwable t) {
+            LOG.warn("[AddTagItems] tag={} failed: {}", tagId, t.toString());
+            return loot; // Никогда не валим генерацию сундука
+        }
     }
-
 
     @Override
     public MapCodec<? extends net.neoforged.neoforge.common.loot.IGlobalLootModifier> codec() {
         return CODEC.get();
     }
 }
-
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddTagItemsModifier.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ModLootModifiers.java -----
@@ -7987,7 +8027,9 @@ n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\R
 package com.doomspire.grimfate.loot;
 
 import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimfate.core.Grimfate;
 import com.doomspire.grimfate.item.comp.AffixListHelper;
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -8000,6 +8042,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.LootModifier;
+import org.slf4j.Logger;
 
 import java.util.*;
 
@@ -8019,7 +8062,7 @@ public final class RollAffixesLootModifier extends LootModifier {
     private static final String MODID = "grimfate";
 
     public static final MapCodec<RollAffixesLootModifier> CODEC = RecordCodecBuilder.mapCodec(inst -> codecStart(inst).and(
-            Codec.STRING.listOf().optionalFieldOf("allow_sources", List.of("WEAPON","ARMOR","SHIELD"))
+            Codec.STRING.listOf().optionalFieldOf("allow_sources", List.of("WEAPON","ARMOR","JEWELRY", "SHIELD"))
                     .forGetter(m -> m.allowSources.stream().map(Enum::name).toList())
     ).and(
             Codec.BOOL.optionalFieldOf("replace_existing", false).forGetter(m -> m.replaceExisting)
@@ -8067,6 +8110,10 @@ public final class RollAffixesLootModifier extends LootModifier {
 
     @Override
     protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
+        Grimfate.LOGGER.info("[AFFIX-ROLL] start: size={}, table={}",
+                generatedLoot == null ? -1 : generatedLoot.size(),
+                context.getQueriedLootTableId());
+
         if (generatedLoot == null || generatedLoot.isEmpty()) return generatedLoot;
 
         final RandomSource rnd = context.getRandom();
@@ -8090,6 +8137,11 @@ public final class RollAffixesLootModifier extends LootModifier {
             // 4) Уровень и ролл
             int itemLevel = ITEM_LEVEL_RESOLVER.resolve(context, stack, defaultItemLevel);
             AffixListHelper.rollAndApply(stack, src, itemLevel, rnd);
+
+            Grimfate.LOGGER.info("[AFFIX-ROLL] {} -> has={}",
+                    stack.getHoverName().getString(),
+                    AffixListHelper.has(stack));
+
         }
         return generatedLoot;
     }
@@ -10646,8 +10698,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\defs\resist
   "required_item_tags": [],
   "min_item_level": 1,
   "max_item_level": 0,
-  "unique_types": true,
-  "max_affixes_override": { "type": "constant", "value": 0 }
+  "unique_types": true
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\armor_defensive.json -----n
@@ -10664,8 +10715,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\armor
   "required_item_tags": [],
   "min_item_level": 1,
   "max_item_level": 0,
-  "unique_types": true,
-  "max_affixes_override": { "type": "constant", "value": 2 }
+  "unique_types": true
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\jewelry_support.json -----n
@@ -10681,8 +10731,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\jewel
   "required_item_tags": [],
   "min_item_level": 1,
   "max_item_level": 0,
-  "unique_types": true,
-  "max_affixes_override": { "type": "constant", "value": 0 }
+  "unique_types": true
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\pools\weapon_primary.json -----n
@@ -10801,49 +10850,42 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\balance\levels.json
 
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\balance\spells.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\_probe_chest_simple_dungeon_add_item.json -----
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_armors_to_simple_dungeon.json -----
 {
-  "type": "grimfate:add_item",
+  "type": "grimfate:add_tag_items",
   "conditions": [
-    { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" }
+    { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+    { "condition": "minecraft:random_chance", "chance": 1.0 }
   ],
-  "item": "minecraft:netherite_ingot",
+  "tag": "grimfate:loot/armors",
   "count": { "type": "minecraft:constant", "value": 1 }
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\_probe_chest_simple_dungeon_add_item.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_loot_to_chests.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_armors_to_simple_dungeon.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_jewelry_to_simple_dungeon.json -----
 {
-  "type": "neoforge:add_table",
+  "type": "grimfate:add_tag_items",
   "conditions": [
-    { "condition": "minecraft:any_of", "terms": [
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/abandoned_mineshaft" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/ancient_city" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/desert_pyramid" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/jungle_temple" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_supply" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/shipwreck_treasure" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_corridor" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_crossing" },
-      { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/stronghold_library" }
-    ]},
-    { "condition": "minecraft:random_chance", "chance": 0.95 }
+    { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+    { "condition": "minecraft:random_chance", "chance": 1.0 }
   ],
-  "table": "grimfate:chests/global_pool"
+  "tag": "grimfate:loot/jewelry",
+  "count": { "type": "minecraft:constant", "value": 1 }
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_loot_to_chests.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_to_simple_dungeon.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_jewelry_to_simple_dungeon.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_weapons_to_simple_dungeon.json -----
 {
-  "type": "neoforge:add_table",
+  "type": "grimfate:add_tag_items",
   "conditions": [
-    { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" }
+    { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+    { "condition": "minecraft:random_chance", "chance": 1.0 }
   ],
-  "table": "grimfate:chests/global_pool"
+  "tag": "grimfate:loot/weapons",
+  "count": { "type": "minecraft:constant", "value": 1 }
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_global_to_simple_dungeon.json -----n
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_weapons_to_simple_dungeon.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json -----
 {
   "type": "grimfate:add_item",
@@ -10872,38 +10914,13 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork
 {
   "type": "grimfate:roll_affixes",
   "conditions": [],
-  "allow_sources": ["WEAPON", "ARMOR", "SHIELD"],
+  "allow_sources": ["ALL"],
   "replace_existing": false,
   "default_item_level": 1
 }
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_modifiers\roll_affixes.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\chests\global_pool.json -----
-{
-  "pools": [
-    {
-      "rolls": 1,
-      "entries": [
-        { "type": "minecraft:tag", "name": "grimfate:loot/weapons" }
-      ]
-    },
-    {
-      "rolls": 1,
-      "entries": [
-        { "type": "minecraft:tag", "name": "grimfate:loot/armors", "expand": true }
-      ]
-    },
-    {
-      "rolls": 1,
-      "entries": [
-        { "type": "minecraft:tag", "name": "grimfate:loot/jewelry", "expand": true }
-      ]
-    }
-  ]
-}
-, "expand":  true
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\chests\global_pool.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabric.json -----
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipe\canvas_fabric.json -----
 {
   "type": "minecraft:crafting_shaped",
   "key": {
@@ -10918,8 +10935,8 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\loot_tables\chests\
   "result": { "id": "grimfate:canvas_fabric", "count": 1 }
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabric.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipe\canvas_fabric.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipe\copper_sword.json -----
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
@@ -10936,12 +10953,12 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\canvas_fabr
   "result": { "id": "grimfate:copper_sword", "count": 1 }
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copper_sword.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copperforced_shield.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipe\copper_sword.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipe\copperforced_shield.json -----
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "MFM",
+    "MPM",
     "MCM",
     "MRM"
   ],
@@ -10954,8 +10971,8 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copper_swor
   "result": { "id": "grimfate:copperforced_shield", "count": 1 }
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copperforced_shield.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\rawhide.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipe\copperforced_shield.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipe\rawhide.json -----
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
@@ -10969,8 +10986,8 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\copperforce
   "result": { "id": "grimfate:rawhide", "count": 1 }
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\rawhide.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\scholar_staff.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipe\rawhide.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipe\scholar_staff.json -----
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
@@ -10984,8 +11001,8 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\rawhide.jso
   },
   "result": {"id": "grimfate:scholar_staff", "count": 1}
 }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\scholar_staff.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipes\weakling_bow.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipe\scholar_staff.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\recipe\weakling_bow.json -----
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
@@ -11003,68 +11020,68 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\scholar_sta
 }
 
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipes\weakling_bow.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\boots.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\recipe\weakling_bow.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\boots.json -----
 { "values": ["grimfate:copper_boots", "grimfate:linen_shoes", "grimfate:rawhide_boots"] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\boots.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\chest.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\boots.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\chest.json -----
 { "values": ["grimfate:copper_chestplate", "grimfate:linen_cape", "grimfate:rawhide_jacket"] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\chest.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\cloth.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\chest.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\cloth.json -----
 { "values": ["grimfate:linen_shoes", "grimfate:linen_cape", "grimfate:linen_hat", "grimfate:linen_pants"] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\cloth.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\helm.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\cloth.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\helm.json -----
 { "values": ["grimfate:copper_helmet", "grimfate:linen_hat", "grimfate:rawhide_hood"] }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\helm.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\leather.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\helm.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\leather.json -----
 { "values": ["grimfate:rawhide_boots", "grimfate:rawhide_wraps", "grimfate:rawhide_jacket", "grimfate:rawhide_hood"] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\leather.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\legs.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\leather.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\legs.json -----
 { "values": ["grimfate:copper_chestplate", "grimfate:linen_pants", "grimfate:rawhide_wraps"] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\legs.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\plate.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\legs.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\plate.json -----
 { "values": ["grimfate:copper_helmet", "grimfate:copper_chestplate", "grimfate:copper_leggings", "grimfate:copper_boots"] }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\armor\plate.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\axes.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\armor\plate.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\axes.json -----
 { "replace": false, "values": [
 
 ] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\axes.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\bows.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\axes.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\bows.json -----
 { "replace": false, "values": [
   "grimfate:weakling_bow"
 ] }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\bows.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\crossbows.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\bows.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\crossbows.json -----
 { "replace": false, "values": [
 
 ] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\crossbows.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\daggers.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\crossbows.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\daggers.json -----
 { "replace": false, "values": [
 
 ] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\daggers.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\greataxes.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\daggers.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\greataxes.json -----
 { "replace": false, "values": [
 
 ] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\greataxes.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\greatswords.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\greataxes.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\greatswords.json -----
 { "replace": false, "values": [
 
 ] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\greatswords.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\hammers.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\greatswords.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\hammers.json -----
 { "replace": false, "values": [
 
 ] }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\hammers.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\jewelry.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\hammers.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\jewelry.json -----
 {
   "replace": false,
   "values": [
@@ -11075,8 +11092,8 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\hammers.
   ]
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\jewelry.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\armors.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\jewelry.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\loot\armors.json -----
 {
   "replace": false,
   "values": [
@@ -11095,8 +11112,8 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\jewelry.
   ]
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\armors.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\fiber.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\loot\armors.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\loot\fiber.json -----
 {
   "replace": false,
   "values": [
@@ -11104,19 +11121,8 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\arm
   ]
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\fiber.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\gear.json -----
-{
-  "replace": false,
-  "values": [
-    "#grimfate:loot/weapons",
-    "#grimfate:loot/armors",
-    "#grimfate:loot/jewelry"
-  ]
-}
-
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\gear.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\jewelry.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\loot\fiber.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\loot\jewelry.json -----
 {
   "replace": false,
   "values": [
@@ -11127,8 +11133,8 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\gea
   ]
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\jewelry.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\pork_fat.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\loot\jewelry.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\loot\pork_fat.json -----
 {
   "replace": false,
   "values": [
@@ -11136,8 +11142,8 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\jew
   ]
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\pork_fat.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\weapons.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\loot\pork_fat.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\loot\weapons.json -----
 {
   "replace": false,
   "values": [
@@ -11147,36 +11153,36 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\por
   ]
 }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\loot\weapons.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\archer.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\loot\weapons.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\role\archer.json -----
 { "values": [] }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\archer.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\mage.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\role\archer.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\role\mage.json -----
 { "values": [] }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\mage.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\melee.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\role\mage.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\role\melee.json -----
 { "values": [] }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\role\melee.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\shields.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\role\melee.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\shields.json -----
 { "replace": false, "values": [
   "grimfate:copperforced_shield"
 ] }
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\shields.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\staves.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\shields.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\staves.json -----
 { "replace": false, "values": [
   "grimfate:scholar_staff"
 ] }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\staves.json -----n
------ BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\swords.json -----
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\staves.json -----n
+----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\swords.json -----
 { "replace": false, "values": [
   "grimfate:copper_sword"
 ] }
 
-n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\items\swords.json -----n
+n----- END FILE: .\grimfate\src\main\resources\data\grimfate\tags\item\swords.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\weapon_attributes\copper_sword.json -----
 { "parent": "bettercombat:sword" }
 
@@ -11195,12 +11201,11 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\weapon_attributes\w
   "entries": [
     "grimfate:fiber_from_grass",
     "grimfate:pork_fat_from_pig",
-    "grimfate:_probe_chest_simple_dungeon_add_item",
-    "grimfate:add_global_to_simple_dungeon",
-    "grimfate:add_global_loot_to_chests",
+    "grimfate:add_weapons_to_simple_dungeon",
+    "grimfate:add_armors_to_simple_dungeon",
+    "grimfate:add_jewelry_to_simple_dungeon",
     "grimfate:roll_affixes"
   ]
 }
-
 
 n----- END FILE: .\grimfate\src\main\resources\data\neoforge\loot_modifiers\global_loot_modifiers.json -----n

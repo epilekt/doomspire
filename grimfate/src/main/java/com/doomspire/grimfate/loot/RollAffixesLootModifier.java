@@ -1,7 +1,9 @@
 package com.doomspire.grimfate.loot;
 
 import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimfate.core.Grimfate;
 import com.doomspire.grimfate.item.comp.AffixListHelper;
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -14,6 +16,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.LootModifier;
+import org.slf4j.Logger;
 
 import java.util.*;
 
@@ -33,7 +36,7 @@ public final class RollAffixesLootModifier extends LootModifier {
     private static final String MODID = "grimfate";
 
     public static final MapCodec<RollAffixesLootModifier> CODEC = RecordCodecBuilder.mapCodec(inst -> codecStart(inst).and(
-            Codec.STRING.listOf().optionalFieldOf("allow_sources", List.of("WEAPON","ARMOR","JEWELRy"))
+            Codec.STRING.listOf().optionalFieldOf("allow_sources", List.of("WEAPON","ARMOR","JEWELRY", "SHIELD"))
                     .forGetter(m -> m.allowSources.stream().map(Enum::name).toList())
     ).and(
             Codec.BOOL.optionalFieldOf("replace_existing", false).forGetter(m -> m.replaceExisting)
@@ -81,6 +84,10 @@ public final class RollAffixesLootModifier extends LootModifier {
 
     @Override
     protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
+        Grimfate.LOGGER.info("[AFFIX-ROLL] start: size={}, table={}",
+                generatedLoot == null ? -1 : generatedLoot.size(),
+                context.getQueriedLootTableId());
+
         if (generatedLoot == null || generatedLoot.isEmpty()) return generatedLoot;
 
         final RandomSource rnd = context.getRandom();
@@ -104,6 +111,11 @@ public final class RollAffixesLootModifier extends LootModifier {
             // 4) Уровень и ролл
             int itemLevel = ITEM_LEVEL_RESOLVER.resolve(context, stack, defaultItemLevel);
             AffixListHelper.rollAndApply(stack, src, itemLevel, rnd);
+
+            Grimfate.LOGGER.info("[AFFIX-ROLL] {} -> has={}",
+                    stack.getHoverName().getString(),
+                    AffixListHelper.has(stack));
+
         }
         return generatedLoot;
     }
