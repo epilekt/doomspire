@@ -8,6 +8,7 @@ import com.doomspire.grimfate.item.armor.Armors;
 import com.doomspire.grimfate.item.jewelry.Jewelry;
 import com.doomspire.grimfate.item.materials.Materials;
 import com.doomspire.grimfate.item.weapons.Weapons;
+import com.doomspire.grimfate.loot.modifier.ModLootModifiers;
 import com.doomspire.grimfate.network.ModNetworking;
 import com.doomspire.grimfate.registry.*;
 import com.mojang.logging.LogUtils;
@@ -72,6 +73,8 @@ public class Grimfate {
         com.doomspire.grimcore.affix.rarity.RarityDataManager.onAddReloadListeners(event);
         com.doomspire.grimcore.affix.def.AffixDataManager.onAddReloadListeners(event);
         com.doomspire.grimcore.affix.pool.AffixPoolDataManager.onAddReloadListeners(event);
+        //NeoForge.EVENT_BUS.addListener(com.doomspire.grimfate.debug.DebugLootModsProbe::onAddReloadListeners);
+
     }
     public Grimfate(IEventBus modEventBus, ModContainer modContainer) {
         // Конфиги
@@ -86,7 +89,9 @@ public class Grimfate {
         ModItems.init(modEventBus);
         ModEntityTypes.init(modEventBus);
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
-        com.doomspire.grimfate.loot.ModLootModifiers.init(modEventBus);
+        ModLootModifiers.init(modEventBus);
+        LOGGER.info("[Grimfate] Registering DebugLootModifiers…");
+        com.doomspire.grimfate.debug.DebugLootModifiers.init(modEventBus);
         ModDataComponents.DATA_COMPONENT_TYPES.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::onAddReloadListeners);
 

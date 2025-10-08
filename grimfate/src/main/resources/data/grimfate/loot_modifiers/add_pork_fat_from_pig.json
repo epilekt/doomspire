@@ -1,0 +1,9 @@
+{
+  "type": "grimfate:add_item",
+  "conditions": [
+    { "condition": "minecraft:entity_properties", "entity": "this", "predicate": { "type": "minecraft:pig" } },
+    { "condition": "minecraft:random_chance", "chance": 0.95 }
+  ],
+  "item": "grimfate:pork_fat",
+  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 }
+}

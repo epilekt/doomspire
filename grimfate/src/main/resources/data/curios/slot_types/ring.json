@@ -1,4 +1,5 @@
 {
+  "name": "ring",
   "size": 2,
   "order": 10,
   "icon": "curios:slot/ring",

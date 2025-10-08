@@ -1,13 +1,13 @@
 {
   "type": "minecraft:crafting_shaped",
+  "key": {
+    "F": { "item": "grimfate:fiber" },
+    "P": {"item": "grimfate:pork_fat"}
+  },
   "pattern": [
     "FFF",
     "FPF",
     "FFF"
   ],
-  "key": {
-    "F": { "item": "grimfate:fiber" },
-    "P": {"item": "grimfate:pork_fat"}
-  },
   "result": { "item": "grimfate:canvas_fabric", "count": 1 }
 }

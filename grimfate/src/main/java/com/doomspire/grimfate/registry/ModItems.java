@@ -22,6 +22,7 @@ public final class ModItems {
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(Registries.ITEM, Grimfate.MODID);
 
+
     public static void init(IEventBus modBus) {
         ITEMS.register(modBus);
         // Подмодулям не требуется отдельный вызов — их поля регистрируются статически через ModItems.ITEMS

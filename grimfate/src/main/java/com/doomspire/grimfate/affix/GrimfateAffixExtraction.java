@@ -5,10 +5,8 @@ import com.doomspire.grimcore.affix.AffixAggregator;
 import com.doomspire.grimfate.compat.curios.CuriosCompat;
 import com.doomspire.grimfate.registry.ModDataComponents;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemStack;
-
+import net.minecraft.world.item.*;
 import java.util.List;
 
 //NOTE: Сторона контента: собираем аффиксы со всех источников сущности.
@@ -36,7 +34,6 @@ public final class GrimfateAffixExtraction {
 
         // 3) Curios (бижутерия), если мод загружен
         if (CuriosCompat.isLoaded()) {
-            // как только появится реальный обход — раскомментировать и использовать
             // CuriosCompat.forEachEquipped(entity, (stack, slotId) -> {
             //     appendFromStack(stack, b, Affix.Source.JEWELRY);
             // });
@@ -48,8 +45,7 @@ public final class GrimfateAffixExtraction {
     }
 
     private static Affix.Source guessOffhandSource(ItemStack offhand) {
-        // Пока считаем оффхенд щитом, если предмет помечен тегом grimfate:shields — добавим позже.
-        // До ввода тегов возвращаем SHIELD как безопасную эвристику.
+        // Позже добавим теги grimfate:shields — пока безопасно считаем оффхенд щитом.
         return Affix.Source.SHIELD;
     }
 
@@ -69,29 +65,30 @@ public final class GrimfateAffixExtraction {
         var comp = stack.get(ModDataComponents.AFFIX_LIST.get());
         if (comp == null) return;
 
-        for (var e : comp.entries()) {
+        var list = comp.entries();
+        if (list == null || list.isEmpty()) return;
+
+        for (var e : list) {
             if (e == null) continue;
 
             // Парсим ID
             ResourceLocation id = ResourceLocation.tryParse(e.id());
             if (id == null) continue; // некорректный id — пропускаем
 
-            // Сводим список роллов к одной величине (по умолчанию — сумма)
+            // Сводим список роллов к одной величине (по умолчанию — сумма валидных значений)
             float mag = 0f;
             var rolls = e.rolls();
-            if (rolls != null) {
+            if (rolls != null && !rolls.isEmpty()) {
                 for (Float r : rolls) {
-                    if (r != null && !Float.isNaN(r) && !Float.isInfinite(r)) {
-                        mag += r;
-                    }
+                    if (r == null) continue;
+                    if (Float.isNaN(r) || Float.isInfinite(r)) continue;
+                    if (r == 0f) continue; // экономим на «пустых» роллах
+                    mag += r;
                 }
             }
 
-            // Пропускаем «пустые» величины
-            if (mag == 0f) continue;
-
+            if (mag == 0f) continue; // пропускаем «пустые» величины
             b.add(id, mag, src);
         }
     }
 }
-

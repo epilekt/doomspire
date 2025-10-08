@@ -2,7 +2,10 @@ package com.doomspire.grimfate.item.weapons;
 
 import com.doomspire.grimfate.item.BaseBowItem;
 import com.doomspire.grimfate.registry.ModItems;
+import com.doomspire.grimfate.registry.ModWeaponMaterials;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ShieldItem;
+import net.minecraft.world.item.SwordItem;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 
@@ -17,7 +20,13 @@ public final class Weapons {
     // ===== Оружие / щит (PHASE_PLAN) =====
     public static final DeferredHolder<Item, Item> COPPER_SWORD =
             ModItems.ITEMS.register("copper_sword",
-                    () -> new Item(new Item.Properties().stacksTo(1)));
+                    () -> new SwordItem(
+                            ModWeaponMaterials.COPPER,
+                            new Item.Properties().stacksTo(1).attributes(
+                                    // у меча весь урон задаём "0", пусть ваниль почти не влияет
+                                    SwordItem.createAttributes(ModWeaponMaterials.COPPER, /*bonus*/0, /*speed*/-2.4f)
+                            )
+                    ));
 
     public static final DeferredHolder<Item, Item> SCHOLAR_STAFF =
             ModItems.ITEMS.register("scholar_staff",
@@ -29,7 +38,7 @@ public final class Weapons {
 
     public static final DeferredHolder<Item, Item> COPPERFORCED_SHIELD =
             ModItems.ITEMS.register("copperforced_shield",
-                    () -> new Item(new Item.Properties().stacksTo(1)));
+                    () -> new ShieldItem(new Item.Properties().stacksTo(1).durability(256)));
 
     /** Вызывается из ModItems.init(modBus) для явной инициализации подмодуля (на будущее). */
     public static void init(IEventBus modBus) {

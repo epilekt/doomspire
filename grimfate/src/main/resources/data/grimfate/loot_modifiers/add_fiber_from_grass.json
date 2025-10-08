@@ -1,0 +1,9 @@
+{
+  "type": "grimfate:add_item",
+  "conditions": [
+    { "condition": "minecraft:block_state_property", "block": "minecraft:short_grass" },
+    { "condition": "minecraft:random_chance", "chance": 0.95 }
+  ],
+  "item": "grimfate:fiber",
+  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 }
+}
