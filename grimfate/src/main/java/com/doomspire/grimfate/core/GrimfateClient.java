@@ -21,6 +21,9 @@ public final class GrimfateClient {
         modBus.addListener(Hotkeys::onRegisterKeys);
         modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) ->
                 e.enqueueWork(com.doomspire.grimfate.client.BowModelProperties::register));
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(
+                com.doomspire.grimfate.client.tooltip.AffixTooltipHandler.class
+        );
 
     }
 

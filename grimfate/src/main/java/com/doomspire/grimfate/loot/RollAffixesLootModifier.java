@@ -2,8 +2,8 @@ package com.doomspire.grimfate.loot;
 
 import com.doomspire.grimcore.affix.Affix;
 import com.doomspire.grimfate.core.Grimfate;
+import com.doomspire.grimfate.item.BaseBowItem;
 import com.doomspire.grimfate.item.comp.AffixListHelper;
-import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -16,21 +16,9 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.LootModifier;
-import org.slf4j.Logger;
 
 import java.util.*;
 
-/*
-//NOTE: Global Loot Modifier — навешивает аффиксы только на наше снаряжение (grimfate: оружие/броня/бижутерия).
-/**
- * Жёсткие правила:
- *  1) Только предметы из namespace "grimfate".
- *  2) Только если предмет помечен тегами: #grimfate:loot/weapons | armors | jewelry.
- *  3) Уважать replace_existing=false — не трогаем уже «наполненные» предметы.
- *  4) Уровень — через внешний ItemLevelResolver (по умолчанию константа).
- *
- * В связке с AffixListHelper.rollAndApply(): пустой результат не записывается → стакинг не ломается.
- */
 public final class RollAffixesLootModifier extends LootModifier {
 
     private static final String MODID = "grimfate";
@@ -59,7 +47,6 @@ public final class RollAffixesLootModifier extends LootModifier {
     private final boolean replaceExisting;
     private final int defaultItemLevel;
 
-    // Теги наших категорий
     private static final net.minecraft.tags.TagKey<Item> TAG_WEAPONS =
             net.minecraft.tags.TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/weapons"));
     private static final net.minecraft.tags.TagKey<Item> TAG_ARMORS  =
@@ -101,6 +88,13 @@ public final class RollAffixesLootModifier extends LootModifier {
             // 1) Обрабатываем только наше снаряжение (по тегам)
             if (!isAffixable(stack)) continue;
 
+// === ЛОГ №A: предмет прошёл ns+tag-фильтр
+            var rk = stack.getItem().builtInRegistryHolder().key();
+            Object loc = (rk != null) ? rk.location() : null;
+            Grimfate.LOGGER.info("[AFFIX-ROLL] pass ns+tag: {} ({})",
+                    stack.getHoverName().getString(), loc);
+
+
             // 2) Уважать уже «наполненные» предметы (если replace_existing=false)
             if (!replaceExisting && AffixListHelper.has(stack)) continue;
 
@@ -112,10 +106,10 @@ public final class RollAffixesLootModifier extends LootModifier {
             int itemLevel = ITEM_LEVEL_RESOLVER.resolve(context, stack, defaultItemLevel);
             AffixListHelper.rollAndApply(stack, src, itemLevel, rnd);
 
+            // === ЛОГ №B: результат ролла
             Grimfate.LOGGER.info("[AFFIX-ROLL] {} -> has={}",
                     stack.getHoverName().getString(),
                     AffixListHelper.has(stack));
-
         }
         return generatedLoot;
     }
@@ -123,13 +117,11 @@ public final class RollAffixesLootModifier extends LootModifier {
     @Override
     public MapCodec<? extends LootModifier> codec() { return CODEC; }
 
-    // Только предметы из нашего модпака (namespace == grimfate)
     private static boolean isFromOurMod(ItemStack stack) {
-        ResourceKey<Item> key = stack.getItem().builtInRegistryHolder().key(); // 1.21.1: прямой ключ
+        ResourceKey<Item> key = stack.getItem().builtInRegistryHolder().key();
         return key != null && MODID.equals(key.location().getNamespace());
     }
 
-    // Только предметы из наших тегов считаем «аффиксируемыми»
     private static boolean isAffixable(ItemStack stack) {
         return stack.is(TAG_WEAPONS) || stack.is(TAG_ARMORS) || stack.is(TAG_JEWELRY);
     }
@@ -139,7 +131,7 @@ public final class RollAffixesLootModifier extends LootModifier {
         if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
         if (item instanceof ShieldItem) return Affix.Source.SHIELD;
         if (item instanceof SwordItem)  return Affix.Source.WEAPON;
-        if (item instanceof BowItem || item instanceof CrossbowItem || item instanceof TridentItem) return Affix.Source.WEAPON;
+        if (item instanceof BaseBowItem || item instanceof CrossbowItem || item instanceof TridentItem) return Affix.Source.WEAPON;
         return Affix.Source.WEAPON;
     }
 }
