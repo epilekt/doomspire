@@ -4,75 +4,108 @@ import com.doomspire.grimcore.stat.Attributes;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import java.util.EnumMap;
+import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 
-public record AttributesBalance(Map<Attributes, Rule> byAttr) {
+/**
+ * Баланс атрибутов: коэффициенты на 1 очко атрибута, + опциональная базовая секция.
+ * Загружается из datapack: data/<ns>/balance/attributes.json
+ */
+public record AttributesBalance(Map<String, Rule> byAttr, Base base) {
 
-    public static final Codec<Rule> RULE_CODEC = RecordCodecBuilder.create(i -> i.group(
-            Codec.INT.optionalFieldOf("cap", 99).forGetter(Rule::cap),
-            Codec.DOUBLE.optionalFieldOf("max_health_per", 5.0).forGetter(Rule::maxHealthPer),
-            Codec.DOUBLE.optionalFieldOf("max_mana_per", 5.0).forGetter(Rule::maxManaPer),
-            Codec.DOUBLE.optionalFieldOf("regen_hp_per", 0.05).forGetter(Rule::regenHpPer),
-            Codec.DOUBLE.optionalFieldOf("regen_mp_per", 0.05).forGetter(Rule::regenMpPer),
-            Codec.DOUBLE.optionalFieldOf("crit_chance_per", 0.0).forGetter(Rule::critChancePer),
-            Codec.DOUBLE.optionalFieldOf("evasion_per", 0.0).forGetter(Rule::evasionPer),
-            Codec.DOUBLE.optionalFieldOf("melee_damage_per", 0.0).forGetter(Rule::meleeDamagePer),
-            Codec.DOUBLE.optionalFieldOf("spell_power_per", 0.0).forGetter(Rule::spellPowerPer),
-            Codec.DOUBLE.optionalFieldOf("cast_speed_per", 0.0).forGetter(Rule::castSpeedPer)
-    ).apply(i, Rule::new));
+    public static final Codec<AttributesBalance> CODEC = RecordCodecBuilder.create(i -> i.group(
+            Codec.unboundedMap(Codec.STRING, Rule.CODEC).fieldOf("by_attr").forGetter(AttributesBalance::byAttr),
+            Base.CODEC.optionalFieldOf("base", Base.DEFAULT).forGetter(AttributesBalance::base)
+    ).apply(i, AttributesBalance::new));
 
-    public static final Codec<Attributes> ATTR_CODEC =
-            Codec.STRING.xmap(s -> Attributes.valueOf(s.toUpperCase()), a -> a.name().toLowerCase());
-
-    public static final Codec<Map<Attributes, Rule>> MAP_CODEC =
-            Codec.unboundedMap(ATTR_CODEC, RULE_CODEC).xmap(m -> {
-                EnumMap<Attributes, Rule> map = new EnumMap<>(Attributes.class);
-                map.putAll(m);
-                return map;
-            }, m -> m);
-
-    public static final Codec<AttributesBalance> CODEC =
-            RecordCodecBuilder.create(i -> i.group(
-                    MAP_CODEC.fieldOf("attributes").forGetter(AttributesBalance::byAttr)
-            ).apply(i, AttributesBalance::new));
-
+    /** Безопасные дефолты, если файл отсутствует. */
     public static AttributesBalance defaults() {
-        EnumMap<Attributes, Rule> def = new EnumMap<>(Attributes.class);
-        for (Attributes a : Attributes.values()) {
-            int cap = (a == Attributes.EVASION) ? 100 : 99;
-
-            double maxHealthPer = (a == Attributes.VITALITY) ? 6.0 : 0.0;
-            double regenHpPer   = (a == Attributes.VITALITY) ? 0.06 : 0.0;
-
-            double maxManaPer   = (a == Attributes.SPIRIT) ? 10.0 : 0.0;
-            double regenMpPer   = (a == Attributes.SPIRIT) ? 0.08 : 0.0;
-
-            double meleePer     = (a == Attributes.STRENGTH) ? 0.7 : 0.0;
-            double spellPer     = (a == Attributes.INTELLIGENCE) ? 0.7 : 0.0;
-            double castPer      = (a == Attributes.DEXTERITY) ? 0.5 : 0.0;
-            double evasionPer   = (a == Attributes.EVASION) ? 0.5 : 0.0;
-
-            def.put(a, new Rule(cap, maxHealthPer, maxManaPer, regenHpPer, regenMpPer,
-                    0.0, evasionPer, meleePer, spellPer, castPer));
-        }
-        return new AttributesBalance(def);
+        return new AttributesBalance(Collections.emptyMap(), Base.DEFAULT);
     }
 
-    public int cap(Attributes a) { return byAttr.getOrDefault(a, defaults().byAttr.get(a)).cap; }
+    // +++ НОВОЕ: удобный доступ по enum'у
+    public Rule get(Attributes attr) {
+        if (attr == null || byAttr == null) return null;
+        // пробуем ключи: lower-case, UPPER, как есть
+        String k1 = attr.name().toLowerCase(Locale.ROOT);
+        Rule r = byAttr.get(k1);
+        if (r != null) return r;
+        Rule r2 = byAttr.get(attr.name());
+        if (r2 != null) return r2;
+        return byAttr.get(attr.toString());
+    }
 
-    public String summary() { return "attrs=" + byAttr.size(); }
+    // +++ НОВОЕ: cap() для PlayerStatsAttachment
+    public int cap(Attributes attr) {
+        Rule r = get(attr);
+        return r != null ? r.cap() : 99;
+    }
 
+    // +++ НОВОЕ: summary() для BalanceData
+    public String summary() {
+        int n = (byAttr != null) ? byAttr.size() : 0;
+        return "AttributesBalance{rules=" + n
+                + ", baseHP=" + (base != null ? base.baseMaxHealth() : Base.DEFAULT.baseMaxHealth())
+                + ", baseMP=" + (base != null ? base.baseMaxMana() : Base.DEFAULT.baseMaxMana())
+                + "}";
+    }
+
+    /** Коэффициенты для конкретного атрибута (на 1 очко). */
     public record Rule(
             int cap,
             double maxHealthPer,
-            double maxManaPer,
             double regenHpPer,
+            double maxManaPer,
             double regenMpPer,
-            double critChancePer,
-            double evasionPer,
-            double meleeDamagePer,
-            double spellPowerPer,
-            double castSpeedPer
-    ) {}
+
+            float physMeleePer,
+            float physRangedPer,
+            float elemDamagePer,
+            float moveSpeedPctPer,
+
+            float baseCritChance,
+            float baseCritDamage,
+            float baseLifesteal,
+            float baseManasteal,
+            float evasionChancePer
+    ) {
+        public static final Codec<Rule> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.INT.optionalFieldOf("cap", 99).forGetter(Rule::cap),
+
+                Codec.DOUBLE.optionalFieldOf("max_health_per", 0.0).forGetter(Rule::maxHealthPer),
+                Codec.DOUBLE.optionalFieldOf("regen_hp_per",   0.0).forGetter(Rule::regenHpPer),
+
+                Codec.DOUBLE.optionalFieldOf("max_mana_per",  0.0).forGetter(Rule::maxManaPer),
+                Codec.DOUBLE.optionalFieldOf("regen_mp_per",  0.0).forGetter(Rule::regenMpPer),
+
+                Codec.FLOAT.optionalFieldOf("phys_melee_per",     0.0f).forGetter(Rule::physMeleePer),
+                Codec.FLOAT.optionalFieldOf("phys_ranged_per",    0.0f).forGetter(Rule::physRangedPer),
+                Codec.FLOAT.optionalFieldOf("elem_damage_per",    0.0f).forGetter(Rule::elemDamagePer),
+                Codec.FLOAT.optionalFieldOf("move_speed_pct_per", 0.0f).forGetter(Rule::moveSpeedPctPer),
+
+                Codec.FLOAT.optionalFieldOf("base_crit_chance",   0.0f).forGetter(Rule::baseCritChance),
+                Codec.FLOAT.optionalFieldOf("base_crit_damage",   0.5f).forGetter(Rule::baseCritDamage),
+                Codec.FLOAT.optionalFieldOf("base_lifesteal",     0.0f).forGetter(Rule::baseLifesteal),
+                Codec.FLOAT.optionalFieldOf("base_manasteal",     0.0f).forGetter(Rule::baseManasteal),
+                Codec.FLOAT.optionalFieldOf("evasion_chance_per", 0.01f).forGetter(Rule::evasionChancePer)
+        ).apply(i, Rule::new));
+    }
+
+    /** Базовые (additive) значения, не зависящие от атрибутов. */
+    public record Base(
+            float baseMaxHealth,
+            float baseRegenHealth,
+            float baseMaxMana,
+            float baseRegenMana
+    ) {
+        public static final Base DEFAULT = new Base(100f, 1f, 100f, 1f);
+
+        public static final Codec<Base> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.FLOAT.optionalFieldOf("max_health",   100f).forGetter(Base::baseMaxHealth),
+                Codec.FLOAT.optionalFieldOf("regen_health", 1f).forGetter(Base::baseRegenHealth),
+                Codec.FLOAT.optionalFieldOf("max_mana",     100f).forGetter(Base::baseMaxMana),
+                Codec.FLOAT.optionalFieldOf("regen_mana",   1f).forGetter(Base::baseRegenMana)
+        ).apply(i, Base::new));
+    }
 }

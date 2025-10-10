@@ -1,5 +1,9 @@
 package com.doomspire.grimfate.compat.curios;
 
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.stat.ModAttachments;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
@@ -27,6 +31,16 @@ public final class CuriosCompat {
     public static void forEachEquipped(LivingEntity entity, BiConsumer<ItemStack, String> consumer) {
         if (!isLoaded()) return;
         // TODO: реализовать через CuriosApi при добавлении API в компиляцию агрегатора
+    }
+    /** Вызови из своих обработчиков Curios (equip/unequip) после изменения слотов. */
+    public static void triggerRecalc(ServerPlayer sp) {
+        if (sp == null) return;
+        PlayerStatsAttachment att = sp.getData(ModAttachments.PLAYER_STATS.get());
+        if (att == null) return;
+
+        att.recalcAndSync(sp);
+        // тот же пакет, что и при обычном экипе
+        GrimcoreNetworking.syncPlayerStats(sp, att);
     }
 }
 

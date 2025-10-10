@@ -3,6 +3,8 @@ package com.doomspire.grimcore.affix;
 import com.doomspire.grimcore.stat.StatSnapshot;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,12 +31,14 @@ public final class AffixAggregator {
 
     private AffixAggregator() {}
 
+    private static final Logger LOG = LoggerFactory.getLogger("Grim/AffixAggregator");
+
     /** Внешний экстрактор аффиксов (grimfate должен установить его на старте). */
     private static volatile Extractor EXTRACTOR = entity -> Collections.emptyList();
 
     /**
      * Установить внешний экстрактор аффиксов.
-     * Вызывайте из grimfate при common-инициализации, когда готов чтение компонентов.
+     * Вызывайте из grimfate при common-инициализации, когда готово чтение компонентов.
      */
     public static void setExtractor(Extractor extractor) {
         EXTRACTOR = Objects.requireNonNull(extractor, "AffixAggregator extractor");
@@ -51,32 +55,54 @@ public final class AffixAggregator {
         try {
             list = EXTRACTOR.extract(entity);
         } catch (Throwable t) {
-            // Любая ошибка экстрактора не должна падать на ядро: просто игнорируем.
+            // Любая ошибка экстрактора не должна ронять ядро: просто игнорируем.
+            if (LOG.isWarnEnabled()) {
+                LOG.warn("[extract] failed: {}", t.toString());
+            }
             list = Collections.emptyList();
         }
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("[applyAll] entity={} extracted={}",
+                    entity.getName() != null ? entity.getName().getString() : entity.getStringUUID(),
+                    list.size());
+        }
         if (list.isEmpty()) return;
 
         for (AffixEntry entry : list) {
             if (entry == null || entry.id() == null) continue;
 
             Affix affix = ModAffixes.get(entry.id());
-            if (affix == null) continue; // неизвестный аффикс — пропускаем
+            if (affix == null) {
+                // Критично для диагностики: id есть в компоненте, но не зарегистрирован в ModAffixes
+                LOG.warn("[apply] MISSING impl for id={} (src={}, mag={})",
+                        entry.id(), entry.source(), entry.magnitude());
+                continue;
+            }
 
             float mag = sanitize(entry.magnitude());
-            if (mag == 0f) continue;
+            if (mag == 0f) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("[apply] SKIP zero magnitude id={} (src={})", entry.id(), entry.source());
+                }
+                continue;
+            }
 
             try {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("[apply] id={} mag={} src={}", entry.id(), mag, entry.source());
+                }
                 affix.apply(outSnapshot, mag, entry.source());
-            } catch (Throwable ignored) {
+            } catch (Throwable t) {
                 // аффикс не должен ломать расчёт статов
+                LOG.warn("[apply] affix {} threw: {}", entry.id(), t.toString());
             }
         }
     }
 
     private static float sanitize(float v) {
         if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
-        // тут можно добавить клампы по типам аффиксов, но это ответственность конкретного Affix.apply
+        // клампы по типам — ответственность конкретного Affix.apply
         return v;
     }
 
@@ -85,11 +111,6 @@ public final class AffixAggregator {
     /**
      * Экстрактор аффиксов для конкретной сущности.
      * ДОЛЖЕН собрать аффиксы со всей экипировки/бафов/Curios/компонентов и вернуть список.
-     *
-     * Пример реализации в grimfate:
-     *  - обойти main/offhand + armor слоты,
-     *  - если Curios загружен — обойти их слоты,
-     *  - из каждого ItemStack прочитать AffixListComponent и собрать пары (id, magnitude, source).
      */
     @FunctionalInterface
     public interface Extractor {

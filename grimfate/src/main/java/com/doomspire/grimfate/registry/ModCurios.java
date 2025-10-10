@@ -25,7 +25,7 @@ public final class ModCurios {
     /** Позвать из commonSetup для логов и ранней диагностики. */
     public static void init() {
         if (isLoaded()) {
-            LOGGER.info("[Grimfate] Curios detected. Slot types are provided via data files (curios/slots).");
+            LOGGER.info("[Grimfate] Curios detected. Slot types are provided via data files (curios/slot).");
         } else {
             LOGGER.warn("[Grimfate] Curios NOT detected. Jewelry slots will be unavailable.");
         }

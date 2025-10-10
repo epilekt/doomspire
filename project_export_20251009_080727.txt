@@ -73,6 +73,7 @@
 .\grimcore\src\main\java\com\doomspire\grimcore\xp\Rewards.java
 .\grimcore\src\main\resources\data\grimcore\mobs\minecraft\zombie.json
 .\grimfate\src\main\java\com\doomspire\grimfate\affix\AffixImbueService.java
+.\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixes.java
 .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java
 .\grimfate\src\main\java\com\doomspire\grimfate\affix\RollService.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\BowModelProperties.java
@@ -82,6 +83,7 @@
 .\grimfate\src\main\java\com\doomspire\grimfate\client\Hotkeys.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\model\armor\BaseArmorGeoModel.java
 .\grimfate\src\main\java\com\doomspire\grimfate\client\render\armor\BaseArmorRenderer.java
+.\grimfate\src\main\java\com\doomspire\grimfate\client\tooltip\AffixTooltipHandler.java
 .\grimfate\src\main\java\com\doomspire\grimfate\combat\WeaponPredicates.java
 .\grimfate\src\main\java\com\doomspire\grimfate\combat\WeaponType.java
 .\grimfate\src\main\java\com\doomspire\grimfate\commands\AddSpellCommand.java
@@ -3054,77 +3056,110 @@ import com.doomspire.grimcore.stat.Attributes;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import java.util.EnumMap;
+import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 
-public record AttributesBalance(Map<Attributes, Rule> byAttr) {
+/**
+ * Баланс атрибутов: коэффициенты на 1 очко атрибута, + опциональная базовая секция.
+ * Загружается из datapack: data/<ns>/balance/attributes.json
+ */
+public record AttributesBalance(Map<String, Rule> byAttr, Base base) {
 
-    public static final Codec<Rule> RULE_CODEC = RecordCodecBuilder.create(i -> i.group(
-            Codec.INT.optionalFieldOf("cap", 99).forGetter(Rule::cap),
-            Codec.DOUBLE.optionalFieldOf("max_health_per", 5.0).forGetter(Rule::maxHealthPer),
-            Codec.DOUBLE.optionalFieldOf("max_mana_per", 5.0).forGetter(Rule::maxManaPer),
-            Codec.DOUBLE.optionalFieldOf("regen_hp_per", 0.05).forGetter(Rule::regenHpPer),
-            Codec.DOUBLE.optionalFieldOf("regen_mp_per", 0.05).forGetter(Rule::regenMpPer),
-            Codec.DOUBLE.optionalFieldOf("crit_chance_per", 0.0).forGetter(Rule::critChancePer),
-            Codec.DOUBLE.optionalFieldOf("evasion_per", 0.0).forGetter(Rule::evasionPer),
-            Codec.DOUBLE.optionalFieldOf("melee_damage_per", 0.0).forGetter(Rule::meleeDamagePer),
-            Codec.DOUBLE.optionalFieldOf("spell_power_per", 0.0).forGetter(Rule::spellPowerPer),
-            Codec.DOUBLE.optionalFieldOf("cast_speed_per", 0.0).forGetter(Rule::castSpeedPer)
-    ).apply(i, Rule::new));
+    public static final Codec<AttributesBalance> CODEC = RecordCodecBuilder.create(i -> i.group(
+            Codec.unboundedMap(Codec.STRING, Rule.CODEC).fieldOf("by_attr").forGetter(AttributesBalance::byAttr),
+            Base.CODEC.optionalFieldOf("base", Base.DEFAULT).forGetter(AttributesBalance::base)
+    ).apply(i, AttributesBalance::new));
 
-    public static final Codec<Attributes> ATTR_CODEC =
-            Codec.STRING.xmap(s -> Attributes.valueOf(s.toUpperCase()), a -> a.name().toLowerCase());
-
-    public static final Codec<Map<Attributes, Rule>> MAP_CODEC =
-            Codec.unboundedMap(ATTR_CODEC, RULE_CODEC).xmap(m -> {
-                EnumMap<Attributes, Rule> map = new EnumMap<>(Attributes.class);
-                map.putAll(m);
-                return map;
-            }, m -> m);
-
-    public static final Codec<AttributesBalance> CODEC =
-            RecordCodecBuilder.create(i -> i.group(
-                    MAP_CODEC.fieldOf("attributes").forGetter(AttributesBalance::byAttr)
-            ).apply(i, AttributesBalance::new));
-
+    /** Безопасные дефолты, если файл отсутствует. */
     public static AttributesBalance defaults() {
-        EnumMap<Attributes, Rule> def = new EnumMap<>(Attributes.class);
-        for (Attributes a : Attributes.values()) {
-            int cap = (a == Attributes.EVASION) ? 100 : 99;
-
-            double maxHealthPer = (a == Attributes.VITALITY) ? 6.0 : 0.0;
-            double regenHpPer   = (a == Attributes.VITALITY) ? 0.06 : 0.0;
-
-            double maxManaPer   = (a == Attributes.SPIRIT) ? 10.0 : 0.0;
-            double regenMpPer   = (a == Attributes.SPIRIT) ? 0.08 : 0.0;
-
-            double meleePer     = (a == Attributes.STRENGTH) ? 0.7 : 0.0;
-            double spellPer     = (a == Attributes.INTELLIGENCE) ? 0.7 : 0.0;
-            double castPer      = (a == Attributes.DEXTERITY) ? 0.5 : 0.0;
-            double evasionPer   = (a == Attributes.EVASION) ? 0.5 : 0.0;
-
-            def.put(a, new Rule(cap, maxHealthPer, maxManaPer, regenHpPer, regenMpPer,
-                    0.0, evasionPer, meleePer, spellPer, castPer));
-        }
-        return new AttributesBalance(def);
+        return new AttributesBalance(Collections.emptyMap(), Base.DEFAULT);
     }
 
-    public int cap(Attributes a) { return byAttr.getOrDefault(a, defaults().byAttr.get(a)).cap; }
+    // +++ НОВОЕ: удобный доступ по enum'у
+    public Rule get(Attributes attr) {
+        if (attr == null || byAttr == null) return null;
+        // пробуем ключи: lower-case, UPPER, как есть
+        String k1 = attr.name().toLowerCase(Locale.ROOT);
+        Rule r = byAttr.get(k1);
+        if (r != null) return r;
+        Rule r2 = byAttr.get(attr.name());
+        if (r2 != null) return r2;
+        return byAttr.get(attr.toString());
+    }
 
-    public String summary() { return "attrs=" + byAttr.size(); }
+    // +++ НОВОЕ: cap() для PlayerStatsAttachment
+    public int cap(Attributes attr) {
+        Rule r = get(attr);
+        return r != null ? r.cap() : 99;
+    }
 
+    // +++ НОВОЕ: summary() для BalanceData
+    public String summary() {
+        int n = (byAttr != null) ? byAttr.size() : 0;
+        return "AttributesBalance{rules=" + n
+                + ", baseHP=" + (base != null ? base.baseMaxHealth() : Base.DEFAULT.baseMaxHealth())
+                + ", baseMP=" + (base != null ? base.baseMaxMana() : Base.DEFAULT.baseMaxMana())
+                + "}";
+    }
+
+    /** Коэффициенты для конкретного атрибута (на 1 очко). */
     public record Rule(
             int cap,
             double maxHealthPer,
-            double maxManaPer,
             double regenHpPer,
+            double maxManaPer,
             double regenMpPer,
-            double critChancePer,
-            double evasionPer,
-            double meleeDamagePer,
-            double spellPowerPer,
-            double castSpeedPer
-    ) {}
+
+            float physMeleePer,
+            float physRangedPer,
+            float elemDamagePer,
+            float moveSpeedPctPer,
+
+            float baseCritChance,
+            float baseCritDamage,
+            float baseLifesteal,
+            float baseManasteal,
+            float evasionChancePer
+    ) {
+        public static final Codec<Rule> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.INT.optionalFieldOf("cap", 99).forGetter(Rule::cap),
+
+                Codec.DOUBLE.optionalFieldOf("max_health_per", 0.0).forGetter(Rule::maxHealthPer),
+                Codec.DOUBLE.optionalFieldOf("regen_hp_per",   0.0).forGetter(Rule::regenHpPer),
+
+                Codec.DOUBLE.optionalFieldOf("max_mana_per",  0.0).forGetter(Rule::maxManaPer),
+                Codec.DOUBLE.optionalFieldOf("regen_mp_per",  0.0).forGetter(Rule::regenMpPer),
+
+                Codec.FLOAT.optionalFieldOf("phys_melee_per",     0.0f).forGetter(Rule::physMeleePer),
+                Codec.FLOAT.optionalFieldOf("phys_ranged_per",    0.0f).forGetter(Rule::physRangedPer),
+                Codec.FLOAT.optionalFieldOf("elem_damage_per",    0.0f).forGetter(Rule::elemDamagePer),
+                Codec.FLOAT.optionalFieldOf("move_speed_pct_per", 0.0f).forGetter(Rule::moveSpeedPctPer),
+
+                Codec.FLOAT.optionalFieldOf("base_crit_chance",   0.0f).forGetter(Rule::baseCritChance),
+                Codec.FLOAT.optionalFieldOf("base_crit_damage",   0.5f).forGetter(Rule::baseCritDamage),
+                Codec.FLOAT.optionalFieldOf("base_lifesteal",     0.0f).forGetter(Rule::baseLifesteal),
+                Codec.FLOAT.optionalFieldOf("base_manasteal",     0.0f).forGetter(Rule::baseManasteal),
+                Codec.FLOAT.optionalFieldOf("evasion_chance_per", 0.01f).forGetter(Rule::evasionChancePer)
+        ).apply(i, Rule::new));
+    }
+
+    /** Базовые (additive) значения, не зависящие от атрибутов. */
+    public record Base(
+            float baseMaxHealth,
+            float baseRegenHealth,
+            float baseMaxMana,
+            float baseRegenMana
+    ) {
+        public static final Base DEFAULT = new Base(100f, 1f, 100f, 1f);
+
+        public static final Codec<Base> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.FLOAT.optionalFieldOf("max_health",   100f).forGetter(Base::baseMaxHealth),
+                Codec.FLOAT.optionalFieldOf("regen_health", 1f).forGetter(Base::baseRegenHealth),
+                Codec.FLOAT.optionalFieldOf("max_mana",     100f).forGetter(Base::baseMaxMana),
+                Codec.FLOAT.optionalFieldOf("regen_mana",   1f).forGetter(Base::baseRegenMana)
+        ).apply(i, Base::new));
+    }
 }
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\codec\AttributesBalance.java -----n
@@ -4727,59 +4762,122 @@ package com.doomspire.grimcore.stat;
 
 import com.doomspire.grimcore.affix.AffixAggregator;
 import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.datapack.Balance;
+import com.doomspire.grimcore.datapack.codec.AttributesBalance;
 import net.minecraft.world.entity.LivingEntity;
 
+import java.util.function.Function;
 
-//NOTE:Пересчитывает агрегированные статы (StatSnapshot) на основе атрибутов, предметов и бонусов.
-//NOTE:Вызов: при изменении атрибутов/уровня/экипировки/эффектов.
+// NOTE: Пересчитывает агрегированные статы (StatSnapshot) на основе атрибутов, предметов и бонусов.
+// NOTE: Баланс (коэффициенты на 1 очко атрибута) берётся из datapack: data/<ns>/balance/attributes.json.
+//       Все константы ниже имеют фолбэки, если в датапаке поля не определены.
 
 public class StatCalculator {
+
+    // ---- helpers to read rules from Balance ----
+    private static AttributesBalance.Rule rule(Attributes attr) {
+        var m = Balance.attributes().byAttr();
+        return m != null ? m.get(attr) : null;
+    }
+
+    // double getter -> float result (для *_per c типом double в кодеке)
+    private static float readD(AttributesBalance.Rule r,
+                               java.util.function.ToDoubleFunction<AttributesBalance.Rule> getter,
+                               float def) {
+        if (r == null) return def;
+        return (float) getter.applyAsDouble(r);
+    }
+
+    // float getter -> float result (для новых полей с типом float в кодеке)
+    private static float readF(AttributesBalance.Rule r,
+                               java.util.function.Function<AttributesBalance.Rule, Float> getter,
+                               float def) {
+        if (r == null) return def;
+        Float v = getter.apply(r);
+        return v != null ? v : def;
+    }
 
     public static StatSnapshot calculate(PlayerStatsAttachment att) {
         StatSnapshot snapshot = new StatSnapshot();
 
-        // Атрибуты
-        int vit = att.getAttribute(Attributes.VITALITY);
-        int str = att.getAttribute(Attributes.STRENGTH);
-        int intl = att.getAttribute(Attributes.INTELLIGENCE);
+        int vit    = att.getAttribute(Attributes.VITALITY);
+        int str    = att.getAttribute(Attributes.STRENGTH);
+        int intel  = att.getAttribute(Attributes.INTELLIGENCE);
         int spirit = att.getAttribute(Attributes.SPIRIT);
-        int dex = att.getAttribute(Attributes.DEXTERITY);
-        int eva = att.getAttribute(Attributes.EVASION);
+        int dex    = att.getAttribute(Attributes.DEXTERITY);
+        int eva    = att.getAttribute(Attributes.EVASION);
 
-        // Примеры формул (значения можно вынести в JSON balance/attributes.json)
-        snapshot.maxHealth   = 100 + vit * 20;
-        snapshot.regenHealth = 1 + vit * 1;
+        var rVit = rule(Attributes.VITALITY);
+        var rSpr = rule(Attributes.SPIRIT);
+        var rDex = rule(Attributes.DEXTERITY);
+        var rStr = rule(Attributes.STRENGTH);
+        var rInt = rule(Attributes.INTELLIGENCE);
+        var rEva = rule(Attributes.EVASION);
 
-        snapshot.maxMana   = 100 + spirit * 30;
-        snapshot.regenMana = 1 + spirit * 3;
+        // --------- БАЗА: можно читать из datapack (см. комментарий-шаблон ниже) ---------
+        // ⚠ Если хочешь настраивать базу из datapack, раскомментируй блок ниже
+        //   и удали хардкоды:
+        //
+        // var base = Balance.attributes().base();
+        // final float BASE_HP  = base.baseMaxHealth();
+        // final float BASE_HPR = base.baseRegenHealth();
+        // final float BASE_MP  = base.baseMaxMana();
+        // final float BASE_MPR = base.baseRegenMana();
+        //
+        final float BASE_HP  = 100f;
+        final float BASE_HPR = 1f;
+        final float BASE_MP  = 100f;
+        final float BASE_MPR = 1f;
 
-        snapshot.damage.put(DamageTypes.PHYS_MELEE,  str * 0.03f);
-        snapshot.damage.put(DamageTypes.PHYS_RANGED, dex * 0.03f);
-        snapshot.damage.put(DamageTypes.FIRE,        intl * 0.02f);
-        snapshot.damage.put(DamageTypes.FROST,       intl * 0.02f);
-        snapshot.damage.put(DamageTypes.LIGHTNING,   intl * 0.02f);
-        snapshot.damage.put(DamageTypes.POISON,      intl * 0.02f);
+        // Vitality → HP/HP-regen
+        float hpPerVit  = readD(rVit, AttributesBalance.Rule::maxHealthPer, 20f);
+        float hprPerVit = readD(rVit, AttributesBalance.Rule::regenHpPer,   1f);
 
-        snapshot.critChance     = 0f;       // 1% за очко — добавим позже при балансировке
-        snapshot.critDamage     = 0.5f;     // +50% базово
-        snapshot.lifesteal      = 0f;
-        snapshot.manasteal      = 0f;
-        snapshot.evasionChance  = eva * 0.01f;
-        snapshot.moveSpeedPct   = dex * 0.25D; // 0.25% за 1 DEX
+        snapshot.maxHealth   = BASE_HP  + vit * hpPerVit;
+        snapshot.regenHealth = BASE_HPR + vit * hprPerVit;
 
-        // Глобальная редукция входящего урона.
-        // Пока = 0, позже сюда добавим:
-        //  - AffixAggregator (из экипировки/бижутерии/аур),
-        //  - классовые/баф-эффекты,
-        //  - возможные бонусы от атрибутов/скилл-дерева.
-        snapshot.damageReductionAll = 0f;
+        // Spirit → MP/MP-regen
+        float mpPerSpr  = readD(rSpr, AttributesBalance.Rule::maxManaPer, 30f);
+        float mprPerSpr = readD(rSpr, AttributesBalance.Rule::regenMpPer,  3f);
 
-        // Клампы безопасных диапазонов (если потребуется)
-        snapshot.evasionChance = clamp01(snapshot.evasionChance);
+        snapshot.maxMana   = BASE_MP  + spirit * mpPerSpr;
+        snapshot.regenMana = BASE_MPR + spirit * mprPerSpr;
+
+        // Уроновые коэффициенты
+        float physMeleePerStr  = readF(rStr, AttributesBalance.Rule::physMeleePer,   0.03f);
+        float physRangedPerDex = readF(rDex, AttributesBalance.Rule::physRangedPer,  0.03f);
+        float elemPerInt       = readF(rInt, AttributesBalance.Rule::elemDamagePer,  0.02f);
+
+        snapshot.damage.put(DamageTypes.PHYS_MELEE,  str * physMeleePerStr);
+        snapshot.damage.put(DamageTypes.PHYS_RANGED, dex * physRangedPerDex);
+        snapshot.damage.put(DamageTypes.FIRE,        intel * elemPerInt);
+        snapshot.damage.put(DamageTypes.FROST,       intel * elemPerInt);
+        snapshot.damage.put(DamageTypes.LIGHTNING,   intel * elemPerInt);
+        snapshot.damage.put(DamageTypes.POISON,      intel * elemPerInt);
+
+        // Базовые боёвые параметры (аффиксы прилетят позже через Aggregator)
+        snapshot.critChance    = readF(rDex, AttributesBalance.Rule::baseCritChance, 0f);
+        snapshot.critDamage    = readF(rDex, AttributesBalance.Rule::baseCritDamage, 0.5f);
+        snapshot.lifesteal     = readF(rStr, AttributesBalance.Rule::baseLifesteal,  0f);
+        snapshot.manasteal     = readF(rSpr, AttributesBalance.Rule::baseManasteal,  0f);
+        snapshot.evasionChance = eva * readF(rEva, AttributesBalance.Rule::evasionChancePer, 0.01f);
+
+        // Скорость передвижения (в процентах для StatEffects → MOVEMENT_SPEED)
+        snapshot.moveSpeedPct  = dex * readF(rDex, AttributesBalance.Rule::moveSpeedPctPer, 0.25f);
+
         snapshot.damageReductionAll = clamp01(snapshot.damageReductionAll);
-
+        snapshot.evasionChance      = clamp01(snapshot.evasionChance);
         return snapshot;
     }
+
+    private static void applyResistAll(StatSnapshot s) {
+        if (s.resistAll == 0f) return;
+        float m = 1f + s.resistAll;
+        for (var k : s.resistances.keySet()) {
+            s.resistances.computeIfPresent(k, (kk, v) -> v * m);
+        }
+    }
+
     /**
      * Полный расчёт со всеми модификаторами предметов/аффиксов.
      * ВНИМАНИЕ: owner может быть null — тогда вернётся чистая версия без аффиксов.
@@ -4788,9 +4886,11 @@ public class StatCalculator {
         StatSnapshot snap = calculate(att);
         if (owner != null) {
             AffixAggregator.applyAll(snap, owner);
+            applyResistAll(snap);
         }
         return snap;
     }
+
     private static float clamp01(float v) {
         if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
         return Math.max(0f, Math.min(1f, v));
@@ -4892,16 +4992,95 @@ public class StatSnapshot {
      */
     public float damageReductionAll;
 
-    public StatSnapshot() {
-        for (DamageTypes type : DamageTypes.values()) {
-            damage.put(type, 0f);
-        }
-        for (ResistTypes type : ResistTypes.values()) {
-            resistances.put(type, 0f);
-        }
+    // ===== НОВЫЕ поля (добавляем) =====
+    /** Плоская броня: уменьшает входящий урон по своей формуле (см. калькулятор). */
+    public float armorFlat = 0f;
+
+    /** Общий множитель ко всем резистам, если хочешь «резист ко всем стихиям» одной ручкой. */
+    public float resistAll = 0f;            // доля: 0.10 = +10% ко всем resistances
+
+    /** Мультипликатор скорости атаки: 0.10 = +10% к базовой скорости. */
+    public float attackSpeed = 0f;
+
+
+    // при необходимости: blockChance, moveSpeed, critDamage, etc.
+
+    public StatSnapshot copy() {
+        StatSnapshot out = new StatSnapshot();
+        out.maxHealth = this.maxHealth;
+        out.regenHealth = this.regenHealth;
+        out.maxMana = this.maxMana;
+        out.regenMana = this.regenMana;
+        out.critChance = this.critChance;
+        out.damageReductionAll = this.damageReductionAll;
+
+        out.damage.putAll(this.damage);
+        out.resistances.putAll(this.resistances);
+
+        // новые
+        out.armorFlat = this.armorFlat;
+        out.resistAll = this.resistAll;
+        out.attackSpeed = this.attackSpeed;
+        out.lifesteal = this.lifesteal;
+        out.manasteal = this.manasteal;
+        out.evasionChance = this.evasionChance;
+
+        return out;
+    }
+
+    public void reset() {
+        maxHealth = regenHealth = 0f;
+        maxMana = regenMana = 0f;
+        critChance = 0f;
         damageReductionAll = 0f;
+        damage.clear();
+        resistances.clear();
+
+        armorFlat = 0f;
+        resistAll = 0f;
+        attackSpeed = 0f;
+        lifesteal = 0f;
+        manasteal = 0f;
+        evasionChance = 0f;
+    }
+
+    /** Сложение снапшотов (аккумуляция эффектов). */
+    public void add(StatSnapshot other) {
+        if (other == null) return;
+        maxHealth += other.maxHealth;
+        regenHealth += other.regenHealth;
+        maxMana += other.maxMana;
+        regenMana += other.regenMana;
+        critChance += other.critChance;
+        damageReductionAll += other.damageReductionAll;
+
+        for (var e : other.damage.entrySet()) {
+            damage.merge(e.getKey(), e.getValue(), Float::sum);
+        }
+        for (var e : other.resistances.entrySet()) {
+            resistances.merge(e.getKey(), e.getValue(), Float::sum);
+        }
+
+        // новые
+        armorFlat += other.armorFlat;
+        resistAll += other.resistAll;
+        attackSpeed += other.attackSpeed;
+        lifesteal += other.lifesteal;
+        manasteal += other.manasteal;
+        evasionChance += other.evasionChance;
     }
 }
+
+    //public StatSnapshot() {
+    //    for (DamageTypes type : DamageTypes.values()) {
+    //        damage.put(type, 0f);
+    //    }
+    //    for (ResistTypes type : ResistTypes.values()) {
+    //        resistances.put(type, 0f);
+    //    }
+    //    damageReductionAll = 0f;
+    //}
+
 
 n----- END FILE: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatSnapshot.java -----n
 ----- BEGIN FILE: .\grimcore\src\main\java\com\doomspire\grimcore\xp\LevelTable.java -----
@@ -5164,6 +5343,152 @@ public final class AffixImbueService {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\AffixImbueService.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixes.java -----
+package com.doomspire.grimfate.affix;
+
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimcore.affix.ModAffixes;
+import com.doomspire.grimcore.datapack.Balance;
+import com.doomspire.grimcore.datapack.codec.AttributesBalance;
+import com.doomspire.grimcore.stat.DamageTypes;
+import com.doomspire.grimcore.stat.ResistTypes;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+
+import java.lang.reflect.Field;
+
+/**
+ * Регистрация поведения аффиксов контента grimfate.
+ * Данные (defs/pools/rarities) остаются в grimcore; тут только "что делает" каждый affix.id со StatSnapshot.
+ */
+public final class GrimfateAffixes {
+    private GrimfateAffixes(){}
+
+    private static ResourceLocation rl(String path) {
+        return ResourceLocation.fromNamespaceAndPath("grimfate", path);
+    }
+
+    /** Вызывай в commonSetup() ПОСЛЕ ModAffixes.bootstrap(). */
+    public static void registerAll() {
+        // ====== core из предыдущего блока (оставляем) ======
+        // 1) +Vitality (ед.) -> конвертируем по balance/attributes.json
+        ModAffixes.register(new Simple(rl("plus_vitality"), (snap, mag, src) -> {
+            var rule = Balance.attributes().byAttr().get(com.doomspire.grimcore.stat.Attributes.VITALITY);
+            double hpPer = (rule != null ? rule.maxHealthPer() : 6.0);
+            double regen = (rule != null ? rule.regenHpPer()   : 0.0);
+            float before = snap.maxHealth;
+            snap.maxHealth   += (float) (mag * hpPer);
+            snap.regenHealth += (float) (mag * regen);
+            org.slf4j.LoggerFactory.getLogger("Grim/Affix")
+                    .info("[Affix] plus_vitality mag={} → HP {} -> {}", mag, before, snap.maxHealth);
+        }));
+
+
+        // 2) +Strength (ед.) -> усиливаем физический ближний урон (примерная калибровка 3%/ед.)
+        ModAffixes.register(new Simple(rl("plus_strength"), (snap, mag, src) ->
+                snap.damage.merge(DamageTypes.PHYS_MELEE, (float)(mag * 0.03f), Float::sum)
+        ));
+
+        // 3) +% Physical Damage (доля) -> добавляем к обоим физ. типам
+        ModAffixes.register(new Simple(rl("phys_damage_percent"), (snap, mag, src) -> {
+            snap.damage.merge(DamageTypes.PHYS_MELEE,  (float)mag, Float::sum);
+            snap.damage.merge(DamageTypes.PHYS_RANGED, (float)mag, Float::sum);
+        }));
+
+        // --- НОВЫЕ ПОДКЛЮЧЕННЫЕ СТАТЫ ---
+
+        // attack_speed (доля): 0.10 = +10%
+        ModAffixes.register(new Simple(rl("attack_speed"), (snap, mag, src) -> {
+            snap.attackSpeed += (float)mag;
+        }));
+
+        // armor_flat (плоско)
+        ModAffixes.register(new Simple(rl("armor_flat"), (snap, mag, src) -> {
+            snap.armorFlat += (float)mag;
+        }));
+
+        // resist_all_percent (доля ко всем резистам)
+        ModAffixes.register(new Simple(rl("resist_all_percent"), (snap, mag, src) -> {
+            snap.resistAll += (float)mag;
+        }));
+
+        // lifesteal (доля)
+        ModAffixes.register(new Simple(rl("lifesteal"), (snap, mag, src) -> {
+            snap.lifesteal += (float)mag;
+        }));
+
+        // manasteal (доля)
+        ModAffixes.register(new Simple(rl("manasteal"), (snap, mag, src) -> {
+            snap.manasteal += (float)mag;
+        }));
+
+        // evasion_chance (доля)
+        ModAffixes.register(new Simple(rl("evasion_chance"), (snap, mag, src) -> {
+            snap.evasionChance += (float)mag;
+        }));
+
+        // crit_chance_percent — оставляем
+        ModAffixes.register(new Simple(rl("crit_chance_percent"), (snap, mag, src) ->
+                snap.critChance += (float)mag
+        ));
+    }
+
+    // ---------------- helpers ----------------
+
+    private static void addAttackSpeed(StatSnapshot snap, float v) {
+        try {
+            // наиболее вероятное имя поля
+            Field f = StatSnapshot.class.getField("attackSpeed");
+            f.setFloat(snap, f.getFloat(snap) + v);
+        } catch (NoSuchFieldException nf) {
+            // если поля нет — ничего не делаем (чтобы не падать). Можем позже свести в общий "multipliers" если появится.
+        } catch (Throwable t) {
+            // игнорим, чтобы не сломать применение остальных аффиксов
+        }
+    }
+
+    private static void addArmorFlat(StatSnapshot snap, float v) {
+        // пробуем «armorFlat», затем «armor»
+        if (!tryIncFloatField(snap, "armorFlat", v)) {
+            if (!tryIncFloatField(snap, "armor", v)) {
+                // как fallback можно сместить в damageReductionAll через кривую, но это уже другая модель; оставим как no-op
+            }
+        }
+    }
+
+    private static void addResistAllPercent(StatSnapshot snap, float v) {
+        // 1) если есть общий агрегат resistAll — используем его
+        if (tryIncFloatField(snap, "resistAll", v)) return;
+
+        // 2) иначе разнесём по всем типам из enum ResistTypes
+        try {
+            for (ResistTypes type : ResistTypes.values()) {
+                snap.resistances.merge(type, v, Float::sum);
+            }
+        } catch (Throwable t) {
+            // игнор — в худшем случае ни на что не повлияем, но и не упадём
+        }
+    }
+
+    private static boolean tryIncFloatField(Object obj, String field, float add) {
+        try {
+            Field f = obj.getClass().getField(field);
+            f.setFloat(obj, f.getFloat(obj) + add);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /** Упрощённый Affix-носитель. */
+    private record Simple(ResourceLocation id, Applier fn) implements Affix {
+        @Override public ResourceLocation id() { return id; }
+        @Override public void apply(StatSnapshot out, float magnitude, Source source) { fn.apply(out, magnitude, source); }
+        @FunctionalInterface private interface Applier { void apply(StatSnapshot out, float mag, Source src); }
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixes.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java -----
 package com.doomspire.grimfate.affix;
 
@@ -5201,9 +5526,9 @@ public final class GrimfateAffixExtraction {
 
         // 3) Curios (бижутерия), если мод загружен
         if (CuriosCompat.isLoaded()) {
-            // CuriosCompat.forEachEquipped(entity, (stack, slotId) -> {
-            //     appendFromStack(stack, b, Affix.Source.JEWELRY);
-            // });
+            CuriosCompat.forEachEquipped(entity, (stack, slotId) -> {
+                appendFromStack(stack, b, Affix.Source.JEWELRY);
+            });
         }
 
         // 4) Бафы/ауры — TODO позже
@@ -5281,9 +5606,10 @@ import net.minecraft.world.item.Item;
 
 import java.util.*;
 
-/*
-//NOTE: Сервис роллинга предметов. Генерирует редкость и аффиксы на основе пулов, уровня и источника. Пишет в AffixListComponent.
-*/
+/**
+ * Сервис роллинга предметов. Генерирует редкость и аффиксы на основе пулов, уровня и источника.
+ * Пишет в AffixListComponent (включая rarityId).
+ */
 public final class RollService {
     private RollService() {}
 
@@ -5309,25 +5635,25 @@ public final class RollService {
     public static AffixListComponent roll(Item item, Set<TagKey<Item>> itemTags, Affix.Source source, int itemLevel, RandomSource random) {
         // --- Жёсткий предохранитель: только наш гир (namespace + целевые теги) ---
         if (!isOurGear(item, itemTags)) {
-            return new AffixListComponent(List.of());
+            return new AffixListComponent("", List.of());
         }
 
         // 1) Редкость
         Optional<RarityDef> rarityOpt = RarityDataManager.INSTANCE.sample(random);
         if (rarityOpt.isEmpty()) {
-            return new AffixListComponent(List.of());
+            return new AffixListComponent("", List.of());
         }
         RarityDef rarity = rarityOpt.get();
 
         int maxAffixes = rarity.sampleMaxAffixes(random);
         if (maxAffixes <= 0) {
-            return new AffixListComponent(List.of());
+            return new AffixListComponent(rarity.id().toString(), List.of());
         }
 
         // 2) Пулы
         List<AffixPoolDef> pools = AffixPoolDataManager.INSTANCE.filterApplicable(item, itemTags, source, itemLevel);
         if (pools.isEmpty()) {
-            return new AffixListComponent(List.of());
+            return new AffixListComponent(rarity.id().toString(), List.of());
         }
 
         // 3) Генерация
@@ -5339,7 +5665,7 @@ public final class RollService {
             var affixOpt = AffixPoolDataManager.INSTANCE.sample(pool, itemLevel, random);
             if (affixOpt.isEmpty()) continue;
 
-            var picked = affixOpt.get();
+            var picked  = affixOpt.get();
             var affixId = picked.affixId();
 
             // Повторы по id — только если пул это разрешает
@@ -5369,7 +5695,8 @@ public final class RollService {
             used.add(affixId);
         }
 
-        return new AffixListComponent(entries);
+        // Возвращаем компонент с rarityId + entries (entries может быть пустым → это валидная «серая» редкость)
+        return new AffixListComponent(rarity.id().toString(), entries);
     }
 }
 
@@ -6219,6 +6546,101 @@ public class BaseArmorRenderer extends GeoArmorRenderer<NoAnimGeoArmorItem> {
 }
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\render\armor\BaseArmorRenderer.java -----n
+----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\tooltip\AffixTooltipHandler.java -----
+package com.doomspire.grimfate.client.tooltip;
+
+import com.doomspire.grimcore.affix.rarity.RarityDataManager;
+import com.doomspire.grimcore.affix.rarity.RarityDef;
+import com.doomspire.grimfate.item.comp.AffixListComponent;
+import com.doomspire.grimfate.registry.ModDataComponents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+
+import java.util.List;
+
+public final class AffixTooltipHandler {
+
+    @SubscribeEvent
+    public static void onTooltip(ItemTooltipEvent e) {
+        ItemStack stack = e.getItemStack();
+        var compType = ModDataComponents.AFFIX_LIST.get();
+        AffixListComponent comp = stack.get(compType);
+        if (comp == null) return;
+
+        List<AffixListComponent.Entry> entries = comp.entries();
+        if (entries == null || entries.isEmpty()) return;
+
+        // ===== Заголовок по редкости =====
+        String rarityId = comp.rarityId(); // требуется обновлённый AffixListComponent
+        if (rarityId != null && !rarityId.isEmpty()) {
+            var defOpt = RarityDataManager.INSTANCE.get(ResourceLocation.tryParse(rarityId));
+            if (defOpt.isPresent()) {
+                RarityDef def = defOpt.get(); // содержит display_key и text_color
+
+                String titleKey = def.displayKey().isEmpty()
+                        ? ("rarity." + def.id().getNamespace() + "." + def.id().getPath())
+                        : def.displayKey();
+
+                MutableComponent title = Component.translatable(titleKey);
+                int rgb = def.textColor();
+                title.withStyle(s -> s.withColor(rgb).withBold(true));
+                e.getToolTip().add(title);
+            }
+        } else {
+            // Фолбэк (если по какой-то причине редкость не была сохранена)
+            e.getToolTip().add(Component.literal("Affixes")
+                    .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        }
+
+        // ===== Список аффиксов =====
+        for (AffixListComponent.Entry en : entries) {
+            String nice  = prettifyId(en.id());      // человекочитаемое имя
+            String rolls = formatRolls(en.rolls());  // "0.12, 0.34"
+
+            MutableComponent line = rolls.isEmpty()
+                    ? Component.literal("• " + nice)
+                    : Component.literal("• " + nice + " (" + rolls + ")");
+
+            line.withStyle(ChatFormatting.BLUE);
+            e.getToolTip().add(line);
+        }
+    }
+
+    private static String prettifyId(String id) {
+        if (id == null || id.isEmpty()) return "?";
+        int colon = id.indexOf(':');
+        String tail = colon >= 0 ? id.substring(colon + 1) : id;
+        int slash = tail.lastIndexOf('/');
+        String base = (slash >= 0 ? tail.substring(slash + 1) : tail).replace('_', ' ');
+        String[] parts = base.split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (String p : parts) {
+            if (p.isEmpty()) continue;
+            sb.append(Character.toUpperCase(p.charAt(0)));
+            if (p.length() > 1) sb.append(p.substring(1));
+            sb.append(' ');
+        }
+        return sb.toString().trim();
+    }
+
+    private static String formatRolls(List<Float> rolls) {
+        if (rolls == null || rolls.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < rolls.size(); i++) {
+            float v = rolls.get(i);
+            sb.append(String.format("%.2f", v));
+            if (i + 1 < rolls.size()) sb.append(", ");
+        }
+        return sb.toString();
+    }
+}
+
+n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\client\tooltip\AffixTooltipHandler.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\combat\WeaponPredicates.java -----
 package com.doomspire.grimfate.combat;
 
@@ -6626,6 +7048,7 @@ package com.doomspire.grimfate.core;
 
 import com.doomspire.grimcore.affix.AffixAggregator;
 import com.doomspire.grimcore.affix.ModAffixes;
+import com.doomspire.grimfate.affix.GrimfateAffixes;
 import com.doomspire.grimfate.commands.AddSpellCommand;
 import com.doomspire.grimfate.config.ClientConfig;
 import com.doomspire.grimfate.item.armor.Armors;
@@ -6748,6 +7171,7 @@ public class Grimfate {
 
             // Аффиксы
             ModAffixes.bootstrap();
+            GrimfateAffixes.registerAll();
             AffixAggregator.setExtractor(com.doomspire.grimfate.affix.GrimfateAffixExtraction::extractFromEntity);
 
             LOGGER.info("[Grimfate] Creative tabs registered; AffixAggregator hooked; integrations bootstrapped.");
@@ -6852,6 +7276,9 @@ public final class GrimfateClient {
         modBus.addListener(Hotkeys::onRegisterKeys);
         modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) ->
                 e.enqueueWork(com.doomspire.grimfate.client.BowModelProperties::register));
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(
+                com.doomspire.grimfate.client.tooltip.AffixTooltipHandler.class
+        );
 
     }
 
@@ -7385,8 +7812,8 @@ import net.minecraft.network.codec.StreamCodec;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Хранилище выбранных аффиксов (id + роллы). Эффекты подключим позже. */
-public record AffixListComponent(List<Entry> entries) {
+/** Хранилище выбранных аффиксов (id + роллы) + редкость предмета. */
+public record AffixListComponent(String rarityId, List<Entry> entries) {
 
     public record Entry(String id, List<Float> rolls) {
         public static final Codec<Entry> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -7396,13 +7823,17 @@ public record AffixListComponent(List<Entry> entries) {
     }
 
     public static final Codec<AffixListComponent> CODEC =
-            Entry.CODEC.listOf().xmap(AffixListComponent::new, AffixListComponent::entries);
+            RecordCodecBuilder.create(i -> i.group(
+                    Codec.STRING.optionalFieldOf("rarity", "").forGetter(AffixListComponent::rarityId),
+                    Entry.CODEC.listOf().fieldOf("entries").forGetter(AffixListComponent::entries)
+            ).apply(i, AffixListComponent::new));
 
     /** Для сетевой синхронизации data-component. */
     public static final StreamCodec<RegistryFriendlyByteBuf, AffixListComponent> STREAM_CODEC =
             new StreamCodec<>() {
                 @Override
                 public AffixListComponent decode(RegistryFriendlyByteBuf buf) {
+                    String rarity = buf.readUtf();
                     int n = buf.readVarInt();
                     List<Entry> list = new ArrayList<>(n);
                     for (int i = 0; i < n; i++) {
@@ -7412,10 +7843,11 @@ public record AffixListComponent(List<Entry> entries) {
                         for (int j = 0; j < m; j++) rolls.add(buf.readFloat());
                         list.add(new Entry(id, rolls));
                     }
-                    return new AffixListComponent(list);
+                    return new AffixListComponent(rarity, list);
                 }
                 @Override
                 public void encode(RegistryFriendlyByteBuf buf, AffixListComponent v) {
+                    buf.writeUtf(v.rarityId() == null ? "" : v.rarityId());
                     List<Entry> list = v.entries();
                     buf.writeVarInt(list.size());
                     for (Entry e : list) {
@@ -7818,7 +8250,6 @@ public final class AddItemModifier extends LootModifier {
 
 n----- END FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddItemModifier.java -----n
 ----- BEGIN FILE: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddTagItemsModifier.java -----
-// src/main/java/com/doomspire/grimfate/loot/modifier/AddTagItemsModifier.java
 package com.doomspire.grimfate.loot.modifier;
 
 import com.google.common.base.Suppliers;
@@ -7834,8 +8265,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.IntProvider;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.LootModifier;
@@ -7883,12 +8313,11 @@ public final class AddTagItemsModifier extends LootModifier {
 
             TagKey<Item> key = TagKey.create(Registries.ITEM, tagId);
 
-            // ВАЖНО: используем get(key), не getOrThrow — чтобы не падать, если тег пуст/не найден
+            // Мягко читаем тег (не кидаем исключение, если его нет)
             Optional<HolderSet.Named<Item>> optSet = itemsLookup.get(key);
             if (optSet.isEmpty()) return loot;
 
             HolderSet<Item> set = optSet.get();
-            if (set.size() <= 0) return loot;
 
             RandomSource rnd = ctx.getRandom();
             Optional<Holder<Item>> picked = set.getRandomElement(rnd);
@@ -7897,17 +8326,81 @@ public final class AddTagItemsModifier extends LootModifier {
             int n = Math.max(0, count.sample(rnd));
             if (n <= 0) return loot;
 
-            loot.add(new ItemStack(picked.get().value(), n));
+            ItemStack stack = new ItemStack(picked.get().value(), n);
+            loot.add(stack);
+
+            // === ЛОГ №1: предмет добавлен из тега
+            var rk = stack.getItem().builtInRegistryHolder().key();
+            String idStr = (rk != null) ? rk.location().toString() : "?";
+            LOG.info("[AddTagItems] +{} {} from tag {}", n, idStr, tagId);
+
+            // === Имбую аффиксы сразу для только что добавленного предмета
+            tryImbueAffixes(stack, ctx);
+
             return loot;
         } catch (Throwable t) {
             LOG.warn("[AddTagItems] tag={} failed: {}", tagId, t.toString());
-            return loot; // Никогда не валим генерацию сундука
+            return loot; // Никогда не валим генерацию лута
         }
     }
 
     @Override
     public MapCodec<? extends net.neoforged.neoforge.common.loot.IGlobalLootModifier> codec() {
         return CODEC.get();
+    }
+
+    // ======== AFFIX IMBUE (локальный, согласован с RollAffixesLootModifier) ===================
+
+    private static final String MODID = "grimfate";
+
+    private static final TagKey<Item> TAG_WEAPONS =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/weapons"));
+    private static final TagKey<Item> TAG_ARMORS  =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/armors"));
+    private static final TagKey<Item> TAG_JEWELRY =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/jewelry"));
+
+    private static boolean isOurs(ItemStack stack) {
+        var key = stack.getItem().builtInRegistryHolder().key();
+        return key != null && MODID.equals(key.location().getNamespace());
+    }
+
+    private static boolean isAffixable(ItemStack stack) {
+        return stack.is(TAG_WEAPONS) || stack.is(TAG_ARMORS) || stack.is(TAG_JEWELRY);
+    }
+
+    private static com.doomspire.grimcore.affix.Affix.Source guessSource(Item item) {
+        if (item instanceof ArmorItem)  return com.doomspire.grimcore.affix.Affix.Source.ARMOR;
+        if (item instanceof ShieldItem) return com.doomspire.grimcore.affix.Affix.Source.SHIELD;
+        if (item instanceof BowItem || item instanceof CrossbowItem || item instanceof TridentItem) {
+            return com.doomspire.grimcore.affix.Affix.Source.WEAPON;
+        }
+        return com.doomspire.grimcore.affix.Affix.Source.WEAPON;
+    }
+
+    /**
+     * Имбуем аффиксы сразу на добавленный стак. Те же предохранители:
+     * только grimfate + только наши лут-теги + не перезаписываем существующие.
+     * Пишем лог результата.
+     */
+    private static void tryImbueAffixes(ItemStack stack, LootContext ctx) {
+        try {
+            if (stack.isEmpty() || !isOurs(stack) || !isAffixable(stack)) return;
+            if (com.doomspire.grimfate.item.comp.AffixListHelper.has(stack)) return; // уважаем уже «наполненные»
+
+            var src = guessSource(stack.getItem());
+            int itemLevel = 1; // см. default в глобальном роллере
+            com.doomspire.grimfate.item.comp.AffixListHelper.rollAndApply(
+                    stack, src, itemLevel, ctx.getRandom()
+            );
+
+            // === ЛОГ №2: результат имбью
+            LOG.info("[AddTagItems] imbue: item={} has={}",
+                    stack.getHoverName().getString(),
+                    com.doomspire.grimfate.item.comp.AffixListHelper.has(stack));
+        } catch (Throwable t) {
+            LOG.debug("[AddTagItems] imbue skipped: {}", t.toString());
+        }
     }
 }
 
@@ -8028,8 +8521,8 @@ package com.doomspire.grimfate.loot;
 
 import com.doomspire.grimcore.affix.Affix;
 import com.doomspire.grimfate.core.Grimfate;
+import com.doomspire.grimfate.item.BaseBowItem;
 import com.doomspire.grimfate.item.comp.AffixListHelper;
-import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -8042,21 +8535,9 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.LootModifier;
-import org.slf4j.Logger;
 
 import java.util.*;
 
-/*
-//NOTE: Global Loot Modifier — навешивает аффиксы только на наше снаряжение (grimfate: оружие/броня/бижутерия).
-/**
- * Жёсткие правила:
- *  1) Только предметы из namespace "grimfate".
- *  2) Только если предмет помечен тегами: #grimfate:loot/weapons | armors | jewelry.
- *  3) Уважать replace_existing=false — не трогаем уже «наполненные» предметы.
- *  4) Уровень — через внешний ItemLevelResolver (по умолчанию константа).
- *
- * В связке с AffixListHelper.rollAndApply(): пустой результат не записывается → стакинг не ломается.
- */
 public final class RollAffixesLootModifier extends LootModifier {
 
     private static final String MODID = "grimfate";
@@ -8085,7 +8566,6 @@ public final class RollAffixesLootModifier extends LootModifier {
     private final boolean replaceExisting;
     private final int defaultItemLevel;
 
-    // Теги наших категорий
     private static final net.minecraft.tags.TagKey<Item> TAG_WEAPONS =
             net.minecraft.tags.TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/weapons"));
     private static final net.minecraft.tags.TagKey<Item> TAG_ARMORS  =
@@ -8127,6 +8607,13 @@ public final class RollAffixesLootModifier extends LootModifier {
             // 1) Обрабатываем только наше снаряжение (по тегам)
             if (!isAffixable(stack)) continue;
 
+// === ЛОГ №A: предмет прошёл ns+tag-фильтр
+            var rk = stack.getItem().builtInRegistryHolder().key();
+            Object loc = (rk != null) ? rk.location() : null;
+            Grimfate.LOGGER.info("[AFFIX-ROLL] pass ns+tag: {} ({})",
+                    stack.getHoverName().getString(), loc);
+
+
             // 2) Уважать уже «наполненные» предметы (если replace_existing=false)
             if (!replaceExisting && AffixListHelper.has(stack)) continue;
 
@@ -8138,10 +8625,10 @@ public final class RollAffixesLootModifier extends LootModifier {
             int itemLevel = ITEM_LEVEL_RESOLVER.resolve(context, stack, defaultItemLevel);
             AffixListHelper.rollAndApply(stack, src, itemLevel, rnd);
 
+            // === ЛОГ №B: результат ролла
             Grimfate.LOGGER.info("[AFFIX-ROLL] {} -> has={}",
                     stack.getHoverName().getString(),
                     AffixListHelper.has(stack));
-
         }
         return generatedLoot;
     }
@@ -8149,13 +8636,11 @@ public final class RollAffixesLootModifier extends LootModifier {
     @Override
     public MapCodec<? extends LootModifier> codec() { return CODEC; }
 
-    // Только предметы из нашего модпака (namespace == grimfate)
     private static boolean isFromOurMod(ItemStack stack) {
-        ResourceKey<Item> key = stack.getItem().builtInRegistryHolder().key(); // 1.21.1: прямой ключ
+        ResourceKey<Item> key = stack.getItem().builtInRegistryHolder().key();
         return key != null && MODID.equals(key.location().getNamespace());
     }
 
-    // Только предметы из наших тегов считаем «аффиксируемыми»
     private static boolean isAffixable(ItemStack stack) {
         return stack.is(TAG_WEAPONS) || stack.is(TAG_ARMORS) || stack.is(TAG_JEWELRY);
     }
@@ -8165,7 +8650,7 @@ public final class RollAffixesLootModifier extends LootModifier {
         if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
         if (item instanceof ShieldItem) return Affix.Source.SHIELD;
         if (item instanceof SwordItem)  return Affix.Source.WEAPON;
-        if (item instanceof BowItem || item instanceof CrossbowItem || item instanceof TridentItem) return Affix.Source.WEAPON;
+        if (item instanceof BaseBowItem || item instanceof CrossbowItem || item instanceof TridentItem) return Affix.Source.WEAPON;
         return Affix.Source.WEAPON;
     }
 }
@@ -10751,7 +11236,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\co
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\epic.json -----
 {
   "id": "grimfate:epic",
-  "weight": 2,
+  "weight": 15,
   "max_affixes": { "type": "uniform", "min_inclusive": 3, "max_inclusive": 4 },
   "rolls_per_affix": { "type": "constant", "value": 1 },
   "magnitude_scale": 1.30,
@@ -10764,7 +11249,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\ep
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\legendary.json -----
 {
   "id": "grimfate:legendary",
-  "weight": 0,
+  "weight": 5,
   "max_affixes": { "type": "uniform", "min_inclusive": 4, "max_inclusive": 5 },
   "rolls_per_affix": { "type": "constant", "value": 1 },
   "magnitude_scale": 1.50,
@@ -10777,12 +11262,12 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\le
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\rare.json -----
 {
   "id": "grimfate:rare",
-  "weight": 10,
+  "weight": 30,
   "max_affixes": { "type": "uniform", "min_inclusive": 2, "max_inclusive": 3 },
   "rolls_per_affix": { "type": "constant", "value": 1 },
   "magnitude_scale": 1.15,
   "display_key": "rarity.grimfate.rare",
-  "text_color": 16755200,
+  "text_color": 65535,
   "allow_duplicates": false
 }
 
@@ -10790,7 +11275,7 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\ra
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\uncommon.json -----
 {
   "id": "grimfate:uncommon",
-  "weight": 28,
+  "weight": 45,
   "max_affixes": { "type": "uniform", "min_inclusive": 1, "max_inclusive": 2 },
   "rolls_per_affix": { "type": "constant", "value": 1 },
   "magnitude_scale": 1.05,
@@ -10802,16 +11287,46 @@ n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\ra
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\affixes\rarities\uncommon.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\balance\attributes.json -----
 {
-  "attributes": {
-    "vitality":     { "cap": 99, "max_health_per": 6.0, "regen_hp_per": 0.06 },
-    "strength":     { "cap": 99, "melee_damage_per": 0.7 },
-    "intelligence": { "cap": 99, "spell_power_per": 0.7 },
-    "spirit":       { "cap": 99, "max_mana_per": 10.0, "regen_mp_per": 0.08 },
-    "dexterity":    { "cap": 99, "cast_speed_per": 0.5 },
-    "evasion":      { "cap": 100, "evasion_per": 0.5 }
+  "base": {
+    "max_health": 100.0,
+    "regen_health": 1.0,
+    "max_mana": 100.0,
+    "regen_mana": 1.0
+  },
+  "by_attr": {
+    "vitality": {
+      "cap": 99,
+      "max_health_per": 20.0,
+      "regen_hp_per": 1.0
+    },
+    "spirit": {
+      "cap": 99,
+      "max_mana_per": 10.0,
+      "regen_mp_per": 0.08,
+      "base_manasteal": 0.0
+    },
+    "dexterity": {
+      "cap": 99,
+      "phys_ranged_per": 0.03,
+      "move_speed_pct_per": 0.25,
+      "base_crit_chance": 0.00,
+      "base_crit_damage": 0.50
+    },
+    "strength": {
+      "cap": 99,
+      "phys_melee_per": 0.03,
+      "base_lifesteal": 0.00
+    },
+    "intelligence": {
+      "cap": 99,
+      "elem_damage_per": 0.02
+    },
+    "evasion": {
+      "cap": 99,
+      "evasion_chance_per": 0.01
+    }
   }
 }
-
 
 n----- END FILE: .\grimfate\src\main\resources\data\grimfate\balance\attributes.json -----n
 ----- BEGIN FILE: .\grimfate\src\main\resources\data\grimfate\balance\levels.json -----

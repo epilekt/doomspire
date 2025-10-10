@@ -34,9 +34,9 @@ public final class GrimfateAffixExtraction {
 
         // 3) Curios (бижутерия), если мод загружен
         if (CuriosCompat.isLoaded()) {
-            // CuriosCompat.forEachEquipped(entity, (stack, slotId) -> {
-            //     appendFromStack(stack, b, Affix.Source.JEWELRY);
-            // });
+            CuriosCompat.forEachEquipped(entity, (stack, slotId) -> {
+                appendFromStack(stack, b, Affix.Source.JEWELRY);
+            });
         }
 
         // 4) Бафы/ауры — TODO позже
@@ -89,6 +89,12 @@ public final class GrimfateAffixExtraction {
 
             if (mag == 0f) continue; // пропускаем «пустые» величины
             b.add(id, mag, src);
+            com.doomspire.grimfate.core.Grimfate.LOGGER.info(
+                    "[Affix][extract] stack={} id={} mag={} src={}",
+                    stack.getHoverName().getString(), id, mag, src
+            );
+
         }
+
     }
 }

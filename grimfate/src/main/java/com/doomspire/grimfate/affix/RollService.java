@@ -17,9 +17,10 @@ import net.minecraft.world.item.Item;
 
 import java.util.*;
 
-/*
-//NOTE: Сервис роллинга предметов. Генерирует редкость и аффиксы на основе пулов, уровня и источника. Пишет в AffixListComponent.
-*/
+/**
+ * Сервис роллинга предметов. Генерирует редкость и аффиксы на основе пулов, уровня и источника.
+ * Пишет в AffixListComponent (включая rarityId).
+ */
 public final class RollService {
     private RollService() {}
 
@@ -45,25 +46,25 @@ public final class RollService {
     public static AffixListComponent roll(Item item, Set<TagKey<Item>> itemTags, Affix.Source source, int itemLevel, RandomSource random) {
         // --- Жёсткий предохранитель: только наш гир (namespace + целевые теги) ---
         if (!isOurGear(item, itemTags)) {
-            return new AffixListComponent(List.of());
+            return new AffixListComponent("", List.of());
         }
 
         // 1) Редкость
         Optional<RarityDef> rarityOpt = RarityDataManager.INSTANCE.sample(random);
         if (rarityOpt.isEmpty()) {
-            return new AffixListComponent(List.of());
+            return new AffixListComponent("", List.of());
         }
         RarityDef rarity = rarityOpt.get();
 
         int maxAffixes = rarity.sampleMaxAffixes(random);
         if (maxAffixes <= 0) {
-            return new AffixListComponent(List.of());
+            return new AffixListComponent(rarity.id().toString(), List.of());
         }
 
         // 2) Пулы
         List<AffixPoolDef> pools = AffixPoolDataManager.INSTANCE.filterApplicable(item, itemTags, source, itemLevel);
         if (pools.isEmpty()) {
-            return new AffixListComponent(List.of());
+            return new AffixListComponent(rarity.id().toString(), List.of());
         }
 
         // 3) Генерация
@@ -75,7 +76,7 @@ public final class RollService {
             var affixOpt = AffixPoolDataManager.INSTANCE.sample(pool, itemLevel, random);
             if (affixOpt.isEmpty()) continue;
 
-            var picked = affixOpt.get();
+            var picked  = affixOpt.get();
             var affixId = picked.affixId();
 
             // Повторы по id — только если пул это разрешает
@@ -105,6 +106,7 @@ public final class RollService {
             used.add(affixId);
         }
 
-        return new AffixListComponent(entries);
+        // Возвращаем компонент с rarityId + entries (entries может быть пустым → это валидная «серая» редкость)
+        return new AffixListComponent(rarity.id().toString(), entries);
     }
 }

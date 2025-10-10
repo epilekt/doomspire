@@ -2,6 +2,7 @@ package com.doomspire.grimfate.core;
 
 import com.doomspire.grimcore.affix.AffixAggregator;
 import com.doomspire.grimcore.affix.ModAffixes;
+import com.doomspire.grimfate.affix.GrimfateAffixes;
 import com.doomspire.grimfate.commands.AddSpellCommand;
 import com.doomspire.grimfate.config.ClientConfig;
 import com.doomspire.grimfate.item.armor.Armors;
@@ -124,7 +125,14 @@ public class Grimfate {
 
             // Аффиксы
             ModAffixes.bootstrap();
+            GrimfateAffixes.registerAll();
+                    com.doomspire.grimfate.core.Grimfate.LOGGER.info("[Affix] registered={} core+content",
+                    com.doomspire.grimcore.affix.ModAffixes.all().size());
             AffixAggregator.setExtractor(com.doomspire.grimfate.affix.GrimfateAffixExtraction::extractFromEntity);
+                    com.doomspire.grimfate.core.Grimfate.LOGGER.info("[Affix] extractor wired: GrimfateAffixExtraction");
+            var all = com.doomspire.grimcore.affix.ModAffixes.all();
+            Grimfate.LOGGER.info("[Affix] registered={} ids={}", all.size(),
+                    all.keySet().stream().map(Object::toString).sorted().toList());
 
             LOGGER.info("[Grimfate] Creative tabs registered; AffixAggregator hooked; integrations bootstrapped.");
         });

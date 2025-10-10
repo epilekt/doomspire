@@ -1,11 +1,9 @@
 package com.doomspire.grimcore.attach;
 
-import com.doomspire.grimcore.stat.Attributes;
-import com.doomspire.grimcore.stat.ModAttachments;
-import com.doomspire.grimcore.stat.StatCalculator;
-import com.doomspire.grimcore.stat.StatSnapshot;
+import com.doomspire.grimcore.stat.*;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import com.doomspire.grimcore.datapack.BalanceData;
 
@@ -152,6 +150,30 @@ public class PlayerStatsAttachment {
             dirty = false;
         }
         return snapshot;
+    }
+
+    /**
+     * Принудительный пересчёт "база + аффиксы" на СЕРВЕРЕ и синк на клиент (HUD).
+     * Дёргай из обработчиков экипировки/Curios и из любых мест, где меняются статы.
+     */
+    public void recalcAndSync(ServerPlayer sp) {
+        if (sp == null) return;
+
+        // 1) база (атрибуты) + аффиксы агрегатором
+        StatSnapshot snap = StatCalculator.calculateWithAffixes(this, sp);
+
+        // 2) кламп текущих ресурсов под новые капы (int!)
+        int newMaxHp = (int) Math.max(1, Math.floor(snap.maxHealth));
+        int newMaxMp = (int) Math.max(1, Math.floor(snap.maxMana));
+        setCurrentHealth(Math.min(getCurrentHealth(), newMaxHp));
+        setCurrentMana(Math.min(getCurrentMana(),     newMaxMp));
+
+        // 3) фиксируем снапшот (у тебя нет setSnapshot — пишем в поле и сбрасываем dirty)
+        this.snapshot = snap;
+        this.dirty = false;
+
+        // 4) в ваниль отдаём только то, что нужно (скорость и т.п.)
+        StatEffects.applyAll(sp);
     }
 
     // ===================== NET (StreamCodec) =====================

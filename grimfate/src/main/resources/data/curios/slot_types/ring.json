@@ -1,8 +1,0 @@
-{
-  "name": "ring",
-  "size": 2,
-  "order": 10,
-  "icon": "curios:slot/ring",
-  "cosmetic": false,
-  "entities": ["curios:player_like"]
-}

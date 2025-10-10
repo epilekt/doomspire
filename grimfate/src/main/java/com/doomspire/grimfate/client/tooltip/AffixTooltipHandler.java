@@ -1,9 +1,13 @@
 package com.doomspire.grimfate.client.tooltip;
 
+import com.doomspire.grimcore.affix.rarity.RarityDataManager;
+import com.doomspire.grimcore.affix.rarity.RarityDef;
 import com.doomspire.grimfate.item.comp.AffixListComponent;
 import com.doomspire.grimfate.registry.ModDataComponents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
@@ -22,33 +26,46 @@ public final class AffixTooltipHandler {
         List<AffixListComponent.Entry> entries = comp.entries();
         if (entries == null || entries.isEmpty()) return;
 
-        // Заголовок
-        e.getToolTip().add(Component.literal("Affixes")
-                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        // ===== Заголовок по редкости =====
+        String rarityId = comp.rarityId(); // требуется обновлённый AffixListComponent
+        if (rarityId != null && !rarityId.isEmpty()) {
+            var defOpt = RarityDataManager.INSTANCE.get(ResourceLocation.tryParse(rarityId));
+            if (defOpt.isPresent()) {
+                RarityDef def = defOpt.get(); // содержит display_key и text_color
 
-        // Список аффиксов
+                String titleKey = def.displayKey().isEmpty()
+                        ? ("rarity." + def.id().getNamespace() + "." + def.id().getPath())
+                        : def.displayKey();
+
+                MutableComponent title = Component.translatable(titleKey);
+                int rgb = def.textColor();
+                title.withStyle(s -> s.withColor(rgb).withBold(true));
+                e.getToolTip().add(title);
+            }
+        } else {
+            // Фолбэк (если по какой-то причине редкость не была сохранена)
+            e.getToolTip().add(Component.literal("Affixes")
+                    .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        }
+
+        // ===== Список аффиксов =====
         for (AffixListComponent.Entry en : entries) {
             String nice  = prettifyId(en.id());      // человекочитаемое имя
             String rolls = formatRolls(en.rolls());  // "0.12, 0.34"
 
-            net.minecraft.network.chat.MutableComponent line =
-                    rolls.isEmpty()
-                            ? net.minecraft.network.chat.Component.literal("• " + nice)
-                            : net.minecraft.network.chat.Component.literal("• " + nice + " (" + rolls + ")");
+            MutableComponent line = rolls.isEmpty()
+                    ? Component.literal("• " + nice)
+                    : Component.literal("• " + nice + " (" + rolls + ")");
 
-            // применяем стиль и добавляем
-            line.withStyle(net.minecraft.ChatFormatting.BLUE);
+            line.withStyle(ChatFormatting.BLUE);
             e.getToolTip().add(line);
         }
-
     }
 
     private static String prettifyId(String id) {
         if (id == null || id.isEmpty()) return "?";
-        // ожидаем вида "namespace:path/like_this" или "namespace:id"
         int colon = id.indexOf(':');
         String tail = colon >= 0 ? id.substring(colon + 1) : id;
-        // берем последний сегмент пути, заменяем '_' на ' ', капитализуем слова
         int slash = tail.lastIndexOf('/');
         String base = (slash >= 0 ? tail.substring(slash + 1) : tail).replace('_', ' ');
         String[] parts = base.split("\\s+");
@@ -64,7 +81,6 @@ public final class AffixTooltipHandler {
 
     private static String formatRolls(List<Float> rolls) {
         if (rolls == null || rolls.isEmpty()) return "";
-        // пока не знаем шкалу — выводим «как есть», до двух знаков
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < rolls.size(); i++) {
             float v = rolls.get(i);

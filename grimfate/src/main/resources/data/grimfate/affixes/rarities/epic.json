@@ -1,6 +1,6 @@
 {
   "id": "grimfate:epic",
-  "weight": 2,
+  "weight": 15,
   "max_affixes": { "type": "uniform", "min_inclusive": 3, "max_inclusive": 4 },
   "rolls_per_affix": { "type": "constant", "value": 1 },
   "magnitude_scale": 1.30,
