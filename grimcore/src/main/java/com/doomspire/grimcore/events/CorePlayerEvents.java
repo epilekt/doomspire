@@ -21,72 +21,50 @@ public final class CorePlayerEvents {
         PlayerStatsAttachment stats = player.getData(ModAttachments.PLAYER_STATS.get());
         if (stats == null) return;
 
-        // Пересчёт "база+аффиксы" на сервере
+        // первичная инициализация «текущих» ресурсов
+        var base = stats.getSnapshot(); // базовый снапшот (без аффиксов)
+        if (stats.getCurrentHealth() <= 0) stats.setCurrentHealth((int) base.maxHealth);
+        if (stats.getCurrentMana()   <= 0) stats.setCurrentMana((int) base.maxMana);
+
+        // ВАЖНО: полный пересчёт "база + аффиксы" прямо сейчас
         stats.markDirty();
-        StatSnapshot snap = stats.getSnapshotWithAffixes(player);
+        var snap = stats.getSnapshotWithAffixes(player);
 
-        // Первичная инициализация/клампы текущих ресурсов под новые капы
-        int maxHp = (int) Math.max(1, Math.floor(snap.maxHealth));
-        int maxMp = (int) Math.max(1, Math.floor(snap.maxMana));
-        if (stats.getCurrentHealth() <= 0) stats.setCurrentHealth(maxHp);
-        else if (stats.getCurrentHealth() > maxHp) stats.setCurrentHealth(maxHp);
+        // клампим текущие под новые капы
+        stats.setCurrentHealth(Math.min(stats.getCurrentHealth(), (int) snap.maxHealth));
+        stats.setCurrentMana(Math.min(stats.getCurrentMana(),   (int) snap.maxMana));
 
-        if (stats.getCurrentMana() <= 0) stats.setCurrentMana(maxMp);
-        else if (stats.getCurrentMana() > maxMp) stats.setCurrentMana(maxMp);
-
-        // Синк клиенту → HUD обновится
+        // синк клиенту — HUD на клиенте дальше сам пересчитает снапшот (см. патч клиента ниже)
         GrimcoreNetworking.syncPlayerStats(player, stats);
 
-        // Применяем эффекты к ваниле (например, скорость бега)
+        // ванильные атрибуты (скорость и т.п.)
         StatEffects.applyAll(player);
     }
 
-    /** Любая смена ванильной экипировки: броня, мейн/оффхэнд. */
+    /** Любая смена ванильной экипировки: броня, main/offhand. */
     @SubscribeEvent
     public static void onEquipChange(LivingEquipmentChangeEvent e) {
-        if (!(e.getEntity() instanceof ServerPlayer player)) return;
-
-        PlayerStatsAttachment att = player.getData(ModAttachments.PLAYER_STATS.get());
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        PlayerStatsAttachment att = sp.getData(ModAttachments.PLAYER_STATS.get());
         if (att == null) return;
 
-        // 1) форсим пересчёт "база+аффиксы"
+        // Полный пересчёт "база + аффиксы"
         att.markDirty();
-        StatSnapshot snap = att.getSnapshotWithAffixes(player);
+        var snap = att.getSnapshotWithAffixes(sp);
 
-        // 2) клампы на СЕРВЕРЕ (важно: int!)
-        int maxHp = (int) Math.max(1, Math.floor(snap.maxHealth));
-        int maxMp = (int) Math.max(1, Math.floor(snap.maxMana));
-        if (att.getCurrentHealth() > maxHp) att.setCurrentHealth(maxHp);
-        if (att.getCurrentMana()   > maxMp) att.setCurrentMana(maxMp);
+        // Подрезаем текущие ресурсы под новые капы (если max упал)
+        att.setCurrentHealth(Math.min(att.getCurrentHealth(), (int) snap.maxHealth));
+        att.setCurrentMana(Math.min(att.getCurrentMana(),   (int) snap.maxMana));
 
-        // 3) применяем мост к ванили (скорость и т.п.)
-        StatEffects.applyAll(player);
-
-        // 4) один пакет синка ПОСЛЕ всего
-        GrimcoreNetworking.syncPlayerStats(player, att);
+        // Синхронизируем клиенту и прокидываем ванильные модификаторы
+        GrimcoreNetworking.syncPlayerStats(sp, att);
+        StatEffects.applyAll(sp);
     }
 
     @SubscribeEvent
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-
-        PlayerStatsAttachment stats = player.getData(ModAttachments.PLAYER_STATS.get());
-        if (stats == null) return;
-
-        // После респауна пересчитываем "база+аффиксы", т.к. Entity новый
-        stats.markDirty();
-        StatSnapshot snap = stats.getSnapshotWithAffixes(player);
-
-        // Восстанавливаем/клампим ресурсы под новые капы
-        int maxHp = (int) Math.max(1, Math.floor(snap.maxHealth));
-        int maxMp = (int) Math.max(1, Math.floor(snap.maxMana));
-        if (stats.getCurrentHealth() > maxHp) stats.setCurrentHealth(maxHp);
-        if (stats.getCurrentMana()   > maxMp) stats.setCurrentMana(maxMp);
-
-        // Синк для HUD
-        GrimcoreNetworking.syncPlayerStats(player, stats);
-
-        // Пере-применяем эффекты к ванильным атрибутам
+        // после респауна повторно навешиваем ванильные модификаторы
         StatEffects.applyAll(player);
     }
 }

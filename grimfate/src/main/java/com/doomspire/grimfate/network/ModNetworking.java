@@ -91,16 +91,28 @@ public final class ModNetworking {
             Attributes attr = PlayerStatsAttachment.parseAttrId(msg.attributeId());
             if (attr == null) return;
 
+            // 1) Пытаемся выделить поинт
             boolean ok = att.tryAllocatePoint(attr);
             int allocated = att.getAttribute(attr);
             int unspent   = att.getUnspentPoints();
 
+            // Клиентскому GUI сообщаем результат распределения
             PacketDistributor.sendToPlayer(sp, new S2CAllocateResultPayload(attr.name(), allocated, unspent));
 
+            // 2) Форсим пересчёт "база + аффиксы" → новые капы HP/MP
             att.markDirty();
+            var snap = att.getSnapshotWithAffixes(sp);
+
+            // 3) Клампы текущих ресурсов под НОВЫЕ капы (int!)
+            int maxHp = (int) Math.max(1, Math.floor(snap.maxHealth));
+            int maxMp = (int) Math.max(1, Math.floor(snap.maxMana));
+            if (att.getCurrentHealth() > maxHp) att.setCurrentHealth(maxHp);
+            if (att.getCurrentMana()   > maxMp) att.setCurrentMana(maxMp);
+
+            // 4) Синк на клиента (HUD берёт данные из клиентского аттача)
             GrimcoreNetworking.syncPlayerStats(sp, att);
 
-            // ядро-эффекты
+            // 5) Ванильный мост (скорость и прочее)
             StatEffects.applyAll(sp);
         });
     }

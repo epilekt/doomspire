@@ -19,20 +19,29 @@ public final class GrimcoreNetworking {
     public static void register(final RegisterPayloadHandlersEvent event) {
         var registrar = event.registrar(Grimcore.MODID);
 
-        // 1.21.x: используем playToClient / playToServer и CustomPacketPayload.Type
         registrar.playToClient(
                 S2C_SyncPlayerStats.TYPE,
                 S2C_SyncPlayerStats.STREAM_CODEC,
                 (payload, ctx) -> {
-                    Player clientPlayer = Minecraft.getInstance().player;
-                    if (clientPlayer != null) {
-                        clientPlayer.setData(ModAttachments.PLAYER_STATS.get(), payload.att());
+                    var mc = Minecraft.getInstance();
+                    Player clientPlayer = mc.player;
+                    if (clientPlayer == null) return;
+
+                    // Положили свежий attachment от сервера
+                    clientPlayer.setData(ModAttachments.PLAYER_STATS.get(), payload.att());
+
+                    // ВАЖНО: прямо сейчас пересчитываем снапшот с аффиксами на клиенте,
+                    // чтобы HUD видел новые maxHealth/maxMana немедленно.
+                    var stats = clientPlayer.getData(ModAttachments.PLAYER_STATS.get());
+                    if (stats != null) {
+                        stats.markDirty();
+                        stats.getSnapshotWithAffixes(clientPlayer);
                     }
                 }
         );
     }
 
-    /** Вызывать на сервере после изменения HP/MP, чтобы HUD сразу обновился. */
+    /** Вызывать на сервере после изменения статов, чтобы HUD сразу обновился. */
     public static void syncPlayerStats(ServerPlayer target, PlayerStatsAttachment att) {
         PacketDistributor.sendToPlayer(target, new S2C_SyncPlayerStats(att));
     }
@@ -54,4 +63,3 @@ public final class GrimcoreNetworking {
         }
     }
 }
-
