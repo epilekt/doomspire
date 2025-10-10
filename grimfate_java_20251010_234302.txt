@@ -1,0 +1,3337 @@
+﻿=== GRIMFATE JAVA FILES (without comments) ===
+Total files: 58
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\affix\AffixImbueService.java
+package com.doomspire.grimfate.affix;
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimfate.item.comp.AffixListHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.*;
+import org.jetbrains.annotations.Nullable;
+import java.util.EnumSet;
+import java.util.Locale;
+import java.util.Objects;
+/*
+ /**
+  * Основная идея:
+  *  • Крафтовые предметы рождаются пустыми (без AffixListComponent).
+  *  • Ритуал (Идол) вызывает этот сервис — он валидирует цель и записывает сгенерированные аффиксы.
+  *  • Вся генерация делегируется в RollService, а запись — в AffixListHelper.
+  *
+  * Хуки:
+  *  • ItemLevelResolver — внешний провайдер уровня предмета (прогрессия мира/игрока).
+  *  • Policy — политика имбью (разрешать ли перезапись уже «насыщенных» предметов и т.п.).
+  *
+  * Не трогает лут — за лут отвечает Global Loot Modifier.
+  */
+public final class AffixImbueService {
+    private AffixImbueService() {}
+    public record Policy(
+            boolean allowOverwrite,  // можно ли перезаписывать уже «наполненные» предметы
+            boolean requireEmpty,    // требовать отсутствия аффиксов (обычно true для крафтового пути)
+            boolean strictSource     // вычислять источник строго (false — использовать эвристику guessSource)
+    ) {
+        public static final Policy DEFAULT = new Policy(false, true, true);
+    }
+    public record Context(
+            ServerLevel level,
+            RandomSource random,
+            @Nullable Player actor
+    ) {
+        public Context {
+            Objects.requireNonNull(level, "level");
+            Objects.requireNonNull(random, "random");
+        }
+    }
+    @FunctionalInterface
+    public interface ItemLevelResolver {
+        int resolve(Context ctx, ItemStack stack, int defaultLevel);
+    }
+    private static volatile ItemLevelResolver ITEM_LEVEL_RESOLVER =
+            (ctx, stack, def) -> def;
+    public static void setItemLevelResolver(ItemLevelResolver resolver) {
+        if (resolver != null) ITEM_LEVEL_RESOLVER = resolver;
+    }
+    /**
+     * Имбью одного предмета. Пишет AffixListComponent внутрь ItemStack при успехе.
+     * @param stack   целевой предмет
+     * @param ctx     серверный контекст
+     * @param policy  политика (см. {@link Policy})
+     * @param defaultItemLevel базовый уровень, если резолвер вернёт дефолт
+     * @return результат операции
+     */
+    public static Result imbue(ItemStack stack, Context ctx, Policy policy, int defaultItemLevel) {
+        if (stack == null || stack.isEmpty()) return Result.fail(Reason.EMPTY_STACK);
+        boolean alreadyHas = AffixListHelper.has(stack);
+        if (policy.requireEmpty && alreadyHas && !policy.allowOverwrite) {
+            return Result.fail(Reason.ALREADY_IMBUED);
+        }
+        if (alreadyHas && !policy.allowOverwrite) {
+            return Result.fail(Reason.ALREADY_IMBUED);
+        }
+        Affix.Source src = policy.strictSource ? strictSourceOrFail(stack) : guessSource(stack);
+        if (src == null) return Result.fail(Reason.UNSUPPORTED_ITEM);
+        int itemLevel = Math.max(1, ITEM_LEVEL_RESOLVER.resolve(ctx, stack, Math.max(1, defaultItemLevel)));
+        AffixListHelper.rollAndApply(stack, src, itemLevel, ctx.random());
+        return Result.success(src, itemLevel);
+    }
+    public static Result imbue(ItemStack stack, Context ctx, int defaultItemLevel) {
+        return imbue(stack, ctx, Policy.DEFAULT, defaultItemLevel);
+    }
+    private static @Nullable Affix.Source strictSourceOrFail(ItemStack stack) {
+        var item = stack.getItem();
+        if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
+        if (item instanceof SwordItem)  return Affix.Source.WEAPON;
+        if (item instanceof BowItem)    return Affix.Source.WEAPON;
+        if (item instanceof CrossbowItem) return Affix.Source.WEAPON;
+        if (item instanceof TridentItem)  return Affix.Source.WEAPON;
+        return null;
+    }
+    private static Affix.Source guessSource(ItemStack stack) {
+        var item = stack.getItem();
+        if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
+        return Affix.Source.WEAPON;
+    }
+    public enum Reason {
+        OK,
+        EMPTY_STACK,
+        ALREADY_IMBUED,
+        UNSUPPORTED_ITEM
+    }
+    public record Result(Reason reason, @Nullable Affix.Source source, int itemLevel) {
+        public static Result success(Affix.Source src, int lvl) { return new Result(Reason.OK, src, Math.max(1, lvl)); }
+        public static Result fail(Reason r) { return new Result(r, null, 0); }
+        public boolean ok() { return reason == Reason.OK; }
+        @Override
+        public String toString() {
+            if (ok()) return "Imbue OK{source=" + source + ", level=" + itemLevel + "}";
+            return "Imbue FAIL{" + reason + "}";
+        }
+    }
+    public static Affix.Source parseSource(String s, Affix.Source fallback) {
+        if (s == null || s.isBlank()) return fallback;
+        try {
+            return Affix.Source.valueOf(s.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return fallback;
+        }
+    }
+    public static EnumSet<Affix.Source> supportedSources() {
+        return EnumSet.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.SHIELD, Affix.Source.JEWELRY);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\affix\AffixImbueService.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixes.java
+package com.doomspire.grimfate.affix;
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimcore.affix.ModAffixes;
+import com.doomspire.grimcore.datapack.Balance;
+import com.doomspire.grimcore.datapack.codec.AttributesBalance;
+import com.doomspire.grimcore.stat.DamageTypes;
+import com.doomspire.grimcore.stat.ResistTypes;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+import java.lang.reflect.Field;
+/**
+ * Регистрация поведения аффиксов контента grimfate.
+ * Данные (defs/pools/rarities) остаются в grimcore; тут только "что делает" каждый affix.id со StatSnapshot.
+ */
+public final class GrimfateAffixes {
+    private GrimfateAffixes(){}
+    private static ResourceLocation rl(String path) {
+        return ResourceLocation.fromNamespaceAndPath("grimfate", path);
+    }
+    public static void registerAll() {
+        ModAffixes.register(new Simple(rl("plus_vitality"), (snap, mag, src) -> {
+            var rule = Balance.attributes().byAttr().get(com.doomspire.grimcore.stat.Attributes.VITALITY);
+            double hpPer = (rule != null ? rule.maxHealthPer() : 6.0);
+            double regen = (rule != null ? rule.regenHpPer()   : 0.0);
+            float before = snap.maxHealth;
+            snap.maxHealth   += (float) (mag * hpPer);
+            snap.regenHealth += (float) (mag * regen);
+            org.slf4j.LoggerFactory.getLogger("Grim/Affix")
+                    .info("[Affix] plus_vitality mag={} → HP {} -> {}", mag, before, snap.maxHealth);
+        }));
+        ModAffixes.register(new Simple(rl("plus_strength"), (snap, mag, src) ->
+                snap.damage.merge(DamageTypes.PHYS_MELEE, (float)(mag * 0.03f), Float::sum)
+        ));
+        ModAffixes.register(new Simple(rl("phys_damage_percent"), (snap, mag, src) -> {
+            snap.damage.merge(DamageTypes.PHYS_MELEE,  (float)mag, Float::sum);
+            snap.damage.merge(DamageTypes.PHYS_RANGED, (float)mag, Float::sum);
+        }));
+        ModAffixes.register(new Simple(rl("attack_speed"), (snap, mag, src) -> {
+            snap.attackSpeed += (float)mag;
+        }));
+        ModAffixes.register(new Simple(rl("armor_flat"), (snap, mag, src) -> {
+            snap.armorFlat += (float)mag;
+        }));
+        ModAffixes.register(new Simple(rl("resist_all_percent"), (snap, mag, src) -> {
+            snap.resistAll += (float)mag;
+        }));
+        ModAffixes.register(new Simple(rl("lifesteal"), (snap, mag, src) -> {
+            snap.lifesteal += (float)mag;
+        }));
+        ModAffixes.register(new Simple(rl("manasteal"), (snap, mag, src) -> {
+            snap.manasteal += (float)mag;
+        }));
+        ModAffixes.register(new Simple(rl("evasion_chance"), (snap, mag, src) -> {
+            snap.evasionChance += (float)mag;
+        }));
+        ModAffixes.register(new Simple(rl("crit_chance_percent"), (snap, mag, src) ->
+                snap.critChance += (float)mag
+        ));
+    }
+    private static void addAttackSpeed(StatSnapshot snap, float v) {
+        try {
+            Field f = StatSnapshot.class.getField("attackSpeed");
+            f.setFloat(snap, f.getFloat(snap) + v);
+        } catch (NoSuchFieldException nf) {
+        } catch (Throwable t) {
+        }
+    }
+    private static void addArmorFlat(StatSnapshot snap, float v) {
+        if (!tryIncFloatField(snap, "armorFlat", v)) {
+            if (!tryIncFloatField(snap, "armor", v)) {
+            }
+        }
+    }
+    private static void addResistAllPercent(StatSnapshot snap, float v) {
+        if (tryIncFloatField(snap, "resistAll", v)) return;
+        try {
+            for (ResistTypes type : ResistTypes.values()) {
+                snap.resistances.merge(type, v, Float::sum);
+            }
+        } catch (Throwable t) {
+        }
+    }
+    private static boolean tryIncFloatField(Object obj, String field, float add) {
+        try {
+            Field f = obj.getClass().getField(field);
+            f.setFloat(obj, f.getFloat(obj) + add);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+    private record Simple(ResourceLocation id, Applier fn) implements Affix {
+        @Override public ResourceLocation id() { return id; }
+        @Override public void apply(StatSnapshot out, float magnitude, Source source) { fn.apply(out, magnitude, source); }
+        @FunctionalInterface private interface Applier { void apply(StatSnapshot out, float mag, Source src); }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixes.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java
+package com.doomspire.grimfate.affix;
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimcore.affix.AffixAggregator;
+import com.doomspire.grimfate.compat.curios.CuriosCompat;
+import com.doomspire.grimfate.registry.ModDataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.*;
+import java.util.List;
+/**
+ * Источники:
+ *  - main hand / offhand (WEAPON/SHIELD),
+ *  - броня по слотам (ARMOR),
+ *  - Curios (JEWELRY), если мод загружен,
+ *  - временные бафы/ауры (позже).
+ */
+public final class GrimfateAffixExtraction {
+    private GrimfateAffixExtraction() {}
+    private static final String MODID = "grimfate";
+    private static final TagKey<Item> TAG_WEAPONS =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/weapons"));
+    private static final TagKey<Item> TAG_SHIELDS =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/shields"));
+    private static final TagKey<Item> TAG_ARMORS =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/armors"));
+    public static List<AffixAggregator.AffixEntry> extractFromEntity(LivingEntity entity) {
+        var b = new AffixAggregator.ListBuilder();
+        ItemStack main = entity.getMainHandItem();
+        if (isWeapon(main)) {
+            appendFromStack(main, b, Affix.Source.WEAPON);
+        }
+        ItemStack off = entity.getOffhandItem();
+        if (isShield(off)) {
+            appendFromStack(off, b, Affix.Source.SHIELD);
+        }
+        for (ItemStack armor : entity.getArmorSlots()) {
+            if (!armor.isEmpty()) {
+                appendFromStack(armor, b, Affix.Source.ARMOR);
+            }
+        }
+        if (CuriosCompat.isLoaded()) {
+            CuriosCompat.forEachEquipped(entity, (stack, slotId) -> {
+                if (!stack.isEmpty()) appendFromStack(stack, b, Affix.Source.JEWELRY);
+            });
+        }
+        return b.build();
+    }
+    private static boolean isWeapon(ItemStack st) {
+        if (st == null || st.isEmpty()) return false;
+        Item it = st.getItem();
+        if (st.is(TAG_WEAPONS)) return true;
+        return it instanceof SwordItem
+                || it instanceof AxeItem       // многие «секиры» — оружие
+                || it instanceof BowItem
+                || it instanceof CrossbowItem
+                || it instanceof TridentItem;
+    }
+    private static boolean isShield(ItemStack st) {
+        if (st == null || st.isEmpty()) return false;
+        if (st.is(TAG_SHIELDS)) return true;
+        return st.getItem() instanceof ShieldItem;
+    }
+    private static void appendFromStack(ItemStack stack, AffixAggregator.ListBuilder b, Affix.Source src) {
+        if (stack == null || stack.isEmpty()) return;
+        readFromStack(stack, src, b);
+    }
+    /**
+     * Чтение аффиксов из data-component'а ModDataComponents.AFFIX_LIST.
+     * Суммируем роллы в единую величину и добавляем запись для агрегатора.
+     */
+    private static void readFromStack(ItemStack stack, Affix.Source src, AffixAggregator.ListBuilder b) {
+        var comp = stack.get(ModDataComponents.AFFIX_LIST.get());
+        if (comp == null) return;
+        var list = comp.entries();
+        if (list == null || list.isEmpty()) return;
+        for (var e : list) {
+            if (e == null) continue;
+            ResourceLocation id = ResourceLocation.tryParse(e.id());
+            if (id == null) continue;
+            float mag = 0f;
+            var rolls = e.rolls();
+            if (rolls != null && !rolls.isEmpty()) {
+                for (Float r : rolls) {
+                    if (r == null) continue;
+                    if (Float.isNaN(r) || Float.isInfinite(r) || r == 0f) continue;
+                    mag += r;
+                }
+            }
+            if (mag == 0f) continue;
+            b.add(id, mag, src);
+        }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\affix\GrimfateAffixExtraction.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\affix\RollService.java
+package com.doomspire.grimfate.affix;
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimcore.affix.def.AffixDataManager;
+import com.doomspire.grimcore.affix.def.AffixDef;
+import com.doomspire.grimcore.affix.pool.AffixPoolDataManager;
+import com.doomspire.grimcore.affix.pool.AffixPoolDef;
+import com.doomspire.grimcore.affix.rarity.RarityDataManager;
+import com.doomspire.grimcore.affix.rarity.RarityDef;
+import com.doomspire.grimfate.item.comp.AffixListComponent;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
+import java.util.*;
+/**
+ * Сервис роллинга предметов. Генерирует редкость и аффиксы на основе пулов, уровня и источника.
+ * Пишет в AffixListComponent (включая rarityId).
+ */
+public final class RollService {
+    private RollService() {}
+    private static final String MODID = "grimfate";
+    private static final TagKey<Item> TAG_WEAPONS = TagKey.create(Registries.ITEM, rl("loot/weapons"));
+    private static final TagKey<Item> TAG_ARMORS  = TagKey.create(Registries.ITEM, rl("loot/armors"));
+    private static final TagKey<Item> TAG_JEWELRY = TagKey.create(Registries.ITEM, rl("loot/jewelry"));
+    private static ResourceLocation rl(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
+    }
+    private static boolean isOurGear(Item item, Set<TagKey<Item>> itemTags) {
+        ResourceKey<Item> key = item.builtInRegistryHolder().key(); // 1.21.1: это НЕ Optional
+        if (key == null || !MODID.equals(key.location().getNamespace())) return false;
+        return itemTags.contains(TAG_WEAPONS) || itemTags.contains(TAG_ARMORS) || itemTags.contains(TAG_JEWELRY);
+    }
+    public static AffixListComponent roll(Item item, Set<TagKey<Item>> itemTags, Affix.Source source, int itemLevel, RandomSource random) {
+        if (!isOurGear(item, itemTags)) {
+            return new AffixListComponent("", List.of());
+        }
+        Optional<RarityDef> rarityOpt = RarityDataManager.INSTANCE.sample(random);
+        if (rarityOpt.isEmpty()) {
+            return new AffixListComponent("", List.of());
+        }
+        RarityDef rarity = rarityOpt.get();
+        int maxAffixes = rarity.sampleMaxAffixes(random);
+        if (maxAffixes <= 0) {
+            return new AffixListComponent(rarity.id().toString(), List.of());
+        }
+        List<AffixPoolDef> pools = AffixPoolDataManager.INSTANCE.filterApplicable(item, itemTags, source, itemLevel);
+        if (pools.isEmpty()) {
+            return new AffixListComponent(rarity.id().toString(), List.of());
+        }
+        List<AffixListComponent.Entry> entries = new ArrayList<>(maxAffixes);
+        Set<ResourceLocation> used = new HashSet<>();
+        for (int i = 0; i < maxAffixes; i++) {
+            AffixPoolDef pool = pools.get(random.nextInt(pools.size()));
+            var affixOpt = AffixPoolDataManager.INSTANCE.sample(pool, itemLevel, random);
+            if (affixOpt.isEmpty()) continue;
+            var picked  = affixOpt.get();
+            var affixId = picked.affixId();
+            if (used.contains(affixId) && pool.uniqueTypes()) {
+                continue;
+            }
+            Optional<AffixDef> defOpt = AffixDataManager.INSTANCE.get(affixId);
+            if (defOpt.isEmpty()) continue;
+            AffixDef def = defOpt.get();
+            if (!def.allowSources().contains(source)) continue;
+            int rolls = picked.rollsPerAffixOverride().sample(random);
+            if (rolls <= 0) rolls = rarity.sampleRollsPerAffix(random);
+            float valueSum = 0f;
+            for (int r = 0; r < rolls; r++) {
+                valueSum += def.sampleBase(random);
+            }
+            float avg     = valueSum / Math.max(1, rolls);
+            float scaled  = rarity.scaleMagnitude(avg);
+            float clamped = def.clampTotal(scaled);
+            entries.add(new AffixListComponent.Entry(affixId.toString(), List.of(clamped)));
+            used.add(affixId);
+        }
+        return new AffixListComponent(rarity.id().toString(), entries);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\affix\RollService.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\client\BowModelProperties.java
+package com.doomspire.grimfate.client;
+import com.doomspire.grimfate.item.weapons.Weapons;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+public final class BowModelProperties {
+    private BowModelProperties() {}
+    public static void register() {
+        registerBow(Weapons.WEAKLING_BOW.get());
+    }
+    private static void registerBow(net.minecraft.world.item.Item item) {
+        ItemProperties.register(item, ResourceLocation.withDefaultNamespace("pull"),
+                (ItemStack stack, ClientLevel level, LivingEntity entity, int seed) -> {
+                    if (entity == null) return 0.0F;
+                    if (entity.getUseItem() != stack) return 0.0F;
+                    int used = entity.getTicksUsingItem();
+                    return Math.min(1.0F, used / 20.0F);
+                });
+        ItemProperties.register(item, ResourceLocation.withDefaultNamespace("pulling"),
+                (ItemStack stack, ClientLevel level, LivingEntity entity, int seed) ->
+                        (entity != null && entity.isUsingItem() && entity.getUseItem() == stack) ? 1.0F : 0.0F);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\client\BowModelProperties.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\client\CustomHudOverlay.java
+package com.doomspire.grimfate.client;
+import com.doomspire.grimcore.attach.PlayerLoadoutAttachment;
+import com.doomspire.grimcore.attach.PlayerProgressAttachment;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimcore.stat.PlayerProgress;
+import com.doomspire.grimfate.config.ClientConfig;
+import com.doomspire.grimfate.core.Grimfate;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+@EventBusSubscriber(modid = Grimfate.MODID, value = Dist.CLIENT)
+public final class CustomHudOverlay {
+    private CustomHudOverlay() {}
+    private static final ResourceLocation HEALTH_BAR_EMPTY =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/health_bar_bg.png");
+    private static final ResourceLocation HEALTH_BAR_FULL =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/health_bar_fill.png");
+    private static final ResourceLocation MANA_BAR_EMPTY =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/health_bar_bg.png");
+    private static final ResourceLocation MANA_BAR_FULL =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/mana_bar_fill.png");
+    private static final ResourceLocation XP_BG =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/xp_background.png");
+    private static final ResourceLocation XP_FILL =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/xp_fill.png");
+    private static final ResourceLocation SPELL_CELL =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/spellbar/spell_bar_cell.png");
+    private static final Map<UUID, Float> DISPLAYED_HEALTH = new ConcurrentHashMap<>();
+    private static final Map<UUID, Float> DISPLAYED_MANA   = new ConcurrentHashMap<>();
+    private static final Map<UUID, Float> DISPLAYED_XP     = new ConcurrentHashMap<>();
+    private static final float LERP_ALPHA = 0.20f;
+    private static final int SPELL_CELL_W = 20;
+    private static final int SPELL_CELL_H = 20;
+    private static final int SPELL_CELL_PAD = 2;
+    private static final Set<ResourceLocation> VANILLA_LAYERS_TO_HIDE = Set.of(
+            ResourceLocation.fromNamespaceAndPath("minecraft", "player_health"),
+            ResourceLocation.fromNamespaceAndPath("minecraft", "armor_level")
+    );
+    @SubscribeEvent
+    public static void onRenderGuiLayerPre(RenderGuiLayerEvent.Pre event) {
+        if (VANILLA_LAYERS_TO_HIDE.contains(event.getName())) {
+            event.setCanceled(true);
+        }
+    }
+    @SubscribeEvent
+    public static void onRenderGui(RenderGuiEvent.Post event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.screen != null) return;
+        var player = mc.player;
+        PlayerStatsAttachment statsAtt = player.getData(ModAttachments.PLAYER_STATS.get());
+        if (statsAtt == null) return;
+        var snap = statsAtt.getSnapshot();
+        int health    = statsAtt.getCurrentHealth();
+        int maxHealth = Math.max(1, (int) snap.maxHealth);
+        int mana      = statsAtt.getCurrentMana();
+        int maxMana   = Math.max(1, (int) snap.maxMana);
+        PlayerProgressAttachment progressAtt = player.getData(ModAttachments.PLAYER_PROGRESS.get());
+        PlayerProgress progress = (progressAtt != null) ? progressAtt.toSnapshot() : PlayerProgress.DEFAULT;
+        GuiGraphics gui = event.getGuiGraphics();
+        int sw = mc.getWindow().getGuiScaledWidth();
+        int sh = mc.getWindow().getGuiScaledHeight();
+        UUID uuid = player.getUUID();
+        renderHealthBar(gui, mc, sw, sh, uuid, health, maxHealth);
+        renderManaBar(gui, mc, sw, sh, uuid, mana, maxMana);
+        renderXpIcon(gui, mc, sw, sh, uuid, progress);
+        renderSpellHotbar(gui, mc, sw, sh);
+    }
+    private static void renderHealthBar(GuiGraphics gui, Minecraft mc, int sw, int sh,
+                                        UUID uuid, int health, int maxHealth) {
+        final int W = 120, H = 12;
+        float disp = DISPLAYED_HEALTH.getOrDefault(uuid, (float) health);
+        disp += (health - disp) * LERP_ALPHA;
+        disp = Math.max(0, Math.min(disp, maxHealth));
+        DISPLAYED_HEALTH.put(uuid, disp);
+        int x = sw / 2 + ClientConfig.HEALTH_BAR_X.get();
+        int y = sh + ClientConfig.HEALTH_BAR_Y.get();
+        gui.blit(HEALTH_BAR_EMPTY, x, y, 0, 0, W, H, W, H);
+        int filled = (int) (W * (disp / Math.max(1f, maxHealth)));
+        if (filled > 0) gui.blit(HEALTH_BAR_FULL, x, y, 0, 0, filled, H, W, H);
+        String text = health + "/" + maxHealth;
+        gui.drawString(mc.font, Component.literal(text),
+                x + W / 2 - mc.font.width(text) / 2,
+                y + (H - mc.font.lineHeight) / 2,
+                0xFFFFFF, true);
+    }
+    private static void renderManaBar(GuiGraphics gui, Minecraft mc, int sw, int sh,
+                                      UUID uuid, int mana, int maxMana) {
+        final int W = 120, H = 12;
+        float disp = DISPLAYED_MANA.getOrDefault(uuid, (float) mana);
+        disp += (mana - disp) * LERP_ALPHA;
+        disp = Math.max(0, Math.min(disp, maxMana));
+        DISPLAYED_MANA.put(uuid, disp);
+        int x = sw / 2 + ClientConfig.MANA_BAR_X.get();
+        int y = sh + ClientConfig.MANA_BAR_Y.get();
+        gui.blit(MANA_BAR_EMPTY, x, y, 0, 0, W, H, W, H);
+        int filled = (int) (W * (disp / Math.max(1f, maxMana)));
+        if (filled > 0) gui.blit(MANA_BAR_FULL, x, y, 0, 0, filled, H, W, H);
+        String text = mana + "/" + maxMana;
+        gui.drawString(mc.font, Component.literal(text),
+                x + W / 2 - mc.font.width(text) / 2,
+                y + (H - mc.font.lineHeight) / 2,
+                0xFFFFFF, true);
+    }
+    private static void renderXpIcon(GuiGraphics gui, Minecraft mc, int sw, int sh,
+                                     UUID uuid, PlayerProgress progress) {
+        final int W = 32, H = 32;
+        int exp = progress.exp();
+        int cap = Math.max(1, progress.expCap());
+        float disp = DISPLAYED_XP.getOrDefault(uuid, (float) exp);
+        disp += (exp - disp) * LERP_ALPHA;
+        disp = Math.max(0, Math.min(disp, cap));
+        DISPLAYED_XP.put(uuid, disp);
+        int x = sw / 2 + ClientConfig.XP_ICON_X.get();
+        int y = sh + ClientConfig.XP_ICON_Y.get();
+        gui.blit(XP_BG, x, y, 0, 0, W, H, W, H);
+        int filledH = (int) (H * (disp / (float) cap));
+        if (filledH > 0) {
+            gui.blit(XP_FILL, x, y + (H - filledH), 0, H - filledH, W, filledH, W, H);
+        }
+        String lvl = String.valueOf(progress.level());
+        gui.drawString(mc.font, Component.literal(lvl),
+                x + W / 2 - mc.font.width(lvl) / 2,
+                y + H / 2 - mc.font.lineHeight / 2,
+                0xFFFFFF, true);
+        String expTxt = exp + "/" + cap;
+        gui.drawString(mc.font, Component.literal(expTxt),
+                x + W / 2 - mc.font.width(expTxt) / 2,
+                y + H + 2,
+                0xFFFFFF, false);
+    }
+    private static void renderSpellHotbar(GuiGraphics gg, Minecraft mc, int sw, int sh) {
+        var p = mc.player;
+        var loadout = p.getData(ModAttachments.PLAYER_LOADOUT.get());
+        if (loadout == null) return;
+        final int CELLS = PlayerLoadoutAttachment.SLOTS; // 6
+        final int CELL = 20; // 20x20, без отступов
+        int totalW = CELLS * CELL;
+        int vanillaHotbarY = sh - 22;
+        int midY = (sh / 2 + vanillaHotbarY) / 2;
+        int x0 = (sw - totalW) / 2 + ClientConfig.SPELLBAR_X.get();
+        int y0 = midY + ClientConfig.SPELLBAR_Y.get();
+        for (int i = 0; i < CELLS; i++) {
+            int x = x0 + i * CELL;
+            int y = y0;
+            gg.blit(SPELL_CELL, x, y, 0, 0, CELL, CELL, CELL, CELL);
+            var rl = loadout.get(i);
+            if (rl == null) continue;
+            int cd = loadout.getCooldown(i);
+            if (cd > 0) {
+                gg.fill(x + 1, y + 1, x + CELL - 1, y + CELL - 1, 0x80000000);
+                String s = String.valueOf(cd / 20);
+                gg.drawString(mc.font, s, x + (CELL - mc.font.width(s)) / 2, y + 5, 0xFFFFFFFF, false);
+            }
+            String hk = Hotkeys.spellKeyName(i);
+            int hkX = x + CELL - mc.font.width(hk) - 2;
+            int hkY = y + CELL - 9;
+            gg.drawString(mc.font, hk, hkX, hkY, 0xFFE6DDAA, false);
+        }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\client\CustomHudOverlay.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryTabsButtons.java
+package com.doomspire.grimfate.client.gui;
+import com.doomspire.grimfate.core.Grimfate;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ScreenEvent;
+@EventBusSubscriber(modid = Grimfate.MODID, value = Dist.CLIENT)
+public final class InventoryTabsButtons {
+    private InventoryTabsButtons() {}
+    private static final ResourceLocation TAB_TEX =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/button_tab.png");
+    private static final ResourceLocation ICON_STATS =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/icon_stats.png");
+    private static final ResourceLocation ICON_SKILLS =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/icon_skills.png");
+    private static SpriteTabButton STATS_BTN;
+    private static SpriteTabButton SKILLS_BTN;
+    @SubscribeEvent
+    public static void onInit(ScreenEvent.Init.Post e) {
+        Screen screen = e.getScreen();
+        if (!(screen instanceof InventoryScreen inv)) return;
+        int left = inv.getGuiLeft();
+        int top  = inv.getGuiTop();
+        int w    = inv.getXSize();
+        int xStats  = left + w + 2;
+        int yStats  = top;
+        int xSkills = xStats;
+        int ySkills = yStats + 22;
+        STATS_BTN = new SpriteTabButton(
+                xStats, yStats,
+                TAB_TEX, 20, 20, 60,
+                ICON_STATS, 16, 48, 3, // 3 кадра у icon_stats
+                () -> Minecraft.getInstance().setScreen(new InventoryWithStatsScreen(Minecraft.getInstance().player)));
+        STATS_BTN.setTooltip(Tooltip.create(Component.translatable("grimfate.ui.stats.open")));
+        SKILLS_BTN = new SpriteTabButton(
+                xSkills, ySkills,
+                TAB_TEX, 20, 20, 60,
+                ICON_SKILLS, 16, 80, 5, // 5 кадров у icon_skills
+                () -> {
+                    var p = Minecraft.getInstance().player;
+                    if (p != null) p.displayClientMessage(Component.literal("Древо не нарисовано, но открылось бы и все работает"), true);
+                });
+        SKILLS_BTN.setTooltip(Tooltip.create(Component.literal("Дерево навыков (WIP)")));
+        e.addListener(STATS_BTN);
+        e.addListener(SKILLS_BTN);
+    }
+    @SubscribeEvent
+    public static void onRender(ScreenEvent.Render.Post e) {
+        Screen screen = e.getScreen();
+        if (!(screen instanceof InventoryScreen inv)) return;
+        int left = inv.getGuiLeft();
+        int top  = inv.getGuiTop();
+        int w    = inv.getXSize();
+        if (STATS_BTN != null) {
+            STATS_BTN.setX(left + w + 2);
+            STATS_BTN.setY(top);
+        }
+        if (SKILLS_BTN != null) {
+            SKILLS_BTN.setX(left + w + 2);
+            SKILLS_BTN.setY(top + 22);
+        }
+    }
+    static final class SpriteTabButton extends AbstractButton {
+        private final ResourceLocation tabTex;
+        private final int tabFrameW, tabFrameH, tabTexH;
+        private final ResourceLocation iconTex;
+        private final int iconFrame;   // размер кадра иконки (обычно 16)
+        private final int iconTexH;    // высота текстуры иконки (для blit)
+        private final int iconFrames;  // сколько кадров у иконки
+        private boolean pressedVisual = false;
+        private final Runnable onPress;
+        SpriteTabButton(
+                int x, int y,
+                ResourceLocation tabTex, int tabFrameW, int tabFrameH, int tabTexH,
+                ResourceLocation iconTex, int iconFrame, int iconTexH, int iconFrames,
+                Runnable onPress
+        ) {
+            super(x, y, tabFrameW, tabFrameH, Component.empty());
+            this.tabTex = tabTex;
+            this.tabFrameW = tabFrameW;
+            this.tabFrameH = tabFrameH;
+            this.tabTexH = tabTexH;
+            this.iconTex = iconTex;
+            this.iconFrame = iconFrame;
+            this.iconTexH = iconTexH;
+            this.iconFrames = Math.max(1, iconFrames);
+            this.onPress = onPress;
+        }
+        @Override
+        protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+            int state = this.isHovered() ? 1 : 0;
+            if (pressedVisual) state = 2; // 0/1/2 = normal/hover/pressed
+            int vTab = state * tabFrameH;
+            g.blit(tabTex, getX(), getY(), 0, vTab, tabFrameW, tabFrameH, tabFrameW, tabTexH);
+            long ms = System.currentTimeMillis();
+            int anim = (int)((ms / 200L) % iconFrames); // ~5 FPS
+            int vIcon = anim * iconFrame;
+            int ix = getX() + (tabFrameW - 16) / 2;
+            int iy = getY() + (tabFrameH - 16) / 2;
+            g.blit(iconTex, ix, iy, 0, vIcon, 16, 16, 16, iconTexH);
+        }
+        @Override
+        public void onPress() {
+            if (onPress != null) onPress.run();
+        }
+        @Override
+        public boolean mouseClicked(double mx, double my, int button) {
+            if (this.isMouseOver(mx, my)) pressedVisual = true;
+            return super.mouseClicked(mx, my, button);
+        }
+        @Override
+        public boolean mouseReleased(double mx, double my, int button) {
+            pressedVisual = false;
+            return super.mouseReleased(mx, my, button);
+        }
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput narration) {
+            this.defaultButtonNarrationText(narration);
+        }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryTabsButtons.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryWithStatsScreen.java
+package com.doomspire.grimfate.client.gui;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.stat.Attributes;
+import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimcore.stat.PlayerProgress;
+import com.doomspire.grimfate.core.Grimfate;
+import com.doomspire.grimfate.network.ModNetworking;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import java.util.ArrayList;
+import java.util.List;
+public class InventoryWithStatsScreen extends InventoryScreen {
+    private static final int PANEL_W = 160;
+    private static final int PANEL_H = 224;
+    private static final int INV_SHIFT = 120;
+    private static final ResourceLocation PANEL_BG =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/stats_panel_bg.png");
+    private static final ResourceLocation ICONS_TEX =
+            ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "textures/gui/stats/stats_icons.png");
+    private int panelX, panelY;
+    private final List<AttrBtn> attrButtons = new ArrayList<>();
+    public InventoryWithStatsScreen(Player player) {
+        super(player);
+    }
+    @Override
+    protected void init() {
+        super.init();
+        this.leftPos -= INV_SHIFT;
+        attrButtons.clear();
+        attrButtons.add(makeAttrBtn(Attributes.VITALITY,     34, 22, 54, 22));
+        attrButtons.add(makeAttrBtn(Attributes.STRENGTH,     34, 35, 54, 35));
+        attrButtons.add(makeAttrBtn(Attributes.SPIRIT,       69, 22, 89, 22));
+        attrButtons.add(makeAttrBtn(Attributes.INTELLIGENCE, 69, 35, 89, 35));
+        attrButtons.add(makeAttrBtn(Attributes.DEXTERITY,   105, 22,125, 22));
+        attrButtons.add(makeAttrBtn(Attributes.EVASION,     105, 35,125, 35));
+    }
+    private AttrBtn makeAttrBtn(Attributes id, int labelX, int labelY, int valueX, int valueY) {
+        int x = labelX - 2;
+        int y = labelY + 10;
+        int w = valueX - x;
+        int h = 10;
+        return new AttrBtn(id, x, y, w, h);
+    }
+    @Override
+    public void render(GuiGraphics g, int mouseX, int mouseY, float pt) {
+        panelX = this.leftPos + this.imageWidth + 2;
+        panelY = this.topPos;
+        this.renderBackground(g, mouseX, mouseY, pt);
+        super.render(g, mouseX, mouseY, pt);
+        g.blit(PANEL_BG, panelX, panelY, 0, 0, PANEL_W, PANEL_H, PANEL_W, PANEL_H);
+        var p = this.minecraft.player;
+        var progressAtt = p.getData(ModAttachments.PLAYER_PROGRESS.get());
+        var statsAtt    = p.getData(ModAttachments.PLAYER_STATS.get());
+        PlayerProgress prog = progressAtt != null ? progressAtt.toSnapshot() : PlayerProgress.DEFAULT;
+        int unspent = statsAtt != null ? statsAtt.getUnspentPoints() : 0;
+        String lvlText = "Уровень: " + prog.level();
+        g.drawString(this.font, lvlText, panelX + 49, panelY + 7, 0xFFE6DDAA, false);
+        g.drawString(this.font, String.valueOf(unspent), panelX + 107, panelY + 7, 0xFFFFFF, false);
+        AttrLine[] lines = new AttrLine[] {
+                new AttrLine("СТК", Attributes.VITALITY,     34, 22, 54, 22),
+                new AttrLine("СИЛ", Attributes.STRENGTH,     34, 35, 54, 35),
+                new AttrLine("ДУХ", Attributes.SPIRIT,       69, 22, 89, 22),
+                new AttrLine("ИНТ", Attributes.INTELLIGENCE, 69, 35, 89, 35),
+                new AttrLine("ЛВК", Attributes.DEXTERITY,   105, 22,125, 22),
+                new AttrLine("УКЛ", Attributes.EVASION,     105, 35,125, 35)
+        };
+        for (AttrLine L : lines) {
+            g.drawString(this.font, L.label, panelX + L.labelX, panelY + L.labelY, 0xFFFFFF, false);
+            int val = (statsAtt != null) ? statsAtt.getAttribute(L.id) : 0;
+            g.drawString(this.font, String.valueOf(val), panelX + L.valueX, panelY + L.valueY, 0xFFFFFF, false);
+        }
+        for (AttrBtn b : attrButtons) {
+            int ax = panelX + b.x;
+            int ay = panelY + b.y;
+            boolean hover = mouseX >= ax && mouseX < ax + b.w && mouseY >= ay && mouseY < ay + b.h;
+            int bg = hover ? 0x66FFFFFF : 0x33FFFFFF; // подсветка на hover
+            g.fill(ax, ay, ax + b.w, ay + b.h, (bg & 0x00FFFFFF) | 0x33000000);
+            g.fill(ax, ay, ax + b.w, ay + 1, 0x55FFFFFF);
+            g.fill(ax, ay + b.h - 1, ax + b.w, ay + b.h, 0x22000000);
+            int px = ax + (b.w - this.font.width("+")) / 2;
+            int py = ay + (b.h - this.font.lineHeight) / 2 + 1;
+            g.drawString(this.font, "+", px, py, 0xFFFFFFFF, false);
+        }
+        String hdr = "Характеристики";
+        int hdrX = panelX + 80 - this.font.width(hdr) / 2;
+        int hdrY = panelY + 55;
+        g.drawString(this.font, hdr, hdrX, hdrY, 0xFFE6DDAA, false);
+        final int col1L = panelX + 10,  col1R = panelX + 56;
+        final int col2L = panelX + 60,  col2R = panelX + 106;
+        final int col3L = panelX + 110, col3R = panelX + 156;
+        final int firstY = panelY + 70;
+        final int rowStep = 14;
+        if (statsAtt != null) {
+            var s = statsAtt.getSnapshot();
+            drawStatIconRow(g, "hp_max",        s.maxHealth,       col1L, col1R, firstY + rowStep * 0, ValueFmt.INT);
+            drawStatIconRow(g, "hp_regen",      s.regenHealth,     col1L, col1R, firstY + rowStep * 1, ValueFmt.INT);
+            drawStatIconRow(g, "mp_max",        s.maxMana,         col1L, col1R, firstY + rowStep * 2, ValueFmt.INT);
+            drawStatIconRow(g, "mp_regen",      s.regenMana,       col1L, col1R, firstY + rowStep * 3, ValueFmt.INT);
+            drawStatIconRow(g, "move_speed",    s.moveSpeedPct,    col1L, col1R, firstY + rowStep * 4, ValueFmt.PCT);
+            drawStatIconRow(g, "attack_speed",  0.0,               col1L, col1R, firstY + rowStep * 5, ValueFmt.INT);
+            drawStatIconRow(g, "res_phys",      s.resistances.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.PHYS_MELEE, 0f) * 100.0, col2L, col2R, firstY + rowStep * 0, ValueFmt.PCT_RAW);
+            drawStatIconRow(g, "res_fire",      s.resistances.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.FIRE, 0f) * 100.0,       col2L, col2R, firstY + rowStep * 1, ValueFmt.PCT_RAW);
+            drawStatIconRow(g, "res_frost",     s.resistances.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.FROST, 0f) * 100.0,      col2L, col2R, firstY + rowStep * 2, ValueFmt.PCT_RAW);
+            drawStatIconRow(g, "res_lightning", s.resistances.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.LIGHTNING, 0f) * 100.0,  col2L, col2R, firstY + rowStep * 3, ValueFmt.PCT_RAW);
+            drawStatIconRow(g, "res_poison",    s.resistances.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.POISON, 0f) * 100.0,     col2L, col2R, firstY + rowStep * 4, ValueFmt.PCT_RAW);
+            drawStatIconRow(g, "armor",         0.0,               col2L, col2R, firstY + rowStep * 5, ValueFmt.INT);
+            drawStatIconRow(g, "dmg_melee",     s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.PHYS_MELEE, 0f),  col3L, col3R, firstY + rowStep * 0, ValueFmt.F1);
+            drawStatIconRow(g, "dmg_ranged",    s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.PHYS_RANGED, 0f), col3L, col3R, firstY + rowStep * 1, ValueFmt.F1);
+            drawStatIconRow(g, "dmg_fire",      s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.FIRE, 0f),        col3L, col3R, firstY + rowStep * 2, ValueFmt.F1);
+            drawStatIconRow(g, "dmg_frost",     s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.FROST, 0f),       col3L, col3R, firstY + rowStep * 3, ValueFmt.F1);
+            drawStatIconRow(g, "dmg_lightning", s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.LIGHTNING, 0f),   col3L, col3R, firstY + rowStep * 4, ValueFmt.F1);
+            drawStatIconRow(g, "dmg_poison",    s.damage.getOrDefault(com.doomspire.grimcore.stat.DamageTypes.POISON, 0f),      col3L, col3R, firstY + rowStep * 5, ValueFmt.F1);
+        }
+        this.renderTooltip(g, mouseX, mouseY);
+    }
+    private void drawStatIconRow(GuiGraphics g, String iconName, double value,
+                                 int colL, int colR, int y, ValueFmt fmt) {
+        int iconX = colL;
+        int valRight = colR; // правое выравнивание числа
+        try {
+            IconDef def = Icons.get(iconName);
+            if (def != null) {
+                int frame = def.frames > 1 ? (int)((System.currentTimeMillis() / def.frameMs) % def.frames) : 0;
+                int u = def.u;
+                int v = def.v + frame * def.h;
+                g.blit(ICONS_TEX, iconX, y - 3, u, v, def.w, def.h);
+            }
+        } catch (Throwable ignored) {
+        }
+        String txt = switch (fmt) {
+            case INT     -> String.valueOf((int)Math.round(value));
+            case F1      -> String.format(java.util.Locale.ROOT, "%.1f", value);
+            case PCT     -> String.format(java.util.Locale.ROOT, "+%.2f%%", value);
+            case PCT_RAW -> String.format(java.util.Locale.ROOT, "%.0f%%", value);
+        };
+        int vx = valRight - this.font.width(txt);
+        g.drawString(this.font, txt, vx, y, 0xFFFFFF, false);
+    }
+    private enum ValueFmt { INT, F1, PCT, PCT_RAW }
+    @Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        for (AttrBtn b : attrButtons) {
+            int ax = panelX + b.x;
+            int ay = panelY + b.y;
+            if (mx >= ax && mx < ax + b.w && my >= ay && my < ay + b.h) {
+                ModNetworking.sendAllocatePoint(b.id.name());
+                return true;
+            }
+        }
+        return super.mouseClicked(mx, my, button);
+    }
+    private record AttrLine(String label, Attributes id, int labelX, int labelY, int valueX, int valueY) {}
+    private static final class AttrBtn {
+        final Attributes id;
+        final int x, y, w, h;
+        AttrBtn(Attributes id, int x, int y, int w, int h) {
+            this.id = id; this.x = x; this.y = y; this.w = w; this.h = h;
+        }
+    }
+    private static final class IconDef {
+        final int u, v, w, h, frames, frameMs;
+        IconDef(int u, int v, int w, int h, int frames, int frameMs) {
+            this.u = u; this.v = v; this.w = w; this.h = h; this.frames = frames; this.frameMs = Math.max(frameMs, 1);
+        }
+    }
+    private static final class Icons {
+        private static final java.util.Map<String, IconDef> MAP = new java.util.HashMap<>();
+        static {
+            MAP.put("hp_max",       new IconDef(  0, 0,14,14, 1,0));
+            MAP.put("hp_regen",     new IconDef( 16, 0,16,16, 6, 60));
+            MAP.put("mp_max",       new IconDef( 32, 0,16,16, 8, 60));
+            MAP.put("mp_regen",     new IconDef( 48, 0,16,16, 8, 60));
+            MAP.put("move_speed",   new IconDef( 64, 0,16,16, 7,120));
+            MAP.put("attack_speed", new IconDef( 80, 0,16,16,10, 20));
+            MAP.put("res_phys",     new IconDef( 96, 0,16,16, 8, 60));
+            MAP.put("res_fire",     new IconDef(112, 0,16,16, 6, 60));
+            MAP.put("res_frost",    new IconDef(128, 0,16,16, 6, 60));
+            MAP.put("res_lightning",new IconDef(144, 0,16,16, 6, 20));
+            MAP.put("res_poison",   new IconDef(160, 0,16,16, 6, 60));
+            MAP.put("armor",        new IconDef(176, 0,16,16, 1,  0));
+            MAP.put("dmg_melee",    new IconDef(192, 0,16,16, 1,  0));
+            MAP.put("dmg_ranged",   new IconDef(208, 0,16,16, 1,  0));
+            MAP.put("dmg_fire",     new IconDef(224, 0,16,16, 1,  0));
+            MAP.put("dmg_frost",    new IconDef(240, 0,16,16, 1,  0));
+            MAP.put("dmg_lightning",new IconDef(256, 0,16,16, 1,  0));
+            MAP.put("dmg_poison",   new IconDef(272, 0,16,16, 1,  0));
+        }
+        static IconDef get(String key) { return MAP.get(key); }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\client\gui\InventoryWithStatsScreen.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\client\Hotkeys.java
+package com.doomspire.grimfate.client;
+import com.doomspire.grimfate.network.ModNetworking;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import org.lwjgl.glfw.GLFW;
+public final class Hotkeys {
+    private Hotkeys() {}
+    private static final String CAT = "key.categories.grimfate";
+    private static final String[] SPELL_IDS = {
+            "key.grimfate.spellslot_1",
+            "key.grimfate.spellslot_2",
+            "key.grimfate.spellslot_3",
+            "key.grimfate.spellslot_4",
+            "key.grimfate.spellslot_5",
+            "key.grimfate.spellslot_6"
+    };
+    private static final int[] DEFAULTS = {
+            GLFW.GLFW_KEY_R, GLFW.GLFW_KEY_F, GLFW.GLFW_KEY_C,
+            GLFW.GLFW_KEY_V, GLFW.GLFW_KEY_B, GLFW.GLFW_KEY_N
+    };
+    private static final KeyMapping[] SPELL_KEYS = new KeyMapping[6];
+    private static boolean CREATED = false;
+    private static boolean REGISTERED = false;
+    private static void ensureCreated() {
+        if (CREATED) return;
+        CREATED = true;
+        for (int i = 0; i < SPELL_KEYS.length; i++) {
+            SPELL_KEYS[i] = new KeyMapping(SPELL_IDS[i], DEFAULTS[i], CAT);
+        }
+    }
+    public static void onRegisterKeys(RegisterKeyMappingsEvent e) {
+        ensureCreated();
+        if (REGISTERED) {
+            return;
+        }
+        REGISTERED = true;
+        for (KeyMapping km : SPELL_KEYS) e.register(km);
+    }
+    public static void onClientTick(ClientTickEvent.Post e) {
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer p = mc.player;
+        if (p == null) return;
+        for (int i = 0; i < SPELL_KEYS.length; i++) {
+            KeyMapping km = SPELL_KEYS[i];
+            if (km != null && km.consumeClick()) {
+                ModNetworking.sendCastSpellSlot(i);
+            }
+        }
+    }
+    public static String spellKeyName(int idx) {
+        if (idx < 0 || idx >= SPELL_KEYS.length || SPELL_KEYS[idx] == null) return "?";
+        return SPELL_KEYS[idx].getTranslatedKeyMessage().getString();
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\client\Hotkeys.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\client\model\armor\BaseArmorGeoModel.java
+package com.doomspire.grimfate.client.model.armor;
+import com.doomspire.grimfate.item.armor.NoAnimGeoArmorItem;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.model.GeoModel;
+public class BaseArmorGeoModel extends GeoModel<NoAnimGeoArmorItem> {
+    @Override public ResourceLocation getModelResource(NoAnimGeoArmorItem a)   { return a.visual().geo(); }
+    @Override public ResourceLocation getTextureResource(NoAnimGeoArmorItem a) { return a.visual().texture(); }
+    @Override public @Nullable ResourceLocation getAnimationResource(NoAnimGeoArmorItem a) { return null; }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\client\model\armor\BaseArmorGeoModel.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\client\render\armor\BaseArmorRenderer.java
+package com.doomspire.grimfate.client.render.armor;
+import com.doomspire.grimfate.client.model.armor.BaseArmorGeoModel;
+import com.doomspire.grimfate.item.armor.GenericGeoArmorItem;
+import com.doomspire.grimfate.item.armor.NoAnimGeoArmorItem;
+import software.bernie.geckolib.renderer.GeoArmorRenderer;
+/**
+ * Базовый GeckoLib-рендерер брони для всех сетов Grimfate.
+ * Работает с {@link GenericGeoArmorItem} и читает пути к geo/texture из его Visual.
+ *
+ * ВАЖНО: имена костей (bone ids) должны совпадать с теми, что в .geo.json.
+ * Ниже указаны дефолтные/распространённые идентификаторы. Если в ваших моделях другие,
+ * просто поправьте строки на ваши bone ids.
+ */
+public class BaseArmorRenderer extends GeoArmorRenderer<NoAnimGeoArmorItem> {
+    public BaseArmorRenderer() {
+        super(new BaseArmorGeoModel());
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\client\render\armor\BaseArmorRenderer.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\client\tooltip\AffixTooltipHandler.java
+package com.doomspire.grimfate.client.tooltip;
+import com.doomspire.grimcore.affix.rarity.RarityDataManager;
+import com.doomspire.grimcore.affix.rarity.RarityDef;
+import com.doomspire.grimfate.item.comp.AffixListComponent;
+import com.doomspire.grimfate.registry.ModDataComponents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import java.util.List;
+public final class AffixTooltipHandler {
+    @SubscribeEvent
+    public static void onTooltip(ItemTooltipEvent e) {
+        ItemStack stack = e.getItemStack();
+        var compType = ModDataComponents.AFFIX_LIST.get();
+        AffixListComponent comp = stack.get(compType);
+        if (comp == null) return;
+        List<AffixListComponent.Entry> entries = comp.entries();
+        if (entries == null || entries.isEmpty()) return;
+        String rarityId = comp.rarityId(); // требуется обновлённый AffixListComponent
+        if (rarityId != null && !rarityId.isEmpty()) {
+            var defOpt = RarityDataManager.INSTANCE.get(ResourceLocation.tryParse(rarityId));
+            if (defOpt.isPresent()) {
+                RarityDef def = defOpt.get(); // содержит display_key и text_color
+                String titleKey = def.displayKey().isEmpty()
+                        ? ("rarity." + def.id().getNamespace() + "." + def.id().getPath())
+                        : def.displayKey();
+                MutableComponent title = Component.translatable(titleKey);
+                int rgb = def.textColor();
+                title.withStyle(s -> s.withColor(rgb).withBold(true));
+                e.getToolTip().add(title);
+            }
+        } else {
+            e.getToolTip().add(Component.literal("Affixes")
+                    .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        }
+        for (AffixListComponent.Entry en : entries) {
+            String nice  = prettifyId(en.id());      // человекочитаемое имя
+            String rolls = formatRolls(en.rolls());  // "0.12, 0.34"
+            MutableComponent line = rolls.isEmpty()
+                    ? Component.literal("• " + nice)
+                    : Component.literal("• " + nice + " (" + rolls + ")");
+            line.withStyle(ChatFormatting.BLUE);
+            e.getToolTip().add(line);
+        }
+    }
+    private static String prettifyId(String id) {
+        if (id == null || id.isEmpty()) return "?";
+        int colon = id.indexOf(':');
+        String tail = colon >= 0 ? id.substring(colon + 1) : id;
+        int slash = tail.lastIndexOf('/');
+        String base = (slash >= 0 ? tail.substring(slash + 1) : tail).replace('_', ' ');
+        String[] parts = base.split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (String p : parts) {
+            if (p.isEmpty()) continue;
+            sb.append(Character.toUpperCase(p.charAt(0)));
+            if (p.length() > 1) sb.append(p.substring(1));
+            sb.append(' ');
+        }
+        return sb.toString().trim();
+    }
+    private static String formatRolls(List<Float> rolls) {
+        if (rolls == null || rolls.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < rolls.size(); i++) {
+            float v = rolls.get(i);
+            sb.append(String.format("%.2f", v));
+            if (i + 1 < rolls.size()) sb.append(", ");
+        }
+        return sb.toString();
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\client\tooltip\AffixTooltipHandler.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\combat\WeaponPredicates.java
+package com.doomspire.grimfate.combat;
+import com.doomspire.grimfate.registry.ModDataComponents;
+import com.doomspire.grimfate.registry.ModItemTags;
+import net.minecraft.world.item.ItemStack;
+public final class WeaponPredicates {
+    public static boolean isType(ItemStack stack, WeaponType t) {
+        var prof = stack.get(ModDataComponents.WEAPON_PROFILE.get());
+        if (prof != null) return prof.type() == t;
+        return switch (t) {
+            case STAFF  -> stack.is(ModItemTags.STAVES);
+            case BOW    -> stack.is(ModItemTags.RANGED_WEAPONS);
+            case DAGGER -> stack.is(ModItemTags.DAGGERS);
+            case SWORD  -> stack.is(ModItemTags.MELEE_WEAPONS);
+            case SHIELD -> stack.is(ModItemTags.SHIELDS);
+            case GREATSWORD -> stack.is(ModItemTags.MELEE_WEAPONS);
+            case HAMMER -> stack.is(ModItemTags.MELEE_WEAPONS);
+            default     -> false;
+        };
+    }
+    public static boolean isStaff(ItemStack s)  { return isType(s, WeaponType.STAFF); }
+    public static boolean isRanged(ItemStack s) { return isType(s, WeaponType.BOW); }
+    public static boolean isMelee(ItemStack s)  { return isType(s, WeaponType.SWORD) || isType(s, WeaponType.DAGGER) || isType(s, WeaponType.AXE)
+            || isType(s, WeaponType.GREATSWORD) || isType(s, WeaponType.HAMMER); }
+    public static boolean isShield(ItemStack s) { return isType(s, WeaponType.SHIELD); }
+    private WeaponPredicates() {}
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\combat\WeaponPredicates.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\combat\WeaponType.java
+package com.doomspire.grimfate.combat;
+public enum WeaponType { SWORD, AXE, DAGGER, STAFF, BOW, SHIELD, HAMMER, GREATSWORD }
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\combat\WeaponType.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\commands\AddSpellCommand.java
+package com.doomspire.grimfate.commands;
+import com.doomspire.grimcore.attach.PlayerLoadoutAttachment;
+import com.doomspire.grimcore.stat.ModAttachments;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import java.util.Collection;
+public final class AddSpellCommand {
+    private AddSpellCommand() {}
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("grimfate")
+                .then(Commands.literal("addspell")
+                        .then(Commands.argument("spell", ResourceLocationArgument.id())
+                                .executes(ctx -> {
+                                    ServerPlayer self = ctx.getSource().getPlayerOrException();
+                                    ResourceLocation rl = ResourceLocationArgument.getId(ctx, "spell");
+                                    int added = addToPlayer(self, rl);
+                                    if (added > 0) {
+                                        ctx.getSource().sendSuccess(() ->
+                                                Component.literal("Added spell " + rl + " to " + self.getGameProfile().getName()), true);
+                                        return 1;
+                                    } else {
+                                        ctx.getSource().sendFailure(Component.literal("No free slot for " + rl + " on " + self.getGameProfile().getName()));
+                                        return 0;
+                                    }
+                                }))
+                        .then(Commands.argument("targets", EntityArgument.players())
+                                .then(Commands.argument("spell", ResourceLocationArgument.id())
+                                        .executes(ctx -> {
+                                            Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
+                                            ResourceLocation rl = ResourceLocationArgument.getId(ctx, "spell");
+                                            int total = 0;
+                                            for (ServerPlayer sp : targets) {
+                                                total += addToPlayer(sp, rl);
+                                            }
+                                            if (total > 0) {
+                                                final int count = total; // effectively final копия для лямбды
+                                                ctx.getSource().sendSuccess(() ->
+                                                        Component.literal("Added spell " + rl + " to " + count + " player(s)"), true);
+                                                return total;
+                                            } else {
+                                                ctx.getSource().sendFailure(Component.literal("No recipients had a free slot for " + rl));
+                                                return 0;
+                                            }
+                                        })))
+                )
+        );
+    }
+    /**
+     * Пытается добавить спелл в первый свободный слот лоадаута игрока.
+     * Возвращает 1 если добавлено, иначе 0.
+     */
+    private static int addToPlayer(ServerPlayer sp, ResourceLocation rl) throws CommandSyntaxException {
+        PlayerLoadoutAttachment att = sp.getData(ModAttachments.PLAYER_LOADOUT.get());
+        if (att == null) {
+            return 0;
+        }
+        for (int i = 0; i < PlayerLoadoutAttachment.SLOTS; i++) {
+            if (att.get(i) == null) {
+                att.set(i, rl);
+                sp.setData(ModAttachments.PLAYER_LOADOUT.get(), att);
+                return 1;
+            }
+        }
+        return 0;
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\commands\AddSpellCommand.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\compat\bettercombat\BetterCombatBridge.java
+package com.doomspire.grimfate.compat.bettercombat;
+import com.mojang.logging.LogUtils;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.neoforged.fml.ModList;
+import org.slf4j.Logger;
+/**
+ * Задача «моста» — централизовать:
+ *  1) проверку наличия мода,
+ *  2) константы с их тегами (Item Tags), чтобы удобно маппить наши теги в data-ресурсах,
+ *  3) место для будущих утилит, если понадобится.
+ *
+ * ВАЖНО:
+ *  - Реальная привязка к анимациям происходит через data-теги (JSON),
+ *    где мы включаем наши теги (#grimfate:daggers, #grimfate:swords, #grimfate:two_handed …)
+ *    в их теги (bettercombat:daggers, bettercombat:swords, …).
+ *  - Этот класс НЕ тянет никаких API Better Combat во время компиляции.
+ */
+public final class BetterCombatBridge {
+    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final String MODID = "bettercombat";
+    private BetterCombatBridge() {}
+    public static boolean isLoaded() {
+        return ModList.get().isLoaded(MODID);
+    }
+    public static void init() {
+        if (isLoaded()) {
+            LOGGER.info("[Grimfate] Better Combat detected. Weapon tags will be bridged via data pack.");
+        } else {
+            LOGGER.warn("[Grimfate] Better Combat NOT detected. Using vanilla/Gecko animations only.");
+        }
+    }
+    public static final TagKey<Item> BC_SWORDS      = itemTag("swords");
+    public static final TagKey<Item> BC_DAGGERS     = itemTag("daggers");
+    public static final TagKey<Item> BC_AXES        = itemTag("axes");
+    public static final TagKey<Item> BC_MACES       = itemTag("maces");
+    public static final TagKey<Item> BC_HAMMERS     = itemTag("hammers");
+    public static final TagKey<Item> BC_SPEARS      = itemTag("spears");
+    public static final TagKey<Item> BC_POLEARMS    = itemTag("polearms");
+    public static final TagKey<Item> BC_GREATSWORDS = itemTag("greatswords");
+    public static final TagKey<Item> BC_GREATAXES   = itemTag("greataxes");
+    public static final TagKey<Item> BC_STAVES      = itemTag("staves"); // если у них есть такой набор (покрываем на будущее)
+    public static final TagKey<Item> GF_TWO_HANDED  =
+            TagKey.create(net.minecraft.core.registries.Registries.ITEM,
+                    ResourceLocation.fromNamespaceAndPath("grimfate", "two_handed"));
+    private static TagKey<Item> itemTag(String path) {
+        return TagKey.create(net.minecraft.core.registries.Registries.ITEM,
+                ResourceLocation.fromNamespaceAndPath(MODID, path));
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\compat\bettercombat\BetterCombatBridge.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\compat\curios\CuriosCompat.java
+package com.doomspire.grimfate.compat.curios;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.stat.ModAttachments;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.fml.ModList;
+import java.util.function.BiConsumer;
+/**
+ * Мягкая интеграция с Curios. Сейчас содержит только проверку наличия.
+ * Позже сюда добавим реальное чтение экипированных curios-предметов,
+ * чтобы складывать их StatBonus-компоненты в агрегатор статов.
+ */
+public final class CuriosCompat {
+    public static final String MODID = "curios";
+    private CuriosCompat() {}
+    public static boolean isLoaded() {
+        return ModList.get().isLoaded(MODID);
+    }
+    /**
+     * Заглушка: когда подключим API-вызовы Curios, сюда добавим обход всех слотов Curios
+     * и вызов consumer.accept(stack, slotId).
+     */
+    public static void forEachEquipped(LivingEntity entity, BiConsumer<ItemStack, String> consumer) {
+        if (!isLoaded()) return;
+    }
+    public static void triggerRecalc(ServerPlayer sp) {
+        if (sp == null) return;
+        PlayerStatsAttachment att = sp.getData(ModAttachments.PLAYER_STATS.get());
+        if (att == null) return;
+        att.recalcAndSync(sp);
+        GrimcoreNetworking.syncPlayerStats(sp, att);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\compat\curios\CuriosCompat.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\config\ClientConfig.java
+package com.doomspire.grimfate.config;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
+public class ClientConfig {
+    public static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static final ModConfigSpec.IntValue HEALTH_BAR_X;
+    public static final ModConfigSpec.IntValue HEALTH_BAR_Y;
+    public static final ModConfigSpec.IntValue MANA_BAR_X;
+    public static final ModConfigSpec.IntValue MANA_BAR_Y;
+    public static final ModConfigSpec.IntValue XP_ICON_X;
+    public static final ModConfigSpec.IntValue XP_ICON_Y;
+    public static final ModConfigSpec.IntValue SPELLBAR_X;
+    public static final ModConfigSpec.IntValue SPELLBAR_Y;
+    static {
+        SPELLBAR_X = BUILDER
+                .comment("Смещение спелбара по X")
+                .defineInRange("hud.spellbar_x", -60, -500, 500);
+        SPELLBAR_Y = BUILDER
+                .comment("Смещение спелбара по X")
+                .defineInRange("hud.spellbar_y", -78, -500, 500);
+        HEALTH_BAR_X = BUILDER
+                .comment("Смещение полоски здоровья по X")
+                .defineInRange("hud.health_bar_x", -60, -500, 500);
+        HEALTH_BAR_Y = BUILDER
+                .comment("Смещение полоски здоровья по Y")
+                .defineInRange("hud.health_bar_y", -78, -500, 500);
+        MANA_BAR_X = BUILDER
+                .comment("Смещение полоски маны по X")
+                .defineInRange("hud.mana_bar_x", -60, -500, 500);
+        MANA_BAR_Y = BUILDER
+                .comment("Смещение полоски маны по Y")
+                .defineInRange("hud.mana_bar_y", -65, -500, 500);
+        XP_ICON_X = BUILDER
+                .comment("Смещение иконки опыта по X")
+                .defineInRange("hud.xp_icon_x", -30, -500, 500);
+        XP_ICON_Y = BUILDER
+                .comment("Смещение иконки опыта по Y")
+                .defineInRange("hud.xp_icon_y", -100, -500, 500);
+    }
+    public static final ModConfigSpec SPEC = BUILDER.build();
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\config\ClientConfig.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\config\ModConfig.java
+package com.doomspire.grimfate.config;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+/**
+ * 🔧 ModConfig — централизованный конфиг мода
+ * В будущем:
+ *  - хранение базовых статов для игроков и мобов
+ *  - множители регена/урона
+ *  - настройка аффиксов
+ *  - редактирование через JSON без пересборки
+ */
+public class ModConfig {
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final File CONFIG_FILE = new File("config/grimfate.json");
+    private static ModConfig INSTANCE = new ModConfig();
+    public static ModConfig get() {
+        return INSTANCE;
+    }
+    public static void load() {
+        if (!CONFIG_FILE.exists()) {
+            save(); // если файла нет, создаём дефолт
+            return;
+        }
+        try (FileReader reader = new FileReader(CONFIG_FILE)) {
+            INSTANCE = GSON.fromJson(reader, ModConfig.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public static void save() {
+        try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
+            GSON.toJson(INSTANCE, writer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\config\ModConfig.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\core\Config.java
+package com.doomspire.grimfate.core;
+import java.util.List;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.common.ModConfigSpec;
+public class Config {
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static final ModConfigSpec.BooleanValue LOG_DIRT_BLOCK = BUILDER
+            .comment("Whether to log the dirt block on common setup")
+            .define("logDirtBlock", true);
+    public static final ModConfigSpec.IntValue MAGIC_NUMBER = BUILDER
+            .comment("A magic number")
+            .defineInRange("magicNumber", 42, 0, Integer.MAX_VALUE);
+    public static final ModConfigSpec.ConfigValue<String> MAGIC_NUMBER_INTRODUCTION = BUILDER
+            .comment("What you want the introduction message to be for the magic number")
+            .define("magicNumberIntroduction", "The magic number is... ");
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> ITEM_STRINGS = BUILDER
+            .comment("A list of items to log on common setup.")
+            .defineListAllowEmpty("items", List.of("minecraft:iron_ingot"), () -> "", Config::validateItemName);
+    static final ModConfigSpec SPEC = BUILDER.build();
+    private static boolean validateItemName(final Object obj) {
+        return obj instanceof String itemName && BuiltInRegistries.ITEM.containsKey(ResourceLocation.parse(itemName));
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\core\Config.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\core\Grimfate.java
+package com.doomspire.grimfate.core;
+import com.doomspire.grimcore.affix.AffixAggregator;
+import com.doomspire.grimcore.affix.ModAffixes;
+import com.doomspire.grimfate.affix.GrimfateAffixes;
+import com.doomspire.grimfate.commands.AddSpellCommand;
+import com.doomspire.grimfate.config.ClientConfig;
+import com.doomspire.grimfate.item.armor.Armors;
+import com.doomspire.grimfate.item.jewelry.Jewelry;
+import com.doomspire.grimfate.item.materials.Materials;
+import com.doomspire.grimfate.item.weapons.Weapons;
+import com.doomspire.grimfate.loot.modifier.ModLootModifiers;
+import com.doomspire.grimfate.network.ModNetworking;
+import com.doomspire.grimfate.registry.*;
+import com.mojang.logging.LogUtils;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import org.slf4j.Logger;
+import net.neoforged.neoforge.common.NeoForge;
+@Mod(Grimfate.MODID)
+public class Grimfate {
+    public static final String MODID = "grimfate";
+    public static final Logger LOGGER = LogUtils.getLogger();
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB_EQUIPMENT =
+            CREATIVE_MODE_TABS.register("equipment", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.grimfate.equipment"))
+                    .icon(() -> new ItemStack(Weapons.COPPER_SWORD.get()))
+                    .withSearchBar()
+                    .build());
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB_MATERIALS =
+            CREATIVE_MODE_TABS.register("materials", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.grimfate.materials"))
+                    .icon(() -> new ItemStack(Materials.RAWHIDE.get()))
+                    .withSearchBar()
+                    .build());
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB_MOBS =
+            CREATIVE_MODE_TABS.register("mobs", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.grimfate.mobs"))
+                    .icon(() -> new ItemStack(Materials.PORK_FAT.get()))
+                    .withSearchBar()
+                    .build());
+    private void onAddReloadListeners(net.neoforged.neoforge.event.AddReloadListenerEvent event) {
+        com.doomspire.grimcore.affix.rarity.RarityDataManager.onAddReloadListeners(event);
+        com.doomspire.grimcore.affix.def.AffixDataManager.onAddReloadListeners(event);
+        com.doomspire.grimcore.affix.pool.AffixPoolDataManager.onAddReloadListeners(event);
+    }
+    public Grimfate(IEventBus modEventBus, ModContainer modContainer) {
+        modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modEventBus.addListener(ModNetworking::register);
+        CREATIVE_MODE_TABS.register(modEventBus);
+        ModItems.init(modEventBus);
+        ModEntityTypes.init(modEventBus);
+        ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
+        ModLootModifiers.init(modEventBus);
+        LOGGER.info("[Grimfate] Registering DebugLootModifiers…");
+        com.doomspire.grimfate.debug.DebugLootModifiers.init(modEventBus);
+        ModDataComponents.DATA_COMPONENT_TYPES.register(modEventBus);
+        NeoForge.EVENT_BUS.addListener(this::onAddReloadListeners);
+        com.doomspire.grimfate.item.weapons.Weapons.init(modEventBus);
+        com.doomspire.grimfate.item.armor.Armors.init(modEventBus);
+        com.doomspire.grimfate.item.materials.Materials.init(modEventBus);
+        com.doomspire.grimfate.item.jewelry.Jewelry.init(modEventBus);
+        modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(this::addCreative);
+        if (FMLEnvironment.dist.isClient()) {
+            GrimfateClient.registerModBusListeners(modEventBus);
+        }
+    }
+    private void commonSetup(final FMLCommonSetupEvent e) {
+        e.enqueueWork(() -> {
+            com.doomspire.grimcore.spell.api.WeaponGate.setTwoHandedResolver((stack, player) -> {
+                var comp = stack.get(com.doomspire.grimfate.registry.ModDataComponents.WEAPON_PROFILE.get());
+                return comp != null && comp.twoHanded();
+            });
+            com.doomspire.grimfate.compat.bettercombat.BetterCombatBridge.init();
+            com.doomspire.grimfate.registry.ModCurios.init();
+            ModAffixes.bootstrap();
+            GrimfateAffixes.registerAll();
+                    com.doomspire.grimfate.core.Grimfate.LOGGER.info("[Affix] registered={} core+content",
+                    com.doomspire.grimcore.affix.ModAffixes.all().size());
+            AffixAggregator.setExtractor(com.doomspire.grimfate.affix.GrimfateAffixExtraction::extractFromEntity);
+                    com.doomspire.grimfate.core.Grimfate.LOGGER.info("[Affix] extractor wired: GrimfateAffixExtraction");
+            var all = com.doomspire.grimcore.affix.ModAffixes.all();
+            Grimfate.LOGGER.info("[Affix] registered={} ids={}", all.size(),
+                    all.keySet().stream().map(Object::toString).sorted().toList());
+            LOGGER.info("[Grimfate] Creative tabs registered; AffixAggregator hooked; integrations bootstrapped.");
+        });
+    }
+    private void addCreative(final BuildCreativeModeTabContentsEvent e) {
+        if (e.getTab() == TAB_EQUIPMENT.get()) {
+            safeAdd(e, Weapons.COPPER_SWORD);
+            safeAdd(e, Weapons.SCHOLAR_STAFF);
+            safeAdd(e, Weapons.WEAKLING_BOW);
+            safeAdd(e, Weapons.COPPERFORCED_SHIELD);
+            safeAdd(e, Armors.COPPER_BOOTS);
+            safeAdd(e, Armors.COPPER_CHESTPLATE);
+            safeAdd(e, Armors.COPPER_LEGGINGS);
+            safeAdd(e, Armors.COPPER_HELMET);
+            safeAdd(e, Jewelry.COPPER_RING);
+            safeAdd(e, Jewelry.COPPER_NECKLACE);
+            safeAdd(e, Jewelry.BRONZE_RING);
+            safeAdd(e, Jewelry.BRONZE_NECKLACE);
+            safeAdd(e, Armors.LINEN_SHOES);
+            safeAdd(e, Armors.LINEN_CAPE);
+            safeAdd(e, Armors.LINEN_PANTS);
+            safeAdd(e, Armors.LINEN_HAT);
+            safeAdd(e, Armors.RAWHIDE_BOOTS);
+            safeAdd(e, Armors.RAWHIDE_JACKET);
+            safeAdd(e, Armors.RAWHIDE_WRAPS);
+            safeAdd(e, Armors.RAWHIDE_HOOD);
+        }
+        else if (e.getTab() == TAB_MATERIALS.get()) {
+            acceptIfPresent(e, rl("fiber"));
+            acceptIfPresent(e, rl("canvas_fabric"));
+            acceptIfPresent(e, rl("pork_fat"));
+            acceptIfPresent(e, rl("rawhide"));
+        }
+        else if (e.getTab() == TAB_MOBS.get()) {
+        }
+    }
+    private static void safeAdd(BuildCreativeModeTabContentsEvent e, DeferredHolder<Item, ? extends Item> h) {
+        if (h != null && h.isBound()) e.accept(h.get());
+    }
+    private static void acceptIfPresent(BuildCreativeModeTabContentsEvent e, ResourceLocation id) {
+        Item item = lookupItem(id);
+        if (item != null) e.accept(item);
+    }
+    private static ItemStack stackOrFallback(ResourceLocation prefer, Item fallback) {
+        Item item = lookupItem(prefer);
+        return new ItemStack(item != null ? item : fallback);
+    }
+    private static Item lookupItem(ResourceLocation id) {
+        return BuiltInRegistries.ITEM.getOptional(id).orElse(null);
+    }
+    @net.neoforged.bus.api.SubscribeEvent
+    public static void onRegisterCommands(RegisterCommandsEvent e) {
+        AddSpellCommand.register(e.getDispatcher());
+    }
+    public static ResourceLocation rl(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
+    }
+    @net.neoforged.bus.api.SubscribeEvent
+    public void onServerStarting(ServerStartingEvent event) {  }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\core\Grimfate.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\core\GrimfateClient.java
+package com.doomspire.grimfate.core;
+import com.doomspire.grimfate.client.Hotkeys;
+import com.doomspire.grimfate.entity.BoltProjectileEntity;
+import com.doomspire.grimfate.registry.ModEntityTypes;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
+public final class GrimfateClient {
+    private GrimfateClient() {}
+    public static void registerModBusListeners(IEventBus modBus) {
+        modBus.addListener(GrimfateClient::onRegisterRenderers);
+        modBus.addListener(GrimfateClient::onClientSetup);
+        modBus.addListener(Hotkeys::onRegisterKeys);
+        modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) ->
+                e.enqueueWork(com.doomspire.grimfate.client.BowModelProperties::register));
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(
+                com.doomspire.grimfate.client.tooltip.AffixTooltipHandler.class
+        );
+    }
+    static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers e) {
+        e.registerEntityRenderer(ModEntityTypes.BOLT.get(),
+                ctx -> new ThrownItemRenderer<BoltProjectileEntity>(ctx, 1.0f, false));
+    }
+    static void onClientSetup(FMLClientSetupEvent e) {
+        Grimfate.LOGGER.info("Client setup OK. User={}", Minecraft.getInstance().getUser().getName());
+        NeoForge.EVENT_BUS.addListener(Hotkeys::onClientTick);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\core\GrimfateClient.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\debug\AlwaysLogAndAddBread.java
+package com.doomspire.grimfate.debug;
+import com.mojang.serialization.MapCodec;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+public final class AlwaysLogAndAddBread implements IGlobalLootModifier {
+    private static final Logger LOG = LoggerFactory.getLogger("Grimfate/GLM-DEBUG");
+    public static final MapCodec<AlwaysLogAndAddBread> CODEC = MapCodec.unit(new AlwaysLogAndAddBread());
+    @Override public MapCodec<? extends IGlobalLootModifier> codec() { return CODEC; }
+    @Override
+    public ObjectArrayList<ItemStack> apply(ObjectArrayList<ItemStack> loot, LootContext ctx) {
+        boolean hasBlock  = ctx.hasParam(LootContextParams.BLOCK_STATE);
+        boolean hasEntity = ctx.hasParam(LootContextParams.THIS_ENTITY);
+        boolean hasTool   = ctx.hasParam(LootContextParams.TOOL);
+        var dim = ctx.getLevel().dimension().location();
+        LOG.info("[GLM] apply() called: hasBlock={}, hasEntity={}, hasTool={}, dim={}", hasBlock, hasEntity, hasTool, dim);
+        loot.add(new ItemStack(Items.BREAD));
+        return loot;
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\debug\AlwaysLogAndAddBread.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\debug\DebugLootModifiers.java
+package com.doomspire.grimfate.debug;
+import com.doomspire.grimfate.core.Grimfate;
+import com.mojang.serialization.MapCodec;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+public final class DebugLootModifiers {
+    private static final Logger LOG = LoggerFactory.getLogger("Grimfate/GLM-DEBUG");
+    public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> REG =
+            DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, Grimfate.MODID);
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            ALWAYS_LOG_AND_ADD_BREAD = REG.register("always_log_and_add_bread", () -> AlwaysLogAndAddBread.CODEC);
+    public static void init(IEventBus modBus) {
+        LOG.info("[GLM-DEBUG] registering codec grimfate:always_log_and_add_bread");
+        REG.register(modBus);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\debug\DebugLootModifiers.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\debug\DebugLootModsProbe.java
+package com.doomspire.grimfate.debug;
+import com.doomspire.grimfate.core.Grimfate;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+public final class DebugLootModsProbe implements PreparableReloadListener {
+    public static void onAddReloadListeners(AddReloadListenerEvent e) {
+        e.addListener(new DebugLootModsProbe());
+    }
+    @Override
+    public CompletableFuture<Void> reload(PreparationBarrier barrier, ResourceManager rm,
+                                          ProfilerFiller prep, ProfilerFiller apply,
+                                          Executor bg, Executor game) {
+        return CompletableFuture
+                .supplyAsync(() -> {
+                    ResourceLocation rl = ResourceLocation.fromNamespaceAndPath(
+                            "neoforge", "loot_modifiers/global_loot_modifiers.json");
+                    boolean exists = rm.getResource(rl).isPresent();
+                    Grimfate.LOGGER.info("[Grimfate][GLM-PROBE] global_loot_modifiers present: {}", exists);
+                    rm.listResources("loot_modifiers", r -> r.getNamespace().equals("neoforge"))
+                            .forEach((res, _resObj) ->
+                                    Grimfate.LOGGER.info("[Grimfate][GLM-PROBE] found: {}", res));
+                    return null;
+                }, bg)
+                .thenCompose(barrier::wait)
+                .thenAcceptAsync(v -> {}, game);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\debug\DebugLootModsProbe.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\entity\BoltProjectileEntity.java
+package com.doomspire.grimfate.entity;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+public class BoltProjectileEntity extends ThrowableItemProjectile {
+    public BoltProjectileEntity(EntityType<? extends BoltProjectileEntity> type, Level level) {
+        super(type, level);
+        this.setNoGravity(true);
+    }
+    public BoltProjectileEntity(Level level, LivingEntity shooter) {
+        this(com.doomspire.grimfate.registry.ModEntityTypes.BOLT.get(), level);
+        this.setOwner(shooter);
+        this.setNoGravity(true);
+    }
+    @Override
+    protected Item getDefaultItem() {
+        return net.minecraft.world.item.Items.AIR;
+    }
+    public void shootForward(LivingEntity shooter, float speed) {
+        Vec3 look = shooter.getLookAngle();
+        this.setPos(
+                shooter.getX() + look.x * 0.5,
+                shooter.getEyeY() - 0.1 + look.y * 0.5,
+                shooter.getZ() + look.z * 0.5
+        );
+        this.setDeltaMovement(look.normalize().scale(speed));
+    }
+    @Override
+    protected void onHit(HitResult result) {
+        super.onHit(result);
+        if (!level().isClientSide) {
+            ((ServerLevel) level()).sendParticles(ParticleTypes.CRIT, getX(), getY(), getZ(), 4, 0, 0, 0, 0.0);
+            if (result.getType() == HitResult.Type.ENTITY && getOwner() instanceof LivingEntity owner) {
+                var hit = ((net.minecraft.world.phys.EntityHitResult) result).getEntity();
+                if (hit instanceof LivingEntity target) {
+                    DamageSource src = level().damageSources().indirectMagic(this, owner); // пока нейтральный DS
+                    target.hurt(src, 5.0f); // базовый урон; позже подменим на DamageEngine
+                }
+            }
+            discard();
+        }
+    }
+    @Override
+    public void tick() {
+        super.tick();
+        if (this.tickCount > 40) this.discard();
+        if (level().isClientSide) {
+            level().addParticle(ParticleTypes.CRIT, getX(), getY(), getZ(), 0, 0, 0);
+        }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\entity\BoltProjectileEntity.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\events\LoadoutTickEvents.java
+package com.doomspire.grimfate.events;
+import com.doomspire.grimcore.attach.PlayerLoadoutAttachment;
+import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimfate.core.Grimfate;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+@EventBusSubscriber(modid = Grimfate.MODID, value = Dist.DEDICATED_SERVER) // слушаем только на сервере
+public final class LoadoutTickEvents {
+    private LoadoutTickEvents() {}
+    private static final Map<UUID, Long> LAST_SYNC_TICK = new HashMap<>();
+    private static final Map<UUID, Integer> LAST_SUM = new HashMap<>();
+    private static final int SYNC_COOLDOWN_TICKS = 10; // ~0.5с при 20 TPS
+    @SubscribeEvent
+    public static void onPlayerTick(PlayerTickEvent.Post e) {
+        Player p = e.getEntity();
+        if (p.level().isClientSide) return;
+        PlayerLoadoutAttachment att = p.getData(ModAttachments.PLAYER_LOADOUT.get());
+        if (att == null) return;
+        att.tickDown();
+        int sum = 0;
+        for (int i = 0; i < PlayerLoadoutAttachment.SLOTS; i++) {
+            sum += att.getCooldown(i);
+        }
+        long now = p.level().getGameTime();
+        UUID id = p.getUUID();
+        long last = LAST_SYNC_TICK.getOrDefault(id, 0L);
+        int prev = LAST_SUM.getOrDefault(id, -1);
+        if ((now - last) >= SYNC_COOLDOWN_TICKS && sum != prev) {
+            p.setData(ModAttachments.PLAYER_LOADOUT.get(), att); // триггерит .sync(...) из ModAttachments
+            LAST_SYNC_TICK.put(id, now);
+            LAST_SUM.put(id, sum);
+        }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\events\LoadoutTickEvents.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\Armors.java
+package com.doomspire.grimfate.item.armor;
+import com.doomspire.grimfate.core.Grimfate;
+import com.doomspire.grimfate.item.armor.GenericGeoArmorItem;
+import com.doomspire.grimfate.registry.ModArmorMaterials;
+import com.doomspire.grimfate.registry.ModItems;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+public final class Armors {
+    private Armors() {}
+    private static NoAnimGeoArmorItem.Visual copperVisual() {
+        return new GenericGeoArmorItem.Visual(
+                Grimfate.rl("geo/armor/copper_armor_set.geo.json"),
+                Grimfate.rl("textures/armor/copper_armor_set_texture.png")
+        );
+    }
+    private static NoAnimGeoArmorItem.Visual rawhideVisual() {
+        return new GenericGeoArmorItem.Visual(
+                Grimfate.rl("geo/armor/rawhide_armor_set.geo.json"),
+                Grimfate.rl("textures/armor/rawhide_armor_set.png")
+        );
+    }
+    private static NoAnimGeoArmorItem.Visual linenVisual() {
+        return new GenericGeoArmorItem.Visual(
+                Grimfate.rl("geo/armor/linen_armor_set.geo.json"),
+                Grimfate.rl("textures/armor/linen_armor_set.png")
+        );
+    }
+    public static final DeferredHolder<Item, Item> COPPER_HELMET =
+            ModItems.ITEMS.register("copper_helmet",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.copperHolder(),
+                            ArmorItem.Type.HELMET, new Item.Properties(), copperVisual()));
+    public static final DeferredHolder<Item, Item> COPPER_CHESTPLATE =
+            ModItems.ITEMS.register("copper_chestplate",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.copperHolder(),
+                            ArmorItem.Type.CHESTPLATE, new Item.Properties(), copperVisual()));
+    public static final DeferredHolder<Item, Item> COPPER_LEGGINGS =
+            ModItems.ITEMS.register("copper_leggings",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.copperHolder(),
+                            ArmorItem.Type.LEGGINGS, new Item.Properties(), copperVisual()));
+    public static final DeferredHolder<Item, Item> COPPER_BOOTS =
+            ModItems.ITEMS.register("copper_boots",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.copperHolder(),
+                            ArmorItem.Type.BOOTS, new Item.Properties(), copperVisual()));
+    public static final DeferredHolder<Item, Item> RAWHIDE_HOOD =
+            ModItems.ITEMS.register("rawhide_hood",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.rawhideHolder(),
+                            ArmorItem.Type.HELMET, new Item.Properties(), rawhideVisual()));
+    public static final DeferredHolder<Item, Item> RAWHIDE_JACKET =
+            ModItems.ITEMS.register("rawhide_jacket",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.rawhideHolder(),
+                            ArmorItem.Type.CHESTPLATE, new Item.Properties(), rawhideVisual()));
+    public static final DeferredHolder<Item, Item> RAWHIDE_WRAPS =
+            ModItems.ITEMS.register("rawhide_wraps",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.rawhideHolder(),
+                            ArmorItem.Type.LEGGINGS, new Item.Properties(), rawhideVisual()));
+    public static final DeferredHolder<Item, Item> RAWHIDE_BOOTS =
+            ModItems.ITEMS.register("rawhide_boots",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.rawhideHolder(),
+                            ArmorItem.Type.BOOTS, new Item.Properties(), rawhideVisual()));
+    public static final DeferredHolder<Item, Item> LINEN_HAT =
+            ModItems.ITEMS.register("linen_hat",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.linenHolder(),
+                            ArmorItem.Type.HELMET, new Item.Properties(), linenVisual()));
+    public static final DeferredHolder<Item, Item> LINEN_CAPE =
+            ModItems.ITEMS.register("linen_cape",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.linenHolder(),
+                            ArmorItem.Type.CHESTPLATE, new Item.Properties(), linenVisual()));
+    public static final DeferredHolder<Item, Item> LINEN_PANTS =
+            ModItems.ITEMS.register("linen_pants",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.linenHolder(),
+                            ArmorItem.Type.LEGGINGS, new Item.Properties(), linenVisual()));
+    public static final DeferredHolder<Item, Item> LINEN_SHOES =
+            ModItems.ITEMS.register("linen_shoes",
+                    () -> new NoAnimGeoArmorItem(
+                            ModArmorMaterials.linenHolder(),
+                            ArmorItem.Type.BOOTS, new Item.Properties(), linenVisual()));
+    public static void init(IEventBus modBus) {}
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\Armors.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\GenericGeoArmorItem.java
+package com.doomspire.grimfate.item.armor;
+import net.minecraft.core.Holder;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animatable.client.GeoRenderProvider;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.constant.DefaultAnimations;
+import software.bernie.geckolib.renderer.GeoArmorRenderer;
+import software.bernie.geckolib.util.GeckoLibUtil;
+import java.util.function.Consumer;
+public class GenericGeoArmorItem extends ArmorItem implements GeoItem {
+    public record Visual(net.minecraft.resources.ResourceLocation geo,
+                         net.minecraft.resources.ResourceLocation texture) {}
+    private final Visual visual;
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    public GenericGeoArmorItem(Holder<ArmorMaterial> material, Type type, Properties props, Visual visual) {
+        super(material, type, props);
+        this.visual = visual;
+    }
+    public Visual visual() { return visual; }
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
+    @Override
+    public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
+        consumer.accept(new GeoRenderProvider() {
+            private GeoArmorRenderer<?> renderer;
+            @Override
+            public <T extends LivingEntity> net.minecraft.client.model.HumanoidModel<?> getGeoArmorRenderer(
+                    @Nullable T living, ItemStack stack, @Nullable EquipmentSlot slot,
+                    @Nullable net.minecraft.client.model.HumanoidModel<T> original) {
+                if (renderer == null) {
+                    renderer = new com.doomspire.grimfate.client.render.armor.BaseArmorRenderer();
+                }
+                return renderer;
+            }
+        });
+    }
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, 20, state -> {
+            state.setAnimation(DefaultAnimations.IDLE);
+            var e = state.getData(software.bernie.geckolib.constant.DataTickets.ENTITY);
+            if (!(e instanceof LivingEntity living)) return PlayState.STOP;
+            for (ItemStack s : living.getArmorSlots()) {
+            }
+            return PlayState.CONTINUE;
+        }));
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\GenericGeoArmorItem.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\NoAnimGeoArmorItem.java
+package com.doomspire.grimfate.item.armor;
+import net.minecraft.core.Holder;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.Item;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animation.AnimatableManager; // ВАЖНО: этот пакет
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.util.GeckoLibUtil;
+public class NoAnimGeoArmorItem extends GenericGeoArmorItem implements GeoItem {
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    public NoAnimGeoArmorItem(Holder<ArmorMaterial> material, ArmorItem.Type type, Item.Properties props, Visual visual) {
+        super(material, type, props, visual);
+    }
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+    }
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\armor\NoAnimGeoArmorItem.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\BaseBowItem.java
+package com.doomspire.grimfate.item;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+/**
+ * Поведение:
+ * - Стрельба, натяжение, зачарования (Infinity и т.п.) — как у ванильного BowItem.
+ * - Визуальные стадии натяжения (pull0/1/2) настраиваются ТОЛЬКО ресурсами (JSON overrides).
+ * - 3D-в руках и 2D-в инвентаре задаются через loader "neoforge:separate_transforms".
+ *
+ * Зачем класс:
+ * - Точка для будущих расширений (подключение WeaponProfileComponent, статов, перков).
+ * - Единый тип для наших реестров/тегов (если понадобится специфичное поведение позже).
+ */
+public class BaseBowItem extends BowItem {
+    public BaseBowItem(Properties props) { super(props); }
+    @Override
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.BOW;
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\BaseBowItem.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListComponent.java
+package com.doomspire.grimfate.item.comp;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import java.util.ArrayList;
+import java.util.List;
+public record AffixListComponent(String rarityId, List<Entry> entries) {
+    public record Entry(String id, List<Float> rolls) {
+        public static final Codec<Entry> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.STRING.fieldOf("id").forGetter(Entry::id),
+                Codec.FLOAT.listOf().fieldOf("rolls").forGetter(Entry::rolls)
+        ).apply(i, Entry::new));
+    }
+    public static final Codec<AffixListComponent> CODEC =
+            RecordCodecBuilder.create(i -> i.group(
+                    Codec.STRING.optionalFieldOf("rarity", "").forGetter(AffixListComponent::rarityId),
+                    Entry.CODEC.listOf().fieldOf("entries").forGetter(AffixListComponent::entries)
+            ).apply(i, AffixListComponent::new));
+    public static final StreamCodec<RegistryFriendlyByteBuf, AffixListComponent> STREAM_CODEC =
+            new StreamCodec<>() {
+                @Override
+                public AffixListComponent decode(RegistryFriendlyByteBuf buf) {
+                    String rarity = buf.readUtf();
+                    int n = buf.readVarInt();
+                    List<Entry> list = new ArrayList<>(n);
+                    for (int i = 0; i < n; i++) {
+                        String id = buf.readUtf();
+                        int m = buf.readVarInt();
+                        List<Float> rolls = new ArrayList<>(m);
+                        for (int j = 0; j < m; j++) rolls.add(buf.readFloat());
+                        list.add(new Entry(id, rolls));
+                    }
+                    return new AffixListComponent(rarity, list);
+                }
+                @Override
+                public void encode(RegistryFriendlyByteBuf buf, AffixListComponent v) {
+                    buf.writeUtf(v.rarityId() == null ? "" : v.rarityId());
+                    List<Entry> list = v.entries();
+                    buf.writeVarInt(list.size());
+                    for (Entry e : list) {
+                        buf.writeUtf(e.id());
+                        List<Float> rolls = e.rolls();
+                        buf.writeVarInt(rolls.size());
+                        for (Float r : rolls) buf.writeFloat(r);
+                    }
+                }
+            };
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListComponent.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListHelper.java
+package com.doomspire.grimfate.item.comp;
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimfate.affix.RollService;
+import com.doomspire.grimfate.registry.ModDataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import java.util.*;
+import java.util.stream.Collectors;
+/*
+/**
+ * Работает поверх data-component'а {@link AffixListComponent}, зарегистрированного как
+ * {@code ModDataComponents.AFFIX_LIST}. Сторона контента (grimfate). См. регистрацию компонентов: ModDataComponents.
+ *
+ * Поток использования:
+ *  - {@link #get(ItemStack)} / {@link #has(ItemStack)} — проверка и чтение.
+ *  - {@link #set(ItemStack, AffixListComponent)} / {@link #clear(ItemStack)} — запись/очистка.
+ *  - {@link #rollAndApply(ItemStack, Affix.Source, int, RandomSource)} — единый «имбью»: выбрать аффиксы и записать их в предмет.
+ *
+ * Совместимость:
+ *  - Чтение используется в GrimfateAffixExtraction.readFromStack() (ядро агрегатора читает аффиксы из компонента).
+ */
+public final class AffixListHelper {
+    private AffixListHelper() {}
+    public static boolean has(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        return stack.get(ModDataComponents.AFFIX_LIST.get()) != null;
+    }
+    public static Optional<AffixListComponent> get(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return Optional.empty();
+        return Optional.ofNullable(stack.get(ModDataComponents.AFFIX_LIST.get()));
+    }
+    public static void set(ItemStack stack, AffixListComponent comp) {
+        if (stack == null || stack.isEmpty() || comp == null) return;
+        stack.set(ModDataComponents.AFFIX_LIST.get(), comp);
+    }
+    public static void clear(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return;
+        stack.remove(ModDataComponents.AFFIX_LIST.get());
+    }
+    public static Set<TagKey<Item>> collectItemTags(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return Collections.emptySet();
+        var holder = stack.getItem().builtInRegistryHolder();
+        return holder.tags()
+                .filter(t -> t.registry().location().equals(Registries.ITEM.location()))
+                .map(t -> (TagKey<Item>) t)
+                .collect(Collectors.toCollection(HashSet::new));
+    }
+    private static boolean isEmptyComponent(AffixListComponent comp) {
+        if (comp == null) return true;
+        var entries = comp.entries();
+        return (entries == null || entries.isEmpty());
+    }
+    /**
+     * Имбью: сгенерировать аффиксы и записать их в предмет.
+     * ВАЖНО: если результат пустой — компонент не пишется (или удаляется), чтобы не ломать стакинг материалов.
+     */
+    public static void rollAndApply(ItemStack stack, Affix.Source source, int itemLevel, RandomSource random) {
+        if (stack == null || stack.isEmpty()) return;
+        var tags = collectItemTags(stack);
+        var comp = RollService.roll(stack.getItem(), tags, source, itemLevel, random);
+        if (isEmptyComponent(comp)) {
+            clear(stack);        // не храним пустой компонент — сохраняем нормальный стакинг
+        } else {
+            set(stack, comp);
+        }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\AffixListHelper.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\WeaponProfileComponent.java
+package com.doomspire.grimfate.item.comp;
+import com.doomspire.grimfate.combat.WeaponType;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+public record WeaponProfileComponent(
+        WeaponType type,
+        boolean twoHanded,
+        float baseSpeed,
+        float baseDamageMod,
+        int affixSlots
+) {
+    public static final Codec<WeaponProfileComponent> CODEC = RecordCodecBuilder.create(i -> i.group(
+            Codec.STRING.xmap(WeaponType::valueOf, WeaponType::name).fieldOf("type").forGetter(WeaponProfileComponent::type),
+            Codec.BOOL.fieldOf("two_handed").forGetter(WeaponProfileComponent::twoHanded),
+            Codec.FLOAT.fieldOf("base_speed").forGetter(WeaponProfileComponent::baseSpeed),
+            Codec.FLOAT.fieldOf("base_damage_mod").forGetter(WeaponProfileComponent::baseDamageMod),
+            Codec.INT.fieldOf("affix_slots").forGetter(WeaponProfileComponent::affixSlots)
+    ).apply(i, WeaponProfileComponent::new));
+    public static final StreamCodec<RegistryFriendlyByteBuf, WeaponProfileComponent> STREAM_CODEC =
+            new StreamCodec<>() {
+                @Override
+                public WeaponProfileComponent decode(RegistryFriendlyByteBuf buf) {
+                    WeaponType t = WeaponType.valueOf(buf.readUtf());
+                    boolean two = buf.readBoolean();
+                    float sp = buf.readFloat();
+                    float dm = buf.readFloat();
+                    int slots = buf.readVarInt();
+                    return new WeaponProfileComponent(t, two, sp, dm, slots);
+                }
+                @Override
+                public void encode(RegistryFriendlyByteBuf buf, WeaponProfileComponent v) {
+                    buf.writeUtf(v.type().name());
+                    buf.writeBoolean(v.twoHanded());
+                    buf.writeFloat(v.baseSpeed());
+                    buf.writeFloat(v.baseDamageMod());
+                    buf.writeVarInt(v.affixSlots());
+                }
+            };
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\comp\WeaponProfileComponent.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\jewelry\Jewelry.java
+package com.doomspire.grimfate.item.jewelry;
+import com.doomspire.grimfate.registry.ModItems;
+import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+public final class Jewelry {
+    private Jewelry() {}
+    public static final DeferredHolder<Item, Item> COPPER_RING =
+            ModItems.ITEMS.register("copper_ring",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+    public static final DeferredHolder<Item, Item> BRONZE_RING =
+            ModItems.ITEMS.register("bronze_ring",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+    public static final DeferredHolder<Item, Item> COPPER_NECKLACE =
+            ModItems.ITEMS.register("copper_necklace",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+    public static final DeferredHolder<Item, Item> BRONZE_NECKLACE =
+            ModItems.ITEMS.register("bronze_necklace",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+    public static void init(IEventBus modBus) {}
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\jewelry\Jewelry.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\materials\Materials.java
+package com.doomspire.grimfate.item.materials;
+import com.doomspire.grimfate.registry.ModItems;
+import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+public final class Materials {
+    private Materials() {}
+    public static final DeferredHolder<Item, Item> FIBER =
+            ModItems.ITEMS.register("fiber", () -> new Item(new Item.Properties()));
+    public static final DeferredHolder<Item, Item> CANVAS_FABRIC =
+            ModItems.ITEMS.register("canvas_fabric", () -> new Item(new Item.Properties()));
+    public static final DeferredHolder<Item, Item> RAWHIDE =
+            ModItems.ITEMS.register("rawhide", () -> new Item(new Item.Properties()));
+    public static final DeferredHolder<Item, Item> PORK_FAT =
+            ModItems.ITEMS.register("pork_fat", () -> new Item(new Item.Properties()));
+    public static void init(IEventBus modBus) {}
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\materials\Materials.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\StaffItem.java
+package com.doomspire.grimfate.item;
+import com.doomspire.grimfate.network.payload.C2SCastAutoBoltPayload;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
+public class StaffItem extends Item {
+    public StaffItem(Properties props) { super(props); }
+    @Override
+    public int getUseDuration(ItemStack stack, LivingEntity entity) {
+        return 72000; // удержание ПКМ
+    }
+    @Override
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.BOW;
+    }
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        player.startUsingItem(hand); // удержание ПКМ
+        return InteractionResultHolder.consume(player.getItemInHand(hand));
+    }
+    private static long lastMsMain = 0, lastMsOff = 0;
+    @Override
+    public void onUseTick(Level level, LivingEntity entity, ItemStack stack, int remainingUseDuration) {
+        if (!level.isClientSide) return;
+        if (!(entity instanceof Player player)) return;
+        InteractionHand hand = player.getUsedItemHand();
+        if (hand == null) return;
+        int elapsed = getUseDuration(stack, entity) - remainingUseDuration;
+        if (elapsed <= 0) return;
+        long now = System.currentTimeMillis();
+        long last = (hand == InteractionHand.MAIN_HAND) ? lastMsMain : lastMsOff;
+        if (now - last < 80) return; // ~каждые 5–6 тиков
+        if (hand == InteractionHand.MAIN_HAND) lastMsMain = now; else lastMsOff = now;
+        PacketDistributor.sendToServer(new C2SCastAutoBoltPayload(hand));
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\StaffItem.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\item\weapons\Weapons.java
+package com.doomspire.grimfate.item.weapons;
+import com.doomspire.grimfate.item.BaseBowItem;
+import com.doomspire.grimfate.registry.ModItems;
+import com.doomspire.grimfate.registry.ModWeaponMaterials;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ShieldItem;
+import net.minecraft.world.item.SwordItem;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+/**
+ * ВАЖНО: сам DeferredRegister<Item> хранится в ModItems.
+ * Здесь мы только объявляем RegistryObject/DeferredHolder и регистрируем через ModItems.ITEMS.register(...).
+ */
+public final class Weapons {
+    private Weapons() {}
+    public static final DeferredHolder<Item, Item> COPPER_SWORD =
+            ModItems.ITEMS.register("copper_sword",
+                    () -> new SwordItem(
+                            ModWeaponMaterials.COPPER,
+                            new Item.Properties().stacksTo(1).attributes(
+                                    SwordItem.createAttributes(ModWeaponMaterials.COPPER, 0, -2.4f)
+                            )
+                    ));
+    public static final DeferredHolder<Item, Item> SCHOLAR_STAFF =
+            ModItems.ITEMS.register("scholar_staff",
+                    () -> new com.doomspire.grimfate.item.StaffItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredHolder<Item, Item> WEAKLING_BOW =
+            ModItems.ITEMS.register("weakling_bow",
+                    () -> new BaseBowItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredHolder<Item, Item> COPPERFORCED_SHIELD =
+            ModItems.ITEMS.register("copperforced_shield",
+                    () -> new ShieldItem(new Item.Properties().stacksTo(1).durability(256)));
+    public static void init(IEventBus modBus) {
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\item\weapons\Weapons.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddItemModifier.java
+package com.doomspire.grimfate.loot.modifier;
+import com.google.common.base.Suppliers;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.neoforged.neoforge.common.loot.LootModifier;
+import javax.annotation.Nonnull;
+import java.util.function.Supplier;
+public final class AddItemModifier extends LootModifier {
+    public static final Supplier<MapCodec<AddItemModifier>> CODEC = Suppliers.memoize(() ->
+            RecordCodecBuilder.mapCodec(inst ->
+                    codecStart(inst).and(
+                            inst.group(
+                                    BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(m -> m.addedItem),
+                                    IntProvider.CODEC.optionalFieldOf("count", ConstantInt.of(1)).forGetter(m -> m.count)
+                            )
+                    ).apply(inst, AddItemModifier::new)
+            )
+    );
+    private final Item addedItem;
+    private final IntProvider count;
+    public AddItemModifier(LootItemCondition[] conditionsIn, Item addedItem, IntProvider count) {
+        super(conditionsIn);
+        this.addedItem = addedItem;
+        this.count = count;
+    }
+    @Nonnull
+    @Override
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> loot, LootContext ctx) {
+        int n = Math.max(0, count.sample(ctx.getRandom()));
+        if (n <= 0) return loot;
+        ItemStack stack = new ItemStack(addedItem, n);
+        if (stack.getCount() <= stack.getMaxStackSize()) {
+            loot.add(stack);
+        } else {
+            int left = stack.getCount();
+            while (left > 0) {
+                ItemStack sub = new ItemStack(addedItem, Math.min(left, stack.getMaxStackSize()));
+                left -= sub.getCount();
+                loot.add(sub);
+            }
+        }
+        return loot;
+    }
+    @Override
+    public MapCodec<? extends net.neoforged.neoforge.common.loot.IGlobalLootModifier> codec() {
+        return CODEC.get();
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddItemModifier.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddTagItemsModifier.java
+package com.doomspire.grimfate.loot.modifier;
+import com.google.common.base.Suppliers;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.neoforged.neoforge.common.loot.LootModifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import javax.annotation.Nonnull;
+import java.util.Optional;
+import java.util.function.Supplier;
+public final class AddTagItemsModifier extends LootModifier {
+    private static final Logger LOG = LoggerFactory.getLogger("Grimfate/GLM-AddTagItems");
+    public static final Supplier<MapCodec<AddTagItemsModifier>> CODEC = Suppliers.memoize(() ->
+            RecordCodecBuilder.mapCodec(inst ->
+                    codecStart(inst).and(
+                            inst.group(
+                                    ResourceLocation.CODEC.fieldOf("tag").forGetter(m -> m.tagId),
+                                    IntProvider.CODEC.optionalFieldOf("count", ConstantInt.of(1)).forGetter(m -> m.count)
+                            )
+                    ).apply(inst, AddTagItemsModifier::new)
+            )
+    );
+    private final ResourceLocation tagId;
+    private final IntProvider count;
+    public AddTagItemsModifier(LootItemCondition[] conditions, ResourceLocation tagId, IntProvider count) {
+        super(conditions);
+        this.tagId = tagId;
+        this.count = count;
+    }
+    @Nonnull
+    @Override
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> loot, LootContext ctx) {
+        try {
+            var level = ctx.getLevel();
+            if (level == null) return loot;
+            RegistryAccess access = level.registryAccess();
+            var itemsLookup = access.lookupOrThrow(Registries.ITEM);
+            TagKey<Item> key = TagKey.create(Registries.ITEM, tagId);
+            Optional<HolderSet.Named<Item>> optSet = itemsLookup.get(key);
+            if (optSet.isEmpty()) return loot;
+            HolderSet<Item> set = optSet.get();
+            RandomSource rnd = ctx.getRandom();
+            Optional<Holder<Item>> picked = set.getRandomElement(rnd);
+            if (picked.isEmpty()) return loot;
+            int n = Math.max(0, count.sample(rnd));
+            if (n <= 0) return loot;
+            ItemStack stack = new ItemStack(picked.get().value(), n);
+            loot.add(stack);
+            var rk = stack.getItem().builtInRegistryHolder().key();
+            String idStr = (rk != null) ? rk.location().toString() : "?";
+            LOG.info("[AddTagItems] +{} {} from tag {}", n, idStr, tagId);
+            tryImbueAffixes(stack, ctx);
+            return loot;
+        } catch (Throwable t) {
+            LOG.warn("[AddTagItems] tag={} failed: {}", tagId, t.toString());
+            return loot; // Никогда не валим генерацию лута
+        }
+    }
+    @Override
+    public MapCodec<? extends net.neoforged.neoforge.common.loot.IGlobalLootModifier> codec() {
+        return CODEC.get();
+    }
+    private static final String MODID = "grimfate";
+    private static final TagKey<Item> TAG_WEAPONS =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/weapons"));
+    private static final TagKey<Item> TAG_ARMORS  =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/armors"));
+    private static final TagKey<Item> TAG_JEWELRY =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/jewelry"));
+    private static boolean isOurs(ItemStack stack) {
+        var key = stack.getItem().builtInRegistryHolder().key();
+        return key != null && MODID.equals(key.location().getNamespace());
+    }
+    private static boolean isAffixable(ItemStack stack) {
+        return stack.is(TAG_WEAPONS) || stack.is(TAG_ARMORS) || stack.is(TAG_JEWELRY);
+    }
+    private static com.doomspire.grimcore.affix.Affix.Source guessSource(Item item) {
+        if (item instanceof ArmorItem)  return com.doomspire.grimcore.affix.Affix.Source.ARMOR;
+        if (item instanceof ShieldItem) return com.doomspire.grimcore.affix.Affix.Source.SHIELD;
+        if (item instanceof BowItem || item instanceof CrossbowItem || item instanceof TridentItem) {
+            return com.doomspire.grimcore.affix.Affix.Source.WEAPON;
+        }
+        return com.doomspire.grimcore.affix.Affix.Source.WEAPON;
+    }
+    /**
+     * Имбуем аффиксы сразу на добавленный стак. Те же предохранители:
+     * только grimfate + только наши лут-теги + не перезаписываем существующие.
+     * Пишем лог результата.
+     */
+    private static void tryImbueAffixes(ItemStack stack, LootContext ctx) {
+        try {
+            if (stack.isEmpty() || !isOurs(stack) || !isAffixable(stack)) return;
+            if (com.doomspire.grimfate.item.comp.AffixListHelper.has(stack)) return; // уважаем уже «наполненные»
+            var src = guessSource(stack.getItem());
+            int itemLevel = 1; // см. default в глобальном роллере
+            com.doomspire.grimfate.item.comp.AffixListHelper.rollAndApply(
+                    stack, src, itemLevel, ctx.getRandom()
+            );
+            LOG.info("[AddTagItems] imbue: item={} has={}",
+                    stack.getHoverName().getString(),
+                    com.doomspire.grimfate.item.comp.AffixListHelper.has(stack));
+        } catch (Throwable t) {
+            LOG.debug("[AddTagItems] imbue skipped: {}", t.toString());
+        }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\AddTagItemsModifier.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ModLootModifiers.java
+package com.doomspire.grimfate.loot.modifier;
+import com.doomspire.grimfate.core.Grimfate;
+import com.mojang.serialization.MapCodec;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+public final class ModLootModifiers {
+    private ModLootModifiers() {}
+    public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> REG =
+            DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, Grimfate.MODID);
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            ADD_ITEM       = REG.register("add_item",       () -> AddItemModifier.CODEC.get());
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            ADD_TAG_ITEMS  = REG.register("add_tag_items",  () -> AddTagItemsModifier.CODEC.get());
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            REPLACE_ITEM   = REG.register("replace_item",   () -> ReplaceItemModifier.CODEC.get());
+    public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<? extends IGlobalLootModifier>>
+            ROLL_AFFIXES  = REG.register("roll_affixes", () -> com.doomspire.grimfate.loot.RollAffixesLootModifier.CODEC);
+    public static void init(IEventBus modBus) { REG.register(modBus); }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ModLootModifiers.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ReplaceItemModifier.java
+package com.doomspire.grimfate.loot.modifier;
+import com.google.common.base.Suppliers;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.neoforged.neoforge.common.loot.LootModifier;
+import javax.annotation.Nonnull;
+import java.util.function.Supplier;
+public final class ReplaceItemModifier extends LootModifier {
+    public static final Supplier<MapCodec<ReplaceItemModifier>> CODEC = Suppliers.memoize(() ->
+            RecordCodecBuilder.mapCodec(inst ->
+                    codecStart(inst).and(
+                            inst.group(
+                                    BuiltInRegistries.ITEM.byNameCodec().optionalFieldOf("match_item")
+                                            .forGetter(m -> m.matchItem),
+                                    ResourceLocation.CODEC.optionalFieldOf("match_tag")
+                                            .forGetter(m -> m.matchTagId),
+                                    BuiltInRegistries.ITEM.byNameCodec().fieldOf("replace_with")
+                                            .forGetter(m -> m.replaceWith)
+                            )
+                    ).apply(inst, ReplaceItemModifier::new)
+            )
+    );
+    private final java.util.Optional<Item> matchItem;
+    private final java.util.Optional<ResourceLocation> matchTagId;
+    private final Item replaceWith;
+    public ReplaceItemModifier(LootItemCondition[] cond, java.util.Optional<Item> matchItem,
+                               java.util.Optional<ResourceLocation> matchTagId, Item replaceWith) {
+        super(cond);
+        this.matchItem = matchItem;
+        this.matchTagId = matchTagId;
+        this.replaceWith = replaceWith;
+    }
+    @Nonnull
+    @Override
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> loot, LootContext ctx) {
+        boolean useTag = matchTagId.isPresent();
+        HolderSet<Item> tag = null;
+        if (useTag) {
+            var access = ctx.getLevel().registryAccess().lookupOrThrow(Registries.ITEM);
+            tag = access.getOrThrow(TagKey.create(Registries.ITEM, matchTagId.get()));
+        }
+        for (int i = 0; i < loot.size(); i++) {
+            ItemStack s = loot.get(i);
+            boolean match = matchItem.map(it -> s.is(it)).orElse(false)
+                    || (useTag && tag != null && s.is(tag));
+            if (match) {
+                loot.set(i, new ItemStack(replaceWith, s.getCount()));
+            }
+        }
+        return loot;
+    }
+    @Override
+    public MapCodec<? extends net.neoforged.neoforge.common.loot.IGlobalLootModifier> codec() {
+        return CODEC.get();
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\loot\modifier\ReplaceItemModifier.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\loot\RollAffixesLootModifier.java
+package com.doomspire.grimfate.loot;
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimfate.core.Grimfate;
+import com.doomspire.grimfate.item.BaseBowItem;
+import com.doomspire.grimfate.item.comp.AffixListHelper;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.neoforged.neoforge.common.loot.LootModifier;
+import java.util.*;
+public final class RollAffixesLootModifier extends LootModifier {
+    private static final String MODID = "grimfate";
+    public static final MapCodec<RollAffixesLootModifier> CODEC = RecordCodecBuilder.mapCodec(inst -> codecStart(inst).and(
+            Codec.STRING.listOf().optionalFieldOf("allow_sources", List.of("WEAPON","ARMOR","JEWELRY", "SHIELD"))
+                    .forGetter(m -> m.allowSources.stream().map(Enum::name).toList())
+    ).and(
+            Codec.BOOL.optionalFieldOf("replace_existing", false).forGetter(m -> m.replaceExisting)
+    ).and(
+            Codec.INT.optionalFieldOf("default_item_level", 1).forGetter(m -> m.defaultItemLevel)
+    ).apply(inst, (conditions, sources, replace, lvl) -> new RollAffixesLootModifier(conditions, parseSources(sources), replace, lvl)));
+    private static Set<Affix.Source> parseSources(List<String> tokens) {
+        var set = EnumSet.noneOf(Affix.Source.class);
+        for (String t : tokens) {
+            var key = t.trim().toUpperCase(Locale.ROOT);
+            if (key.equals("ALL")) { for (var s : Affix.Source.values()) set.add(s); break; }
+            set.add(Affix.Source.valueOf(key));
+        }
+        if (set.isEmpty()) { set.add(Affix.Source.WEAPON); set.add(Affix.Source.ARMOR); set.add(Affix.Source.SHIELD); }
+        return Set.copyOf(set);
+    }
+    private final Set<Affix.Source> allowSources;
+    private final boolean replaceExisting;
+    private final int defaultItemLevel;
+    private static final net.minecraft.tags.TagKey<Item> TAG_WEAPONS =
+            net.minecraft.tags.TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/weapons"));
+    private static final net.minecraft.tags.TagKey<Item> TAG_ARMORS  =
+            net.minecraft.tags.TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/armors"));
+    private static final net.minecraft.tags.TagKey<Item> TAG_JEWELRY =
+            net.minecraft.tags.TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "loot/jewelry"));
+    public RollAffixesLootModifier(LootItemCondition[] conditionsIn,
+                                   Set<Affix.Source> allowSources,
+                                   boolean replaceExisting,
+                                   int defaultItemLevel) {
+        super(conditionsIn);
+        this.allowSources = allowSources;
+        this.replaceExisting = replaceExisting;
+        this.defaultItemLevel = Math.max(1, defaultItemLevel);
+    }
+    @FunctionalInterface
+    public interface ItemLevelResolver { int resolve(LootContext ctx, ItemStack stack, int defaultLevel); }
+    private static volatile ItemLevelResolver ITEM_LEVEL_RESOLVER = (ctx, st, def) -> def;
+    public static void setItemLevelResolver(ItemLevelResolver resolver) { if (resolver != null) ITEM_LEVEL_RESOLVER = resolver; }
+    @Override
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
+        Grimfate.LOGGER.info("[AFFIX-ROLL] start: size={}, table={}",
+                generatedLoot == null ? -1 : generatedLoot.size(),
+                context.getQueriedLootTableId());
+        if (generatedLoot == null || generatedLoot.isEmpty()) return generatedLoot;
+        final RandomSource rnd = context.getRandom();
+        for (ItemStack stack : generatedLoot) {
+            if (stack == null || stack.isEmpty()) continue;
+            if (!isFromOurMod(stack)) continue;
+            if (!isAffixable(stack)) continue;
+            var rk = stack.getItem().builtInRegistryHolder().key();
+            Object loc = (rk != null) ? rk.location() : null;
+            Grimfate.LOGGER.info("[AFFIX-ROLL] pass ns+tag: {} ({})",
+                    stack.getHoverName().getString(), loc);
+            if (!replaceExisting && AffixListHelper.has(stack)) continue;
+            Affix.Source src = guessSource(stack);
+            if (!allowSources.contains(src)) continue;
+            int itemLevel = ITEM_LEVEL_RESOLVER.resolve(context, stack, defaultItemLevel);
+            AffixListHelper.rollAndApply(stack, src, itemLevel, rnd);
+            Grimfate.LOGGER.info("[AFFIX-ROLL] {} -> has={}",
+                    stack.getHoverName().getString(),
+                    AffixListHelper.has(stack));
+        }
+        return generatedLoot;
+    }
+    @Override
+    public MapCodec<? extends LootModifier> codec() { return CODEC; }
+    private static boolean isFromOurMod(ItemStack stack) {
+        ResourceKey<Item> key = stack.getItem().builtInRegistryHolder().key();
+        return key != null && MODID.equals(key.location().getNamespace());
+    }
+    private static boolean isAffixable(ItemStack stack) {
+        return stack.is(TAG_WEAPONS) || stack.is(TAG_ARMORS) || stack.is(TAG_JEWELRY);
+    }
+    private static Affix.Source guessSource(ItemStack stack) {
+        var item = stack.getItem();
+        if (item instanceof ArmorItem)  return Affix.Source.ARMOR;
+        if (item instanceof ShieldItem) return Affix.Source.SHIELD;
+        if (item instanceof SwordItem)  return Affix.Source.WEAPON;
+        if (item instanceof BaseBowItem || item instanceof CrossbowItem || item instanceof TridentItem) return Affix.Source.WEAPON;
+        return Affix.Source.WEAPON;
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\loot\RollAffixesLootModifier.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\network\AutoBoltServer.java
+package com.doomspire.grimfate.network;
+import com.doomspire.grimfate.entity.BoltProjectileEntity;
+import com.doomspire.grimcore.spell.autobolt.AutoBoltResult;
+import com.doomspire.grimcore.spell.autobolt.AutoBoltService;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+public final class AutoBoltServer {
+    private AutoBoltServer() {}
+    public static void tryCast(ServerPlayer sp, InteractionHand hand) {
+        if (sp == null) return;
+        ServerLevel level = sp.serverLevel();
+        ItemStack used = sp.getItemInHand(hand);
+        if (used.isEmpty()) return;
+        AutoBoltResult result = AutoBoltService.computeAndConsume(sp, used);
+        if (result == null || !result.ok()) {
+            return;
+        }
+        BoltProjectileEntity bolt = new BoltProjectileEntity(level, sp);
+        bolt.shootFromRotation(sp, sp.getXRot(), sp.getYRot(), 0.0f, result.projectileSpeed(), 0.0f);
+        level.addFreshEntity(bolt);
+        Item usedItem = used.getItem();
+        int cd = result.cooldownTicks();
+        if (cd > 0) {
+            sp.getCooldowns().addCooldown(usedItem, cd);
+        }
+        level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 0.6f, 1.0f);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\network\AutoBoltServer.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\network\ModNetworking.java
+package com.doomspire.grimfate.network;
+import com.doomspire.grimcore.attach.PlayerLoadoutAttachment;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.spell.GrimSpells;
+import com.doomspire.grimcore.spell.api.CastResult;
+import com.doomspire.grimcore.spell.api.SpellContext;
+import com.doomspire.grimcore.spell.api.WeaponGate;
+import com.doomspire.grimcore.spell.api.WeaponRequirement;
+import com.doomspire.grimcore.stat.Attributes;
+import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimcore.stat.StatEffects;
+import com.doomspire.grimfate.network.payload.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+public final class ModNetworking {
+    private ModNetworking() {}
+    private static boolean REGISTERED = false;
+    public static void register(RegisterPayloadHandlersEvent e) {
+        if (REGISTERED) return;
+        REGISTERED = true;
+        var reg = e.registrar("grimfate");
+        reg.playToServer(C2SAllocatePointPayload.TYPE, C2SAllocatePointPayload.STREAM_CODEC,
+                ModNetworking::handleAllocatePoint);
+        reg.playToClient(S2CAllocateResultPayload.TYPE, S2CAllocateResultPayload.STREAM_CODEC,
+                ModNetworking::handleAllocateResult);
+        reg.playToServer(C2SCastSpellSlotPayload.TYPE, C2SCastSpellSlotPayload.STREAM_CODEC,
+                ModNetworking::handleCastSpellSlot);
+        reg.playToServer(C2SCastAutoBoltPayload.TYPE, C2SCastAutoBoltPayload.STREAM_CODEC, (msg, ctx) -> {
+            ctx.enqueueWork(() -> {
+                ServerPlayer sp = (ServerPlayer) ctx.player();
+                if (sp == null) return;
+                var gate = WeaponGate.check(sp, WeaponRequirement.stavesOnly());
+                if (!gate.ok) {
+                    showGateFailure(sp, gate);
+                    return;
+                }
+                var hand = gate.usedHand != null ? gate.usedHand : net.minecraft.world.InteractionHand.MAIN_HAND;
+                var stack = sp.getItemInHand(hand);
+                var result = com.doomspire.grimcore.spell.autobolt.AutoBoltService.computeAndConsume(sp, stack);
+                if (!result.ok()) return;
+                var proj = new com.doomspire.grimfate.entity.BoltProjectileEntity(sp.level(), sp);
+                proj.shootForward(sp, result.projectileSpeed());
+                sp.level().addFreshEntity(proj);
+                sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                        SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 0.6f, 1.0f);
+                sp.getCooldowns().addCooldown(stack.getItem(), result.cooldownTicks());
+            });
+        });
+    }
+    public static void sendAllocatePoint(String attrId) {
+        PacketDistributor.sendToServer(new C2SAllocatePointPayload(attrId));
+    }
+    private static void handleAllocatePoint(C2SAllocatePointPayload msg, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            ServerPlayer sp = (ServerPlayer) ctx.player();
+            if (sp == null) return;
+            PlayerStatsAttachment att = sp.getData(ModAttachments.PLAYER_STATS.get());
+            if (att == null) return;
+            Attributes attr = PlayerStatsAttachment.parseAttrId(msg.attributeId());
+            if (attr == null) return;
+            boolean ok = att.tryAllocatePoint(attr);
+            int allocated = att.getAttribute(attr);
+            int unspent   = att.getUnspentPoints();
+            PacketDistributor.sendToPlayer(sp, new S2CAllocateResultPayload(attr.name(), allocated, unspent));
+            att.markDirty();
+            var snap = att.getSnapshotWithAffixes(sp);
+            int maxHp = (int) Math.max(1, Math.floor(snap.maxHealth));
+            int maxMp = (int) Math.max(1, Math.floor(snap.maxMana));
+            if (att.getCurrentHealth() > maxHp) att.setCurrentHealth(maxHp);
+            if (att.getCurrentMana()   > maxMp) att.setCurrentMana(maxMp);
+            GrimcoreNetworking.syncPlayerStats(sp, att);
+            StatEffects.applyAll(sp);
+        });
+    }
+    private static void handleAllocateResult(S2CAllocateResultPayload msg, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            var mc = Minecraft.getInstance();
+            if (mc.player == null) return;
+            var att = mc.player.getData(ModAttachments.PLAYER_STATS.get());
+            if (att != null) {
+                Attributes attr = PlayerStatsAttachment.parseAttrId(msg.attributeId());
+                if (attr != null) {
+                    att.setAttribute(attr, msg.newAllocated());
+                }
+                att.setUnspentPoints(msg.unspent());
+                att.markDirty();
+            }
+        });
+    }
+    private static void handleCastSpellSlot(C2SCastSpellSlotPayload msg, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            ServerPlayer sp = (ServerPlayer) ctx.player();
+            if (sp == null) return;
+            int slot = msg.slot();
+            if (slot < 0 || slot >= PlayerLoadoutAttachment.SLOTS) return;
+            PlayerLoadoutAttachment loadout = sp.getData(ModAttachments.PLAYER_LOADOUT.get());
+            if (loadout == null) return;
+            if (loadout.getCooldown(slot) > 0) return;
+            ResourceLocation spellId = loadout.get(slot);
+            if (spellId == null) return;
+            var spell = GrimSpells.get(spellId);
+            if (spell == null) return;
+            var req = com.doomspire.grimfate.spell.SpellRequirements.require(spellId);
+            if (req != null) {
+                var gate = WeaponGate.check(sp, req);
+                if (!gate.ok) {
+                    showGateFailure(sp, gate);
+                    return;
+                }
+            }
+            var lvl = sp.serverLevel();
+            var ctxSpell = new SpellContext(lvl, sp, slot, 0, 0, 0, null);
+            int cost = Math.max(0, spell.manaCost(ctxSpell));
+            int cd   = Math.max(0, spell.cooldownTicks(ctxSpell));
+            var stats = sp.getData(ModAttachments.PLAYER_STATS.get());
+            if (stats == null) return;
+            if (stats.getCurrentMana() < cost) return;
+            CastResult result = spell.cast(ctxSpell);
+            if (result == CastResult.OK) {
+                stats.setCurrentMana(stats.getCurrentMana() - cost);
+                stats.markDirty();
+                GrimcoreNetworking.syncPlayerStats(sp, stats);
+                loadout.setCooldown(slot, cd);
+                sp.setData(ModAttachments.PLAYER_LOADOUT.get(), loadout);
+            }
+        });
+    }
+    public static void sendCastSpellSlot(int slot) {
+        PacketDistributor.sendToServer(new C2SCastSpellSlotPayload(slot));
+    }
+    private static void showGateFailure(ServerPlayer sp, WeaponGate.Result gate) {
+        if (gate.reasonKey != null) {
+            sp.displayClientMessage(Component.translatable(gate.reasonKey), true);
+        } else if (gate.reason != null && !gate.reason.isBlank()) {
+            sp.displayClientMessage(Component.literal(gate.reason), true);
+        } else {
+            sp.displayClientMessage(Component.translatable("grimfate.msg.weapon_required"), true);
+        }
+        sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.7f, 1.0f);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\network\ModNetworking.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\C2SAllocatePointPayload.java
+package com.doomspire.grimfate.network.payload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+public record C2SAllocatePointPayload(String attributeId) implements CustomPacketPayload {
+    public static final Type<C2SAllocatePointPayload> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath("grimfate", "c2s_allocate_point"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, C2SAllocatePointPayload> STREAM_CODEC =
+            StreamCodec.composite(
+                    ByteBufCodecs.STRING_UTF8, C2SAllocatePointPayload::attributeId,
+                    C2SAllocatePointPayload::new
+            );
+    @Override
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\C2SAllocatePointPayload.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\C2SCastAutoBoltPayload.java
+package com.doomspire.grimfate.network.payload;
+import com.doomspire.grimfate.core.Grimfate;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+public record C2SCastAutoBoltPayload(InteractionHand hand) implements CustomPacketPayload {
+    public static final Type<C2SCastAutoBoltPayload> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, "c2s_cast_auto_bolt"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, C2SCastAutoBoltPayload> STREAM_CODEC =
+            new StreamCodec<>() {
+                @Override public C2SCastAutoBoltPayload decode(RegistryFriendlyByteBuf buf) {
+                    return new C2SCastAutoBoltPayload(buf.readEnum(InteractionHand.class));
+                }
+                @Override public void encode(RegistryFriendlyByteBuf buf, C2SCastAutoBoltPayload v) {
+                    buf.writeEnum(v.hand());
+                }
+            };
+    @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\C2SCastAutoBoltPayload.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\C2SCastSpellSlotPayload.java
+package com.doomspire.grimfate.network.payload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+public record C2SCastSpellSlotPayload(int slot) implements CustomPacketPayload {
+    public static final Type<C2SCastSpellSlotPayload> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath("grimfate", "c2s_cast_spell_slot"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, C2SCastSpellSlotPayload> STREAM_CODEC =
+            StreamCodec.of((buf, msg) -> ByteBufCodecs.VAR_INT.encode(buf, msg.slot),
+                    buf -> new C2SCastSpellSlotPayload(ByteBufCodecs.VAR_INT.decode(buf)));
+    @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\C2SCastSpellSlotPayload.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\S2CAllocateResultPayload.java
+package com.doomspire.grimfate.network.payload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+public record S2CAllocateResultPayload(String attributeId, int newAllocated, int unspent)
+        implements CustomPacketPayload {
+    public static final Type<S2CAllocateResultPayload> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath("grimfate", "s2c_allocate_result"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, S2CAllocateResultPayload> STREAM_CODEC =
+            StreamCodec.composite(
+                    ByteBufCodecs.STRING_UTF8, S2CAllocateResultPayload::attributeId,
+                    ByteBufCodecs.VAR_INT,    S2CAllocateResultPayload::newAllocated,
+                    ByteBufCodecs.VAR_INT,    S2CAllocateResultPayload::unspent,
+                    S2CAllocateResultPayload::new
+            );
+    @Override
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\network\payload\S2CAllocateResultPayload.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\network\SpellCastClient.java
+package com.doomspire.grimfate.network;
+import com.doomspire.grimfate.network.payload.C2SCastAutoBoltPayload;
+import net.minecraft.world.InteractionHand;
+import net.neoforged.neoforge.network.PacketDistributor;
+public final class SpellCastClient {
+    private SpellCastClient() {}
+    public static void tryCastAutoBoltFromStaff(InteractionHand hand) {
+        PacketDistributor.sendToServer(new C2SCastAutoBoltPayload(hand));
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\network\SpellCastClient.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModArmorMaterials.java
+package com.doomspire.grimfate.registry;
+import com.doomspire.grimfate.core.Grimfate;
+import net.minecraft.Util;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+public final class ModArmorMaterials {
+    public static final DeferredRegister<ArmorMaterial> ARMOR_MATERIALS =
+            DeferredRegister.create(Registries.ARMOR_MATERIAL, Grimfate.MODID);
+    private static Map<ArmorItem.Type, Integer> def(int helm, int chest, int legs, int boots) {
+        var m = new EnumMap<ArmorItem.Type, Integer>(ArmorItem.Type.class);
+        m.put(ArmorItem.Type.HELMET, helm);
+        m.put(ArmorItem.Type.CHESTPLATE, chest);
+        m.put(ArmorItem.Type.LEGGINGS, legs);
+        m.put(ArmorItem.Type.BOOTS, boots);
+        return m;
+    }
+    public static final DeferredHolder<ArmorMaterial, ArmorMaterial> COPPER = ARMOR_MATERIALS.register("copper",
+            () -> new ArmorMaterial(
+                     def(2, 6, 5, 2),
+                     12,
+                     SoundEvents.ARMOR_EQUIP_GENERIC,
+                     (Supplier<Ingredient>) () -> Ingredient.of(Items.COPPER_INGOT),
+                     List.<ArmorMaterial.Layer>of(),
+                     0.0f,
+                     0.0f
+            ));
+    public static final DeferredHolder<ArmorMaterial, ArmorMaterial> LINEN = ARMOR_MATERIALS.register(
+            "linen", () -> new ArmorMaterial(
+                     def(2, 6, 5, 2),
+                     12,
+                     SoundEvents.ARMOR_EQUIP_GENERIC,
+                     (Supplier<Ingredient>) () -> Ingredient.of(Items.COPPER_INGOT),
+                     List.<ArmorMaterial.Layer>of(),
+                     0.0f,
+                     0.0f
+            ));
+    public static final DeferredHolder<ArmorMaterial, ArmorMaterial> RAWHIDE = ARMOR_MATERIALS.register(
+            "rawhide", () -> new ArmorMaterial(
+                     def(2, 6, 5, 2),
+                     12,
+                     SoundEvents.ARMOR_EQUIP_GENERIC,
+                     (Supplier<Ingredient>) () -> Ingredient.of(Items.COPPER_INGOT),
+                     List.<ArmorMaterial.Layer>of(),
+                     0.0f,
+                     0.0f
+            ));
+    public static Holder<ArmorMaterial> copperHolder() {
+        return COPPER.getDelegate();
+    }
+    public static Holder<ArmorMaterial> linenHolder() {
+        return LINEN.getDelegate();
+    }
+    public static Holder<ArmorMaterial> rawhideHolder() {
+        return RAWHIDE.getDelegate();
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModArmorMaterials.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModCurios.java
+package com.doomspire.grimfate.registry;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
+import net.neoforged.fml.ModList;
+/**
+ * Слоты в Curios 9.5.x регистрируются через data/curios/... (см. ресурсы нашего мода).
+ */
+public final class ModCurios {
+    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final String SLOT_RING = "ring";
+    public static final String SLOT_NECKLACE = "necklace";
+    public static final String SLOT_BELT = "belt";
+    private ModCurios() {}
+    public static boolean isLoaded() {
+        return ModList.get().isLoaded("curios");
+    }
+    public static void init() {
+        if (isLoaded()) {
+            LOGGER.info("[Grimfate] Curios detected. Slot types are provided via data files (curios/slot).");
+        } else {
+            LOGGER.warn("[Grimfate] Curios NOT detected. Jewelry slots will be unavailable.");
+        }
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModCurios.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModDataComponents.java
+package com.doomspire.grimfate.registry;
+import com.doomspire.grimfate.core.Grimfate;
+import com.doomspire.grimfate.item.comp.AffixListComponent;
+import com.doomspire.grimfate.item.comp.WeaponProfileComponent;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+public final class ModDataComponents {
+    private ModDataComponents() {}
+    public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENT_TYPES =
+            DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, Grimfate.MODID);
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<WeaponProfileComponent>> WEAPON_PROFILE =
+            DATA_COMPONENT_TYPES.register("weapon_profile",
+                    () -> DataComponentType.<WeaponProfileComponent>builder()
+                            .persistent(WeaponProfileComponent.CODEC)
+                            .networkSynchronized(WeaponProfileComponent.STREAM_CODEC)
+                            .build());
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<AffixListComponent>> AFFIX_LIST =
+            DATA_COMPONENT_TYPES.register("affix_list",
+                    () -> DataComponentType.<AffixListComponent>builder()
+                            .persistent(AffixListComponent.CODEC)
+                            .networkSynchronized(AffixListComponent.STREAM_CODEC)
+                            .build());
+    public static void init(IEventBus modBus) {
+        DATA_COMPONENT_TYPES.register(modBus);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModDataComponents.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModEntityTypes.java
+package com.doomspire.grimfate.registry;
+import com.doomspire.grimfate.core.Grimfate;
+import com.doomspire.grimfate.entity.BoltProjectileEntity;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+public final class ModEntityTypes {
+    private ModEntityTypes(){}
+    public static final DeferredRegister<EntityType<?>> ENTITIES =
+            DeferredRegister.create(Registries.ENTITY_TYPE, Grimfate.MODID);
+    public static final DeferredHolder<EntityType<?>, EntityType<BoltProjectileEntity>> BOLT =
+            ENTITIES.register("bolt", () -> EntityType.Builder
+                    .<BoltProjectileEntity>of(BoltProjectileEntity::new, MobCategory.MISC)
+                    .sized(0.25f, 0.25f)
+                    .clientTrackingRange(64)
+                    .updateInterval(2)
+                    .build(Grimfate.MODID + ":bolt"));
+    public static void init(IEventBus modBus) {
+        ENTITIES.register(modBus);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModEntityTypes.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItems.java
+package com.doomspire.grimfate.registry;
+import com.doomspire.grimfate.core.Grimfate;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredRegister;
+/**
+ * Все конкретные предметы объявляются и регистрируются в подмодулях:
+ *  - item/weapons/Weapons
+ *  - item/armor/Armors
+ *  - item/materials/Materials
+ *  - item/jewelry/Jewelry
+ */
+public final class ModItems {
+    private ModItems() {}
+    public static final DeferredRegister<Item> ITEMS =
+            DeferredRegister.create(Registries.ITEM, Grimfate.MODID);
+    public static void init(IEventBus modBus) {
+        ITEMS.register(modBus);
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItems.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItemTags.java
+package com.doomspire.grimfate.registry;
+import com.doomspire.grimfate.core.Grimfate;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+public final class ModItemTags {
+    public static final TagKey<Item> MELEE_WEAPONS  = tag("melee_weapons");
+    public static final TagKey<Item> STAVES         = tag("staves");
+    public static final TagKey<Item> RANGED_WEAPONS = tag("ranged_weapons");
+    public static final TagKey<Item> DAGGERS        = tag("daggers");
+    public static final TagKey<Item> SHIELDS        = tag("shields");
+    private static TagKey<Item> tag(String path) {
+        return TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Grimfate.MODID, path));
+    }
+    private ModItemTags() {}
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModItemTags.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModWeaponMaterials.java
+package com.doomspire.grimfate.registry;
+import com.doomspire.grimfate.core.Grimfate;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.neoforged.neoforge.common.Tags;
+import net.neoforged.neoforge.common.SimpleTier;
+/**
+ * Оружейные материалы (Tier) для инструментов/мечей.
+ * 1.21.1: используем SimpleTier (NeoForge) и передаём его в SwordItem/прочие TieredItem.
+ *
+ * Как применять (пример для меча):
+ *   new SwordItem(
+ *       // сам tier
+ *       ModWeaponMaterials.COPPER,
+ *       // свойства предмета + атрибуты урона/скорости через createAttributes
+ *       new Item.Properties().attributes(
+ *           net.minecraft.world.item.SwordItem.createAttributes(
+ *               ModWeaponMaterials.COPPER,
+ *                type-specific damage bonus 3,
+ *                attack speed -2.4f
+ *           )
+ *       )
+ *   );
+ *
+ * Примечание: в 1.21.1 конструкторы инструментов не принимают raw-значения урона/скорости;
+ * их нужно класть в Properties#attributes(...) через соответствующий createAttributes(...) у класса инструмента.
+ */
+public final class ModWeaponMaterials {
+    private ModWeaponMaterials() {}
+    /**
+     * Медный tier для мечей/инструментов.
+     * Размещаем «между камнем и железом».
+     *
+     * Пояснение параметров SimpleTier:
+     *  - incorrectBlocksForDrops: какой тег блоков НЕЛЬЗЯ добывать этим tier (берём каменный как базу).
+     *  - uses: прочность (stone=131, iron=250). Ставим 200.
+     *  - speed: скорость копания (stone=4.0f, iron=6.0f). Ставим 5.0f.
+     *  - attackDamageBonus: бонус к урону tier (для меча финальный = 4 + это значение).
+     *  - enchantmentValue: «лучше золота» = 22, «хуже золота» — ставим 20 или 12 по балансу. Пусть 12 как в твоей броне.
+     *  - repairIngredient: чем чинить (медь).
+     */
+    public static final Tier COPPER = new SimpleTier(
+            BlockTags.INCORRECT_FOR_STONE_TOOL,
+            300,
+            5.0f,
+            0.0f,
+            12,
+            () -> Ingredient.of(Items.COPPER_INGOT)
+    );
+    /**
+     * Деревянный tier для посохов.
+     * Логика: по прочности и энчантабилити близко к WOOD, но это твой самостоятельный tier.
+     * Если посохи — не «инструменты» в смысле добычи, всё равно удобно хранить их боевой tier тут.
+     */
+    public static final Tier WOOD_STAFF = new SimpleTier(
+            BlockTags.INCORRECT_FOR_WOODEN_TOOL,
+            59,           // как у дерев. инструментов
+            2.0f,         // дерево = медленно
+            0.0f,         // базовый бонус минимальный, добираем уроны атрибутами предмета
+            15,           // как у ванильного дерева
+            () -> Ingredient.of(Items.STICK)
+    );
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\registry\ModWeaponMaterials.java
+
+НАЧАЛО: .\grimfate\src\main\java\com\doomspire\grimfate\spell\SpellRequirements.java
+package com.doomspire.grimfate.spell;
+import com.doomspire.grimcore.spell.api.WeaponRequirement;
+import net.minecraft.resources.ResourceLocation;
+/**
+ * Централизованная таблица: какой спелл требует какое оружие.
+ * На старте держим тут только то, что уже есть; позже расширим при добавлении новых спеллов.
+ */
+public final class SpellRequirements {
+    private SpellRequirements() {}
+    /**
+     * Вернёт требования к оружию для указанного спелла, либо null если требований нет.
+     */
+    public static WeaponRequirement require(ResourceLocation spellId) {
+        if (spellId == null) return null;
+        return null; // по умолчанию — без требований
+    }
+}
+
+КОНЕЦ: .\grimfate\src\main\java\com\doomspire\grimfate\spell\SpellRequirements.java
+

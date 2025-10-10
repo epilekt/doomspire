@@ -1,0 +1,3901 @@
+﻿=== GRIMCORE JAVA FILES (without comments) ===
+Total files: 71
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\affix\Affix.java
+package com.doomspire.grimcore.affix;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+/**
+ * Ядро (grimcore) не знает, как хранятся аффиксы на предметах — это задача контент-модуля.
+ * Здесь — только применение к StatSnapshot и метаданные.
+ *
+ * Допущения:
+ * - "magnitude" — числовая сила/вес аффикса, уже нормализованная контентом (например, 0.12f для +12%).
+ * - "source" — откуда пришёл аффикс (броня, оружие, бижутерия/curios) — на случай разных формул.
+ * - Применение идемпотентно и НЕ должно читать/менять состояние предметов, только модифицировать снапшот.
+ */
+public interface Affix {
+    /**
+     * Уникальный идентификатор аффикса (например, grimcore:dr_all, grimcore:fire_resist).
+     */
+    ResourceLocation id();
+    /**
+     * Применить эффект аффикса к снапшоту.
+     *
+     * @param outSnapshot целевой снапшот, в который суммируются эффекты
+     * @param magnitude   сила аффикса (уже приведённая в доли/единицы)
+     * @param source      источник (тип носителя аффикса)
+     */
+    void apply(StatSnapshot outSnapshot, float magnitude, Source source);
+    /**
+     * Короткий человекочитаемый ключ для тултипа/логов (без локализации).
+     * Полноценный локализованный текст делаем на стороне клиента в grimfate.
+     */
+    default String tooltipKey() {
+        return id().toString();
+    }
+    /**
+     * Источник аффикса — может влиять на формулу (например, бонусы с оружия чаще «оффенсивные»).
+     */
+    enum Source {
+        WEAPON,
+        ARMOR,
+        JEWELRY,   // кольца/амулеты (включая Curios)
+        SHIELD,
+        OTHER
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\affix\Affix.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\affix\AffixAggregator.java
+package com.doomspire.grimcore.affix;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+/**
+ * ВАЖНО:
+ *  - grimcore НЕ знает, где хранятся аффиксы (компоненты предметов, Curios, теги и т.д.).
+ *  - Контент-модуль (grimfate) обязан предоставить экстрактор через {@link #setExtractor(Extractor)}.
+ *  - Экстрактор возвращает список "AffixEntry" (id, сила, источник) для КОНКРЕТНОЙ сущности.
+ *
+ * Алгоритм:
+ *  1) Вызываем внешний Extractor → получаем список аффиксов сущности.
+ *  2) Для каждого id резолвим Affix из {@link ModAffixes} и вызываем {@link Affix#apply}.
+ *  3) Все эффекты суммируются в переданный снапшот.
+ *
+ * Безопасность:
+ *  - Пустые/неизвестные id пропускаются молча.
+ *  - Неверные или NaN величины "magnitude" приводятся к 0.
+ */
+public final class AffixAggregator {
+    private AffixAggregator() {}
+    private static final Logger LOG = LoggerFactory.getLogger("Grim/AffixAggregator");
+    private static volatile Extractor EXTRACTOR = entity -> Collections.emptyList();
+    /**
+     * Установить внешний экстрактор аффиксов.
+     * Вызывайте из grimfate при common-инициализации, когда готово чтение компонентов.
+     */
+    public static void setExtractor(Extractor extractor) {
+        EXTRACTOR = Objects.requireNonNull(extractor, "AffixAggregator extractor");
+    }
+    /**
+     * Собрать и применить ВСЕ аффиксы сущности к снапшоту.
+     * Снапшот должен быть уже частично посчитан (атрибуты и т.п.) — аффиксы добавятся поверх.
+     */
+    public static void applyAll(StatSnapshot outSnapshot, LivingEntity entity) {
+        if (outSnapshot == null || entity == null) return;
+        List<AffixEntry> list;
+        try {
+            list = EXTRACTOR.extract(entity);
+        } catch (Throwable t) {
+            if (LOG.isWarnEnabled()) {
+                LOG.warn("[extract] failed: {}", t.toString());
+            }
+            list = Collections.emptyList();
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("[applyAll] entity={} extracted={}",
+                    entity.getName() != null ? entity.getName().getString() : entity.getStringUUID(),
+                    list.size());
+        }
+        if (list.isEmpty()) return;
+        for (AffixEntry entry : list) {
+            if (entry == null || entry.id() == null) continue;
+            Affix affix = ModAffixes.get(entry.id());
+            if (affix == null) {
+                LOG.warn("[apply] MISSING impl for id={} (src={}, mag={})",
+                        entry.id(), entry.source(), entry.magnitude());
+                continue;
+            }
+            float mag = sanitize(entry.magnitude());
+            if (mag == 0f) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("[apply] SKIP zero magnitude id={} (src={})", entry.id(), entry.source());
+                }
+                continue;
+            }
+            try {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("[apply] id={} mag={} src={}", entry.id(), mag, entry.source());
+                }
+                affix.apply(outSnapshot, mag, entry.source());
+            } catch (Throwable t) {
+                LOG.warn("[apply] affix {} threw: {}", entry.id(), t.toString());
+            }
+        }
+    }
+    private static float sanitize(float v) {
+        if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
+        return v;
+    }
+    /**
+     * Экстрактор аффиксов для конкретной сущности.
+     * ДОЛЖЕН собрать аффиксы со всей экипировки/бафов/Curios/компонентов и вернуть список.
+     */
+    @FunctionalInterface
+    public interface Extractor {
+        List<AffixEntry> extract(LivingEntity entity);
+    }
+    /**
+     * Единичная запись аффикса.
+     *
+     * @param id        уникальный id аффикса (например, grimcore:damage_reduction_all)
+     * @param magnitude числовая сила (уже нормализована, например 0.12f для +12%)
+     * @param source    источник (оружие/броня/бижутерия/щит/прочее)
+     */
+    public record AffixEntry(ResourceLocation id, float magnitude, Affix.Source source) {
+        public AffixEntry {
+            if (source == null) source = Affix.Source.OTHER;
+        }
+    }
+    /**
+     * Удобный builder для внешнего экстрактора.
+     * Позволяет накапливать аффиксы с валидацией, а затем получить immutable-список.
+     */
+    public static final class ListBuilder {
+        private final List<AffixEntry> data = new ArrayList<>();
+        public ListBuilder add(ResourceLocation id, float magnitude, Affix.Source source) {
+            if (id != null && !Float.isNaN(magnitude) && !Float.isInfinite(magnitude)) {
+                data.add(new AffixEntry(id, magnitude, source));
+            }
+            return this;
+        }
+        public List<AffixEntry> build() {
+            return Collections.unmodifiableList(new ArrayList<>(data));
+        }
+    }
+}
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\affix\AffixAggregator.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\affix\codec\AffixSourceSetCodec.java
+package com.doomspire.grimcore.affix.codec;
+import com.doomspire.grimcore.affix.Affix;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Locale;
+import java.util.Set;
+/*
+ *
+ * Поддерживаемые формы JSON:
+ *   "allow_sources": "WEAPON"
+ *   "allow_sources": ["WEAPON", "ARMOR", "JEWELRY"]
+ *   "allow_sources": "ALL"
+ *
+ * Регистр не важен (weapon == WEAPON).
+ */
+public final class AffixSourceSetCodec implements Codec<Set<Affix.Source>> {
+    public static final AffixSourceSetCodec INSTANCE = new AffixSourceSetCodec();
+    private static final Codec<Set<Affix.Source>> ARRAY =
+            Codec.STRING.listOf().flatXmap(
+                    list -> {
+                        try {
+                            final EnumSet<Affix.Source> out = EnumSet.noneOf(Affix.Source.class);
+                            for (String s : list) {
+                                parseTokenInto(out, s);
+                            }
+                            return DataResult.success(out);
+                        } catch (IllegalArgumentException ex) {
+                            return DataResult.error(() -> "Affix.Source parse error: " + ex.getMessage());
+                        }
+                    },
+                    set -> DataResult.success(set.stream().map(Enum::name).toList())
+            );
+    private static final Codec<Set<Affix.Source>> SINGLE =
+            Codec.STRING.flatXmap(
+                    s -> {
+                        try {
+                            final EnumSet<Affix.Source> out = EnumSet.noneOf(Affix.Source.class);
+                            parseTokenInto(out, s);
+                            return DataResult.success(out);
+                        } catch (IllegalArgumentException ex) {
+                            return DataResult.error(() -> "Affix.Source parse error: " + ex.getMessage());
+                        }
+                    },
+                    set -> {
+                        if (set.size() == Affix.Source.values().length) {
+                            return DataResult.success("ALL");
+                        }
+                        final String first = set.iterator().next().name();
+                        return DataResult.success(first);
+                    }
+            );
+    private AffixSourceSetCodec() {}
+    @Override
+    public <T> DataResult<T> encode(Set<Affix.Source> input, com.mojang.serialization.DynamicOps<T> ops, T prefix) {
+        if (input != null && input.size() == Affix.Source.values().length) {
+            return Codec.STRING.encode("ALL", ops, prefix);
+        }
+        return ARRAY.encode(input == null ? EnumSet.noneOf(Affix.Source.class) : input, ops, prefix);
+    }
+    @Override
+    public <T> DataResult<Pair<Set<Affix.Source>, T>> decode(DynamicOps<T> ops, T input) {
+        final DataResult<String> asString = Codec.STRING.parse(ops, input);
+        if (asString.result().isPresent()) {
+            return SINGLE.decode(ops, input);
+        }
+        return ARRAY.decode(ops, input);
+    }
+    private static void parseTokenInto(EnumSet<Affix.Source> out, String token) {
+        final String t = token.trim().toUpperCase(Locale.ROOT);
+        if (t.isEmpty()) throw new IllegalArgumentException("empty token");
+        if ("ALL".equals(t)) {
+            out.addAll(Arrays.asList(Affix.Source.values()));
+            return;
+        }
+        try {
+            out.add(Affix.Source.valueOf(t));
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("unknown source '" + token + "'. Allowed: " +
+                    "'ALL', " + Arrays.toString(Affix.Source.values()));
+        }
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\affix\codec\AffixSourceSetCodec.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\affix\def\AffixDataManager.java
+package com.doomspire.grimcore.affix.def;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+/*
+ *
+ * Data-driven загрузчик AffixDef. Папка: data/<ns>/affixes/defs/*.json
+ * Регистрируется на MOD bus через AddReloadListenerEvent (см. onAddReloadListeners).
+ */
+public final class AffixDataManager extends SimpleJsonResourceReloadListener {
+    public static final String FOLDER = "affixes/defs";
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
+    private final Map<ResourceLocation, AffixDef> byId = new ConcurrentHashMap<>();
+    public static final AffixDataManager INSTANCE = new AffixDataManager();
+    private AffixDataManager() {
+        super(GSON, FOLDER);
+    }
+    public Optional<AffixDef> get(ResourceLocation id) {
+        return Optional.ofNullable(byId.get(id));
+    }
+    public boolean contains(ResourceLocation id) {
+        return byId.containsKey(id);
+    }
+    public Map<ResourceLocation, AffixDef> all() {
+        return Collections.unmodifiableMap(byId);
+    }
+    @Override
+    protected void apply(Map<ResourceLocation, JsonElement> jsons,
+                         ResourceManager resourceManager,
+                         ProfilerFiller profiler) {
+        profiler.push("grimcore_affix_defs_parse");
+        final Map<ResourceLocation, AffixDef> parsed = new HashMap<>();
+        final Set<ResourceLocation> duplicateCheck = new HashSet<>();
+        for (Map.Entry<ResourceLocation, JsonElement> e : jsons.entrySet()) {
+            final ResourceLocation fileKey = e.getKey();
+            final var json = e.getValue();
+            final var result = AffixDef.CODEC.parse(JsonOps.INSTANCE, json).result();
+            if (result.isEmpty()) {
+                throw new IllegalStateException("Failed to parse AffixDef from " + fileKey);
+            }
+            final AffixDef def = result.get();
+            final ResourceLocation id = def.id();
+            if (!duplicateCheck.add(id)) {
+                throw new IllegalStateException("Duplicate affix id detected: " + id + " (from " + fileKey + ")");
+            }
+            if (def.min() == def.max() && def.unit() == AffixDef.ValueUnit.PERCENT && def.min() == 0f) {
+                throw new IllegalStateException("Suspicious zero-percent affix: " + id + " in " + fileKey);
+            }
+            parsed.put(id, def);
+        }
+        byId.clear();
+        byId.putAll(parsed);
+        profiler.pop();
+    }
+    public static void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(INSTANCE);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\affix\def\AffixDataManager.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\affix\def\AffixDef.java
+package com.doomspire.grimcore.affix.def;
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimcore.affix.codec.AffixSourceSetCodec;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import java.util.EnumSet;
+import java.util.Locale;
+import java.util.Set;
+/*
+ */
+public record AffixDef(
+        ResourceLocation id,
+        String displayKey,
+        ValueUnit unit,
+        float min,
+        float max,
+        Curve curve,
+        Set<Affix.Source> allowSources,
+        boolean stackable,
+        boolean clampTotal
+) {
+    public static final Codec<AffixDef> CODEC = RecordCodecBuilder.create(i -> i.group(
+            ResourceLocation.CODEC.fieldOf("id").forGetter(AffixDef::id),
+            Codec.STRING.fieldOf("display_key").forGetter(AffixDef::displayKey),
+            ValueUnit.CODEC.fieldOf("unit").forGetter(AffixDef::unit),
+            Codec.FLOAT.fieldOf("min").forGetter(AffixDef::min),
+            Codec.FLOAT.fieldOf("max").forGetter(AffixDef::max),
+            Curve.CODEC.fieldOf("curve").forGetter(AffixDef::curve),
+            AffixSourceSetCodec.INSTANCE.optionalFieldOf("allow_sources", allSources()).forGetter(AffixDef::allowSources),
+            Codec.BOOL.optionalFieldOf("stackable", false).forGetter(AffixDef::stackable),
+            Codec.BOOL.optionalFieldOf("clamp_total", true).forGetter(AffixDef::clampTotal)
+    ).apply(i, AffixDef::new));
+    private static Set<Affix.Source> allSources() {
+        EnumSet<Affix.Source> s = EnumSet.noneOf(Affix.Source.class);
+        for (Affix.Source v : Affix.Source.values()) s.add(v);
+        return s;
+    }
+    public AffixDef {
+        if (displayKey == null || displayKey.isBlank())
+            throw new IllegalArgumentException("display_key must be non-empty for " + id);
+        if (Float.isNaN(min) || Float.isNaN(max) || Float.isInfinite(min) || Float.isInfinite(max))
+            throw new IllegalArgumentException("min/max must be finite for " + id + " (min=" + min + ", max=" + max + ")");
+        if (max < min)
+            throw new IllegalArgumentException("max < min for " + id + " (min=" + min + ", max=" + max + ")");
+        if (allowSources == null || allowSources.isEmpty())
+            throw new IllegalArgumentException("allow_sources cannot be empty for " + id);
+    }
+    public float sampleBase(RandomSource rng) {
+        final float t = Mth.clamp(curve.sample01(rng), 0f, 1f);
+        return min + (max - min) * t;
+    }
+    public float clampTotal(float value) {
+        return clampTotal ? Mth.clamp(value, min, max) : value;
+    }
+    public enum ValueUnit {
+        FLAT,
+        PERCENT;
+        public static final Codec<ValueUnit> CODEC =
+                Codec.STRING.xmap(
+                        s -> ValueUnit.valueOf(s.trim().toUpperCase(Locale.ROOT)),
+                        e -> e.name().toLowerCase(Locale.ROOT)
+                );
+    }
+    /**
+     * Кривая распределения t в [0..1], чтобы управлять «редкостью» высоких/низких роллов.
+     * Реализовано через dispatch по полю "type" (важно: вызываем ИМЕННО С КОДЕКА СТРОК — Codec.STRING.dispatch(...)).
+     */
+    public sealed interface Curve permits Curve.Uniform, Curve.Gaussian, Curve.Logistic, Curve.BiasLow, Curve.BiasHigh {
+        public static final com.mojang.serialization.Codec<Curve> CODEC = com.mojang.serialization.Codec.STRING.dispatch(
+                "type",
+                Curve::typeKey,
+                key -> switch (key) {
+                    case "UNIFORM" -> Uniform.CODEC;
+                    case "GAUSSIAN" -> Gaussian.CODEC;
+                    case "LOGISTIC" -> Logistic.CODEC;
+                    case "BIAS_LOW" -> BiasLow.CODEC;
+                    case "BIAS_HIGH" -> BiasHigh.CODEC;
+                    default -> Uniform.CODEC; // безопасный дефолт
+                }
+        );
+        String typeKey();
+        float sample01(RandomSource rng);
+        record Uniform() implements Curve {
+            static final com.mojang.serialization.MapCodec<Uniform> CODEC =
+                    com.mojang.serialization.MapCodec.unit(new Uniform());
+            @Override public String typeKey() { return "UNIFORM"; }
+            @Override public float sample01(RandomSource rng) { return rng.nextFloat(); }
+        }
+        record Gaussian(float spread) implements Curve {
+            static final com.mojang.serialization.MapCodec<Gaussian> CODEC =
+                    RecordCodecBuilder.mapCodec(i -> i.group(
+                            Codec.FLOAT.optionalFieldOf("spread", 1.0f).forGetter(Gaussian::spread)
+                    ).apply(i, Gaussian::new));
+            @Override public String typeKey() { return "GAUSSIAN"; }
+            @Override public float sample01(RandomSource rng) {
+                double u1 = Math.max(1e-7, rng.nextDouble());
+                double u2 = rng.nextDouble();
+                double z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                double sigma = Math.max(1e-4, spread) / 6.0;
+                double x = 0.5 + z0 * sigma;
+                return (float) Mth.clamp(x, 0.0, 1.0);
+            }
+        }
+        record Logistic(float spread) implements Curve {
+            static final com.mojang.serialization.MapCodec<Logistic> CODEC =
+                    RecordCodecBuilder.mapCodec(i -> i.group(
+                            Codec.FLOAT.optionalFieldOf("spread", 1.0f).forGetter(Logistic::spread)
+                    ).apply(i, Logistic::new));
+            @Override public String typeKey() { return "LOGISTIC"; }
+            @Override public float sample01(RandomSource rng) {
+                double u = Mth.clamp(rng.nextDouble(), 1e-7, 1 - 1e-7);
+                double k = Math.max(1e-4, spread);
+                double t = 1.0 / (1.0 + Math.pow(1.0 / u - 1.0, 1.0 / k));
+                return (float) Mth.clamp(t, 0.0, 1.0);
+            }
+        }
+        record BiasLow(float power) implements Curve {
+            static final com.mojang.serialization.MapCodec<BiasLow> CODEC =
+                    RecordCodecBuilder.mapCodec(i -> i.group(
+                            Codec.FLOAT.optionalFieldOf("power", 2.0f).forGetter(BiasLow::power)
+                    ).apply(i, BiasLow::new));
+            @Override public String typeKey() { return "BIAS_LOW"; }
+            @Override public float sample01(RandomSource rng) {
+                float u = rng.nextFloat();
+                float p = Math.max(1.0f, power);
+                return (float) Math.pow(u, p);
+            }
+        }
+        record BiasHigh(float power) implements Curve {
+            static final com.mojang.serialization.MapCodec<BiasHigh> CODEC =
+                    RecordCodecBuilder.mapCodec(i -> i.group(
+                            Codec.FLOAT.optionalFieldOf("power", 2.0f).forGetter(BiasHigh::power)
+                    ).apply(i, BiasHigh::new));
+            @Override public String typeKey() { return "BIAS_HIGH"; }
+            @Override public float sample01(RandomSource rng) {
+                float u = rng.nextFloat();
+                float p = Math.max(1.0f, power);
+                return 1.0f - (float) Math.pow(1.0f - u, p);
+            }
+        }
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\affix\def\AffixDef.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\affix\ModAffixes.java
+package com.doomspire.grimcore.affix;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+/**
+ * Grimcore не знает, какие предметы их содержат — только предоставляет фабрики и реализацию.
+ * Контент-модуль (grimfate) может расширять реестр через register().
+ */
+public final class ModAffixes {
+    private static final Map<ResourceLocation, Affix> REGISTRY = new HashMap<>();
+    private ModAffixes() {}
+    public static void register(Affix affix) {
+        if (REGISTRY.containsKey(affix.id())) {
+            throw new IllegalStateException("Affix id already registered: " + affix.id());
+        }
+        REGISTRY.put(affix.id(), affix);
+    }
+    public static Affix get(ResourceLocation id) {
+        return REGISTRY.get(id);
+    }
+    public static Map<ResourceLocation, Affix> all() {
+        return Collections.unmodifiableMap(REGISTRY);
+    }
+    /**
+     * Вызвать один раз при старте мода (например, в common-инициализации).
+     * Регистрирует базовые аффиксы ядра.
+     * Контент может добавить свои дополнительно.
+     */
+    public static void bootstrap() {
+        register(new SimpleAffix(
+                ResourceLocation.fromNamespaceAndPath("grimcore", "damage_reduction_all"),
+                (snap, mag, src) -> snap.damageReductionAll += mag
+        ));
+        register(new SimpleAffix(
+                ResourceLocation.fromNamespaceAndPath("grimcore", "max_mana_flat"),
+                (snap, mag, src) -> snap.maxMana += mag
+        ));
+        register(new SimpleAffix(
+                ResourceLocation.fromNamespaceAndPath("grimcore", "fire_resist"),
+                (snap, mag, src) -> snap.resistances.merge(
+                        com.doomspire.grimcore.stat.ResistTypes.FIRE,
+                        mag, Float::sum)
+        ));
+    }
+    /**
+     * Упрощённый аффикс, для случаев где достаточно «применить лямбду».
+     */
+    private record SimpleAffix(ResourceLocation id, Applier fn) implements Affix {
+        @Override
+        public void apply(StatSnapshot outSnapshot, float magnitude, Source source) {
+            fn.apply(outSnapshot, magnitude, source);
+        }
+        @FunctionalInterface
+        private interface Applier {
+            void apply(StatSnapshot out, float mag, Source src);
+        }
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\affix\ModAffixes.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\affix\pool\AffixPoolDataManager.java
+package com.doomspire.grimcore.affix.pool;
+import com.doomspire.grimcore.affix.Affix;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.item.Item;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.minecraft.util.random.WeightedEntry;
+import net.minecraft.util.random.WeightedRandomList;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+/*
+*/
+public final class AffixPoolDataManager extends SimpleJsonResourceReloadListener {
+    public static final String FOLDER = "affixes/pools";
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
+    private final Map<ResourceLocation, AffixPoolDef> byId = new ConcurrentHashMap<>();
+    public static final AffixPoolDataManager INSTANCE = new AffixPoolDataManager();
+    private AffixPoolDataManager() { super(GSON, FOLDER); }
+    public Optional<AffixPoolDef> get(ResourceLocation id) {
+        return Optional.ofNullable(byId.get(id));
+    }
+    public Map<ResourceLocation, AffixPoolDef> all() {
+        return Collections.unmodifiableMap(byId);
+    }
+    /**
+     * Вернёт список пулов, удовлетворяющих фильтрам:
+     * источник (оружие, броня и т.д.), теги предмета и уровень.
+     */
+    public List<AffixPoolDef> filterApplicable(Item item, Set<TagKey<Item>> itemTags, Affix.Source src, int itemLevel) {
+        final List<AffixPoolDef> result = new ArrayList<>();
+        for (AffixPoolDef pool : byId.values()) {
+            if (!pool.allowSources().contains(src)) continue;
+            if (!pool.matchesItemLevel(itemLevel)) continue;
+            if (!itemTags.containsAll(pool.requiredItemTags())) continue;
+            result.add(pool);
+        }
+        return result;
+    }
+    /**
+     * Извлекает взвешенный список всех записей из данного пула.
+     * Позволяет затем выбрать случайный аффикс с учётом весов.
+     */
+    public WeightedRandomList<WeightedEntry.Wrapper<AffixPoolDef.Entry>> buildWeightedEntries(AffixPoolDef pool) {
+        final List<WeightedEntry.Wrapper<AffixPoolDef.Entry>> list = new ArrayList<>();
+        for (AffixPoolDef.Entry e : pool.entries()) {
+            list.add(WeightedEntry.wrap(e, Math.max(1, e.weight())));
+        }
+        return WeightedRandomList.create(list);
+    }
+    /**
+     * Выбрать случайный аффикс из пула, учитывая веса и фильтр уровня.
+     * Возвращает Optional.empty(), если ничего не подошло.
+     */
+    public Optional<AffixPoolDef.Entry> sample(AffixPoolDef pool, int itemLevel, RandomSource random) {
+        var candidates = pool.entries().stream()
+                .filter(e -> e.levelOk(itemLevel))
+                .toList();
+        if (candidates.isEmpty()) return Optional.empty();
+        var weighted = WeightedRandomList.create(
+                candidates.stream()
+                        .map(e -> WeightedEntry.wrap(e, Math.max(1, e.weight())))
+                        .toList()
+        );
+        return weighted.getRandom(random).map(WeightedEntry.Wrapper::data);
+    }
+    @Override
+    protected void apply(Map<ResourceLocation, JsonElement> jsons, ResourceManager manager, ProfilerFiller profiler) {
+        profiler.push("grimcore_affix_pools_parse");
+        final Map<ResourceLocation, AffixPoolDef> parsed = new HashMap<>();
+        final Set<ResourceLocation> duplicateCheck = new HashSet<>();
+        for (var e : jsons.entrySet()) {
+            final ResourceLocation fileKey = e.getKey();
+            var json = e.getValue();
+            var result = AffixPoolDef.CODEC.parse(JsonOps.INSTANCE, json).result();
+            if (result.isEmpty()) {
+                throw new IllegalStateException("Failed to parse AffixPoolDef from " + fileKey);
+            }
+            var def = result.get();
+            var id = def.id();
+            if (!duplicateCheck.add(id))
+                throw new IllegalStateException("Duplicate pool id: " + id);
+            parsed.put(id, def);
+        }
+        byId.clear();
+        byId.putAll(parsed);
+        profiler.pop();
+    }
+    public static void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(INSTANCE);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\affix\pool\AffixPoolDataManager.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\affix\pool\AffixPoolDef.java
+package com.doomspire.grimcore.affix.pool;
+import com.doomspire.grimcore.affix.Affix;
+import com.doomspire.grimcore.affix.codec.AffixSourceSetCodec;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.world.item.Item;
+import java.util.List;
+import java.util.Set;
+/*
+*/
+public record AffixPoolDef(
+        ResourceLocation id,
+        List<Entry> entries,
+        Set<Affix.Source> allowSources,
+        List<TagKey<Item>> requiredItemTags,
+        int minItemLevel,
+        int maxItemLevel,
+        boolean uniqueTypes,
+        IntProvider maxAffixesOverride
+) {
+    public static final Codec<TagKey<Item>> ITEM_TAG_CODEC =
+            ResourceLocation.CODEC.xmap(rl -> TagKey.create(Registries.ITEM, rl), TagKey::location);
+    public static final Codec<AffixPoolDef> CODEC = RecordCodecBuilder.create(i -> i.group(
+            ResourceLocation.CODEC.fieldOf("id").forGetter(AffixPoolDef::id),
+            Entry.CODEC.listOf().fieldOf("entries").forGetter(AffixPoolDef::entries),
+            AffixSourceSetCodec.INSTANCE.optionalFieldOf("allow_sources", Set.of(Affix.Source.WEAPON, Affix.Source.ARMOR, Affix.Source.JEWELRY, Affix.Source.OTHER)).forGetter(AffixPoolDef::allowSources),
+            ITEM_TAG_CODEC.listOf().optionalFieldOf("required_item_tags", List.of()).forGetter(AffixPoolDef::requiredItemTags),
+            Codec.INT.optionalFieldOf("min_item_level", 1).forGetter(AffixPoolDef::minItemLevel),
+            Codec.INT.optionalFieldOf("max_item_level", 0).forGetter(AffixPoolDef::maxItemLevel),
+            Codec.BOOL.optionalFieldOf("unique_types", true).forGetter(AffixPoolDef::uniqueTypes),
+            IntProvider.CODEC.optionalFieldOf("max_affixes_override", ConstantInt.of(0)).forGetter(AffixPoolDef::maxAffixesOverride)
+    ).apply(i, AffixPoolDef::new));
+    public boolean matchesItemLevel(int itemLevel) {
+        if (itemLevel < Math.max(1, minItemLevel)) return false;
+        if (maxItemLevel > 0 && itemLevel > maxItemLevel) return false;
+        return true;
+    }
+    public record Entry(
+            ResourceLocation affixId,
+            int weight,
+            int perItemMinLevel,
+            int perItemMaxLevel,
+            IntProvider rollsPerAffixOverride
+    ) {
+        public static final Codec<Entry> CODEC = RecordCodecBuilder.create(i -> i.group(
+                ResourceLocation.CODEC.fieldOf("affix_id").forGetter(Entry::affixId),
+                Codec.intRange(1, Integer.MAX_VALUE).fieldOf("weight").forGetter(Entry::weight),
+                Codec.INT.optionalFieldOf("min_item_level", 1).forGetter(Entry::perItemMinLevel),
+                Codec.INT.optionalFieldOf("max_item_level", 0).forGetter(Entry::perItemMaxLevel),
+                IntProvider.CODEC.optionalFieldOf("rolls_override", ConstantInt.of(0)).forGetter(Entry::rollsPerAffixOverride)
+        ).apply(i, Entry::new));
+        public boolean levelOk(int itemLevel) {
+            if (itemLevel < Math.max(1, perItemMinLevel)) return false;
+            if (perItemMaxLevel > 0 && itemLevel > perItemMaxLevel) return false;
+            return true;
+        }
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\affix\pool\AffixPoolDef.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\affix\rarity\RarityDataManager.java
+package com.doomspire.grimcore.affix.rarity;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.util.random.WeightedEntry;
+import net.minecraft.util.random.WeightedRandomList;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+/**
+ *
+ * Data-driven загрузчик RarityDef с поддержкой hot-reload.
+ * Путь в датапаке: data/<namespace>/affixes/rarities/*.json
+ *
+ * Требуется регистрация на событие {@link AddReloadListenerEvent} (см. метод onAddReloadListeners).
+ */
+public final class RarityDataManager extends SimpleJsonResourceReloadListener {
+    public static final String FOLDER = "affixes/rarities";
+    private static final Gson GSON = new GsonBuilder().setLenient().create();
+    private final Map<ResourceLocation, RarityDef> byId = new ConcurrentHashMap<>();
+    private volatile WeightedRandomList<WeightedEntry.Wrapper<ResourceLocation>> weighted = WeightedRandomList.create();
+    public static final RarityDataManager INSTANCE = new RarityDataManager();
+    private RarityDataManager() {
+        super(GSON, FOLDER);
+    }
+    public Optional<RarityDef> get(ResourceLocation id) {
+        return Optional.ofNullable(byId.get(id));
+    }
+    public Map<ResourceLocation, RarityDef> all() {
+        return Collections.unmodifiableMap(byId);
+    }
+    /**
+     * Выбор случайной редкости по весам. Если список пуст — Optional.empty().
+     * NB: возвращает именно id, чтобы потребитель мог повторно достать актуальное определение.
+     */
+    public Optional<ResourceLocation> sampleId(RandomSource random) {
+        return weighted.getRandom(random).map(WeightedEntry.Wrapper::data);
+    }
+    public Optional<RarityDef> sample(RandomSource random) {
+        return sampleId(random).flatMap(this::get);
+    }
+    @Override
+    protected void apply(Map<ResourceLocation, JsonElement> jsons,
+                         ResourceManager resourceManager,
+                         ProfilerFiller profiler) {
+        profiler.push("grimcore_rarities_parse");
+        final Map<ResourceLocation, RarityDef> parsed = new HashMap<>();
+        final Set<ResourceLocation> duplicateCheck = new HashSet<>();
+        final List<Pair<ResourceLocation, Integer>> weights = new ArrayList<>();
+        for (Map.Entry<ResourceLocation, JsonElement> e : jsons.entrySet()) {
+            final ResourceLocation fileKey = e.getKey(); // data/<ns>/<FOLDER>/<path>.json
+            final var json = e.getValue();
+            final var result = RarityDef.CODEC.parse(JsonOps.INSTANCE, json).result();
+            if (result.isEmpty()) {
+                throw new IllegalStateException("Failed to parse RarityDef from " + fileKey + " (see logs for details)");
+            }
+            final RarityDef def = result.get();
+            final ResourceLocation id = def.id();
+            if (!duplicateCheck.add(id)) {
+                throw new IllegalStateException("Duplicate rarity id detected: " + id + " (from " + fileKey + ")");
+            }
+            parsed.put(id, def);
+            weights.add(Pair.of(id, Math.max(0, def.weight())));
+        }
+        final List<WeightedEntry.Wrapper<ResourceLocation>> wrappers = new ArrayList<>(weights.size());
+        for (Pair<ResourceLocation, Integer> p : weights) {
+            final int w = p.getSecond();
+            if (w > 0) {
+                wrappers.add(WeightedEntry.wrap(p.getFirst(), w));
+            }
+        }
+        byId.clear();
+        byId.putAll(parsed);
+        weighted = wrappers.isEmpty() ? WeightedRandomList.create() : WeightedRandomList.create(wrappers);
+        profiler.pop();
+    }
+    /**
+     * Зарегистрировать менеджер как ресурс-лоадер. Вызвать один раз на старте (common-setup),
+     * например из grimcore Main или из grimfate, если у тебя там центральная точка инициализации ядра.
+     */
+    public static void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(INSTANCE);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\affix\rarity\RarityDataManager.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\affix\rarity\RarityDef.java
+package com.doomspire.grimcore.affix.rarity;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.IntProvider;
+/*
+*/
+public record RarityDef(
+        ResourceLocation id,
+        int weight,
+        IntProvider maxAffixes,
+        IntProvider rollsPerAffix,
+        float magnitudeScale,
+        String displayKey,
+        int textColor,
+        boolean allowDuplicates
+) {
+    public static final Codec<RarityDef> CODEC = RecordCodecBuilder.create(i -> i.group(
+            ResourceLocation.CODEC.fieldOf("id").forGetter(RarityDef::id),
+            Codec.intRange(0, Integer.MAX_VALUE).fieldOf("weight").forGetter(RarityDef::weight),
+            IntProvider.CODEC.optionalFieldOf("max_affixes", ConstantInt.of(0)).forGetter(RarityDef::maxAffixes),
+            IntProvider.CODEC.optionalFieldOf("rolls_per_affix", ConstantInt.of(1)).forGetter(RarityDef::rollsPerAffix),
+            Codec.FLOAT.optionalFieldOf("magnitude_scale", 1.0f).forGetter(RarityDef::magnitudeScale),
+            Codec.STRING.optionalFieldOf("display_key", "").forGetter(RarityDef::displayKey),
+            Codec.INT.optionalFieldOf("text_color", 0xFFFFFF).forGetter(RarityDef::textColor),
+            Codec.BOOL.optionalFieldOf("allow_duplicates", false).forGetter(RarityDef::allowDuplicates)
+    ).apply(i, RarityDef::new));
+    public RarityDef {
+        if (id == null) throw new IllegalArgumentException("rarity.id is null");
+        if (weight < 0) throw new IllegalArgumentException("rarity.weight < 0 for " + id);
+        if (Float.isNaN(magnitudeScale) || Float.isInfinite(magnitudeScale)) {
+            throw new IllegalArgumentException("rarity.magnitude_scale must be finite for " + id);
+        }
+    }
+    public int sampleMaxAffixes(RandomSource rng) {
+        int v = maxAffixes.sample(rng);
+        return Math.max(0, v);
+    }
+    public int sampleRollsPerAffix(RandomSource rng) {
+        int v = rollsPerAffix.sample(rng);
+        return Mth.clamp(v, 1, 16); // разумный предел
+    }
+    public float scaleMagnitude(float value) {
+        return value * magnitudeScale;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\affix\rarity\RarityDef.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatCalculator.java
+package com.doomspire.grimcore.attach;
+import com.doomspire.grimcore.stat.*;
+public final class MobStatCalculator {
+    private MobStatCalculator(){}
+    public static StatSnapshot calculate(MobStatsAttachment att) {
+        StatSnapshot s = new StatSnapshot();
+        int vit  = att.getAttribute(Attributes.VITALITY);
+        int str  = att.getAttribute(Attributes.STRENGTH);
+        int intl = att.getAttribute(Attributes.INTELLIGENCE);
+        int dex  = att.getAttribute(Attributes.DEXTERITY);
+        int eva  = att.getAttribute(Attributes.EVASION);
+        s.maxHealth   = 60 + vit * 20;
+        s.regenHealth = 0 + vit * 1;
+        s.maxMana   = 0;
+        s.regenMana = 0;
+        s.damage.put(DamageTypes.PHYS_MELEE, 3f + str * 0.5f);
+        s.damage.put(DamageTypes.PHYS_RANGED, dex * 0.5f);
+        s.damage.putIfAbsent(DamageTypes.FIRE, 0f);
+        s.damage.putIfAbsent(DamageTypes.FROST, 0f);
+        s.damage.putIfAbsent(DamageTypes.LIGHTNING, 0f);
+        s.damage.putIfAbsent(DamageTypes.POISON, 0f);
+        s.resistances.put(ResistTypes.PHYS, 0.0f);
+        s.resistances.put(ResistTypes.FIRE, 0.0f);
+        s.resistances.put(ResistTypes.FROST, 0.0f);
+        s.resistances.put(ResistTypes.LIGHTNING, 0.0f);
+        s.resistances.put(ResistTypes.POISON, 0.0f);
+        s.evasionChance = Math.min(0.5f, eva * 0.005f); // 0.5% за очко, кап 50%
+        s.critChance = 0f;
+        s.critDamage = 0.25f;
+        return s;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatCalculator.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatsAttachment.java
+package com.doomspire.grimcore.attach;
+import com.doomspire.grimcore.stat.*;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import java.util.EnumMap;
+public class MobStatsAttachment {
+    private final EnumMap<Attributes, Integer> attributes = new EnumMap<>(Attributes.class);
+    private int currentHealth = 100;
+    private boolean dirty = true;
+    private StatSnapshot snapshot = new StatSnapshot();
+    public MobStatsAttachment() {
+        for (Attributes a : Attributes.values()) {
+            if (a != Attributes.SPIRIT) attributes.put(a, 0);
+        }
+    }
+    public int getAttribute(Attributes attr) {
+        return attributes.getOrDefault(attr, 0);
+    }
+    public void setAttribute(Attributes attr, int value) {
+        if (attr == Attributes.SPIRIT) return; // игнор
+        attributes.put(attr, Math.max(0, value)); dirty = true;
+    }
+    public void addAttribute(Attributes attr, int delta) {
+        if (attr == Attributes.SPIRIT) return;
+        attributes.put(attr, Math.max(0, getAttribute(attr) + delta)); dirty = true;
+    }
+    public int getCurrentHealth() { return currentHealth; }
+    public void setCurrentHealth(int v) {
+        int max = (int)Math.max(1, getSnapshot().maxHealth);
+        currentHealth = Math.max(0, Math.min(v, max));
+    }
+    public StatSnapshot getSnapshot() {
+        if (dirty) {
+            snapshot = MobStatCalculator.calculate(this);
+            dirty = false;
+        }
+        return snapshot;
+    }
+    public void markDirty() { dirty = true; }
+    public static final StreamCodec<RegistryFriendlyByteBuf, MobStatsAttachment> STREAM_CODEC =
+            StreamCodec.of(MobStatsAttachment::encode, MobStatsAttachment::decode);
+    private static void encode(RegistryFriendlyByteBuf buf, MobStatsAttachment att) {
+        buf.writeVarInt(att.currentHealth);
+        for (Attributes a : Attributes.values()) {
+            if (a == Attributes.SPIRIT) continue;
+            buf.writeVarInt(att.getAttribute(a));
+        }
+    }
+    private static MobStatsAttachment decode(RegistryFriendlyByteBuf buf) {
+        MobStatsAttachment att = new MobStatsAttachment();
+        att.currentHealth = buf.readVarInt();
+        for (Attributes a : Attributes.values()) {
+            if (a == Attributes.SPIRIT) continue;
+            att.attributes.put(a, buf.readVarInt());
+        }
+        att.dirty = true;
+        return att;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobStatsAttachment.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobThreatAttachment.java
+package com.doomspire.grimcore.attach;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import java.util.*;
+/**
+ * Таблица угрозы для одной боевой единицы (обычно — для моба).
+ *
+ * Модель:
+ *  - БАЗОВАЯ угроза (накапливается от урона, постоянных статов и т.п.) — не "тает".
+ *  - ВРЕМЕННЫЕ модификаторы (таунт/умения) — каждый с суммой и временем истечения.
+ *  - Целью считается игрок с максимальной актуальной угрозой (base + активные temp).
+ *
+ * Никакого общего decay по тикам нет.
+ */
+public final class MobThreatAttachment {
+    public static final float EPSILON = 0.05f;
+    private final Map<UUID, Float> baseThreat = new HashMap<>();
+    private final Map<UUID, List<TempBonus>> tempThreats = new HashMap<>();
+    private long lastCombatMs = 0L;
+    public static final class TempBonus {
+        public float amount;
+        public long expiresAtMs;
+        public TempBonus(float amount, long expiresAtMs) {
+            this.amount = amount;
+            this.expiresAtMs = expiresAtMs;
+        }
+    }
+    public float addBaseThreat(UUID playerId, float amount) {
+        if (playerId == null || amount <= 0f) return getBaseThreat(playerId);
+        float next = Math.max(0f, baseThreat.getOrDefault(playerId, 0f) + amount);
+        if (next < EPSILON) {
+            baseThreat.remove(playerId);
+        } else {
+            baseThreat.put(playerId, next);
+        }
+        lastCombatMs = System.currentTimeMillis();
+        return next;
+    }
+    public void setBaseThreat(UUID playerId, float value) {
+        if (playerId == null) return;
+        float v = Math.max(0f, value);
+        if (v < EPSILON) baseThreat.remove(playerId);
+        else baseThreat.put(playerId, v);
+    }
+    public void addTempThreat(UUID playerId, float amount, long durationMs) {
+        if (playerId == null || amount <= 0f || durationMs <= 0L) return;
+        long now = System.currentTimeMillis();
+        long exp = now + durationMs;
+        var list = tempThreats.computeIfAbsent(playerId, k -> new ArrayList<>());
+        list.add(new TempBonus(amount, exp));
+        lastCombatMs = now;
+    }
+    public void clearFor(UUID playerId) {
+        if (playerId == null) return;
+        baseThreat.remove(playerId);
+        tempThreats.remove(playerId);
+    }
+    public void clearAll() {
+        baseThreat.clear();
+        tempThreats.clear();
+        lastCombatMs = 0L;
+    }
+    public float getBaseThreat(UUID playerId) {
+        if (playerId == null) return 0f;
+        return baseThreat.getOrDefault(playerId, 0f);
+    }
+    public float totalThreatFor(UUID playerId, long nowMs) {
+        if (playerId == null) return 0f;
+        float base = baseThreat.getOrDefault(playerId, 0f);
+        float sumTemp = sumAndPruneTemps(playerId, nowMs);
+        float total = base + sumTemp;
+        if (total < EPSILON) {
+            baseThreat.remove(playerId);
+            if (sumTemp == 0f) tempThreats.remove(playerId);
+            return 0f;
+        }
+        return total;
+    }
+    public UUID topThreatPlayer(long nowMs) {
+        Set<UUID> keys = new HashSet<>(baseThreat.keySet());
+        keys.addAll(tempThreats.keySet());
+        UUID bestId = null;
+        float bestVal = 0f;
+        for (UUID id : keys) {
+            float val = totalThreatFor(id, nowMs);
+            if (val > bestVal) {
+                bestVal = val;
+                bestId = id;
+            }
+        }
+        if (bestId == null) {
+            baseThreat.entrySet().removeIf(e -> e.getValue() < EPSILON);
+            tempThreats.entrySet().removeIf(e -> {
+                float s = sumAndPruneTemps(e.getKey(), nowMs);
+                return s < EPSILON;
+            });
+        }
+        return bestId;
+    }
+    public List<Map.Entry<UUID, Float>> topN(int n, long nowMs) {
+        Set<UUID> keys = new HashSet<>(baseThreat.keySet());
+        keys.addAll(tempThreats.keySet());
+        ArrayList<Map.Entry<UUID, Float>> list = new ArrayList<>(keys.size());
+        for (UUID id : keys) {
+            float v = totalThreatFor(id, nowMs);
+            if (v >= EPSILON) list.add(Map.entry(id, v));
+        }
+        list.sort((a, b) -> Float.compare(b.getValue(), a.getValue()));
+        return list.size() > n ? list.subList(0, n) : list;
+    }
+    public boolean isInCombat(long nowMs, long timeoutMs) {
+        return lastCombatMs > 0L && (nowMs - lastCombatMs) <= Math.max(0L, timeoutMs);
+    }
+    private float sumAndPruneTemps(UUID playerId, long nowMs) {
+        var list = tempThreats.get(playerId);
+        if (list == null || list.isEmpty()) return 0f;
+        float sum = 0f;
+        list.removeIf(tb -> tb == null || tb.expiresAtMs <= nowMs || tb.amount < EPSILON);
+        for (TempBonus tb : list) sum += tb.amount;
+        if (list.isEmpty()) tempThreats.remove(playerId);
+        return sum;
+    }
+    /**
+     * Формат:
+     *  base: varInt size, затем (UUID hi, UUID lo, float base)
+     *  temps: varInt size, затем для каждого ключа:
+     *         (UUID hi, UUID lo, varInt listSize, повторить listSize раз: float amount, long expiresAtMs)
+     *  lastCombatMs: long
+     */
+    public static final StreamCodec<RegistryFriendlyByteBuf, MobThreatAttachment> STREAM_CODEC =
+            StreamCodec.of(MobThreatAttachment::encode, MobThreatAttachment::decode);
+    private static void encode(RegistryFriendlyByteBuf buf, MobThreatAttachment att) {
+        buf.writeVarInt(att.baseThreat.size());
+        for (var e : att.baseThreat.entrySet()) {
+            UUID id = e.getKey();
+            buf.writeLong(id.getMostSignificantBits());
+            buf.writeLong(id.getLeastSignificantBits());
+            buf.writeFloat(e.getValue());
+        }
+        buf.writeVarInt(att.tempThreats.size());
+        for (var e : att.tempThreats.entrySet()) {
+            UUID id = e.getKey();
+            buf.writeLong(id.getMostSignificantBits());
+            buf.writeLong(id.getLeastSignificantBits());
+            List<TempBonus> list = e.getValue();
+            buf.writeVarInt(list != null ? list.size() : 0);
+            if (list != null) {
+                for (TempBonus tb : list) {
+                    buf.writeFloat(tb.amount);
+                    buf.writeLong(tb.expiresAtMs);
+                }
+            }
+        }
+        buf.writeLong(att.lastCombatMs);
+    }
+    private static MobThreatAttachment decode(RegistryFriendlyByteBuf buf) {
+        MobThreatAttachment a = new MobThreatAttachment();
+        int bSize = buf.readVarInt();
+        for (int i = 0; i < bSize; i++) {
+            UUID id = new UUID(buf.readLong(), buf.readLong());
+            float v = buf.readFloat();
+            if (v >= EPSILON) a.baseThreat.put(id, v);
+        }
+        int tSize = buf.readVarInt();
+        for (int i = 0; i < tSize; i++) {
+            UUID id = new UUID(buf.readLong(), buf.readLong());
+            int n = buf.readVarInt();
+            if (n > 0) {
+                ArrayList<TempBonus> list = new ArrayList<>(n);
+                for (int j = 0; j < n; j++) {
+                    float amt = buf.readFloat();
+                    long exp = buf.readLong();
+                    if (amt >= EPSILON) list.add(new TempBonus(amt, exp));
+                }
+                if (!list.isEmpty()) a.tempThreats.put(id, list);
+            }
+        }
+        a.lastCombatMs = buf.readLong();
+        return a;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\attach\MobThreatAttachment.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerLoadoutAttachment.java
+package com.doomspire.grimcore.attach;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+/**
+ * Лоадаут спеллов игрока: 6 слотов + пер-слот кулдауны.
+ * Сериализация:
+ *  - CODEC (в NBT/сейв): slots как список строк (пустая строка = null), cooldowns как список int.
+ *  - STREAM_CODEC (в сеть): на слот пишем флаг наличия + ResourceLocation (если есть), затем cooldowns.
+ */
+public final class PlayerLoadoutAttachment {
+    public static final int SLOTS = 6;
+    private final ResourceLocation[] slots = new ResourceLocation[SLOTS];
+    private final int[] cooldown = new int[SLOTS];
+    public PlayerLoadoutAttachment() {}
+    public ResourceLocation get(int slot) { check(slot); return slots[slot]; }
+    public void set(int slot, ResourceLocation id) { check(slot); slots[slot] = id; }
+    public int getCooldown(int slot) { check(slot); return cooldown[slot]; }
+    public void setCooldown(int slot, int ticks) { check(slot); cooldown[slot] = Math.max(0, ticks); }
+    public void tickDown() {
+        for (int i = 0; i < SLOTS; i++) if (cooldown[i] > 0) cooldown[i]--;
+    }
+    public void clearAll() {
+        Arrays.fill(slots, null);
+        Arrays.fill(cooldown, 0);
+    }
+    private static void check(int s) {
+        if (s < 0 || s >= SLOTS) throw new IndexOutOfBoundsException("slot " + s);
+    }
+    public static final Codec<PlayerLoadoutAttachment> CODEC = RecordCodecBuilder.create(inst -> inst.group(
+            Codec.list(Codec.STRING).fieldOf("slots").forGetter(att -> {
+                List<String> out = new ArrayList<>(SLOTS);
+                for (int i = 0; i < SLOTS; i++) out.add(att.slots[i] != null ? att.slots[i].toString() : "");
+                return out;
+            }),
+            Codec.list(Codec.INT).fieldOf("cooldowns").forGetter(att -> {
+                List<Integer> out = new ArrayList<>(SLOTS);
+                for (int i = 0; i < SLOTS; i++) out.add(att.cooldown[i]);
+                return out;
+            })
+    ).apply(inst, (slotStrings, cds) -> {
+        PlayerLoadoutAttachment att = new PlayerLoadoutAttachment();
+        int n = Math.min(SLOTS, slotStrings.size());
+        for (int i = 0; i < n; i++) {
+            String s = slotStrings.get(i);
+            if (s != null && !s.isEmpty()) {
+                ResourceLocation rl = ResourceLocation.tryParse(s);
+                if (rl != null) att.slots[i] = rl;
+            }
+        }
+        int m = Math.min(SLOTS, cds.size());
+        for (int i = 0; i < m; i++) att.cooldown[i] = Math.max(0, cds.get(i));
+        return att;
+    }));
+    public static final StreamCodec<RegistryFriendlyByteBuf, PlayerLoadoutAttachment> STREAM_CODEC =
+            new StreamCodec<>() {
+                @Override
+                public PlayerLoadoutAttachment decode(RegistryFriendlyByteBuf buf) {
+                    PlayerLoadoutAttachment att = new PlayerLoadoutAttachment();
+                    for (int i = 0; i < SLOTS; i++) {
+                        boolean has = buf.readBoolean();
+                        if (has) att.slots[i] = ResourceLocation.STREAM_CODEC.decode(buf);
+                    }
+                    for (int i = 0; i < SLOTS; i++) {
+                        att.cooldown[i] = buf.readVarInt();
+                    }
+                    return att;
+                }
+                @Override
+                public void encode(RegistryFriendlyByteBuf buf, PlayerLoadoutAttachment att) {
+                    for (int i = 0; i < SLOTS; i++) {
+                        ResourceLocation rl = att.slots[i];
+                        buf.writeBoolean(rl != null);
+                        if (rl != null) ResourceLocation.STREAM_CODEC.encode(buf, rl);
+                    }
+                    for (int i = 0; i < SLOTS; i++) {
+                        buf.writeVarInt(att.cooldown[i]);
+                    }
+                }
+            };
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerLoadoutAttachment.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerProgressAttachment.java
+package com.doomspire.grimcore.attach;
+import com.doomspire.grimcore.stat.PlayerProgress;
+import com.doomspire.grimcore.xp.LevelTable;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+/**
+ * Персистентный прогресс игрока (уровень/опыт/кап). Сохраняется через CODEC.
+ * Клиенту отдаём лёгкий снапшот PlayerProgress.
+ */
+public class PlayerProgressAttachment {
+    private int level;
+    private int exp;
+    private int expCap;
+    public PlayerProgressAttachment() {
+        this.level = 1;
+        this.exp = 0;
+        this.expCap = LevelTable.expForLevel(1); // кап до 2-го уровня
+    }
+    public int level() { return level; }
+    public int exp() { return exp; }
+    public int expCap() { return expCap; }
+    public int addExp(int amount) {
+        if (amount <= 0) return 0;
+        int gained = 0;
+        exp += amount;
+        while (exp >= expCap && level < LevelTable.maxLevel()) {
+            exp -= expCap;
+            level++;
+            expCap = LevelTable.expForLevel(level);
+            gained++;
+        }
+        return gained;
+    }
+    public PlayerProgress toSnapshot() {
+        return new PlayerProgress(level, exp, expCap);
+    }
+    public static final Codec<PlayerProgressAttachment> CODEC = RecordCodecBuilder.create(i -> i.group(
+            Codec.INT.fieldOf("level").forGetter(PlayerProgressAttachment::level),
+            Codec.INT.fieldOf("exp").forGetter(PlayerProgressAttachment::exp),
+            Codec.INT.fieldOf("exp_cap").forGetter(PlayerProgressAttachment::expCap)
+    ).apply(i, (lvl, e, cap) -> {
+        PlayerProgressAttachment a = new PlayerProgressAttachment();
+        a.level = Math.max(1, lvl);
+        a.exp = Math.max(0, e);
+        a.expCap = Math.max(1, cap);
+        return a;
+    }));
+    public static final StreamCodec<RegistryFriendlyByteBuf, PlayerProgressAttachment> STREAM_CODEC =
+            StreamCodec.of(PlayerProgressAttachment::encode, PlayerProgressAttachment::decode);
+    private static void encode(RegistryFriendlyByteBuf buf, PlayerProgressAttachment a) {
+        buf.writeVarInt(a.level);
+        buf.writeVarInt(a.exp);
+        buf.writeVarInt(a.expCap);
+    }
+    private static PlayerProgressAttachment decode(RegistryFriendlyByteBuf buf) {
+        PlayerProgressAttachment a = new PlayerProgressAttachment();
+        a.level  = buf.readVarInt();
+        a.exp    = buf.readVarInt();
+        a.expCap = buf.readVarInt();
+        return a;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerProgressAttachment.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerStatsAttachment.java
+package com.doomspire.grimcore.attach;
+import com.doomspire.grimcore.stat.*;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import com.doomspire.grimcore.datapack.BalanceData;
+import java.util.EnumMap;
+import java.util.Locale;
+public class PlayerStatsAttachment {
+    private int currentHealth = 100;
+    private int currentMana   = 100;
+    /**
+     * Текущая «сверхщит» полоса (overshield).
+     * Списывается ПЕРВОЙ при получении урона, затем уже здоровье.
+     * Значение не входит в StatSnapshot, это runtime-ресурс (как временные бафы/щит).
+     */
+    private int overshield = 0;
+    private final EnumMap<Attributes, Integer> attributes = new EnumMap<>(Attributes.class);
+    private int unspentPoints = 0;
+    private StatSnapshot snapshot = new StatSnapshot();
+    private boolean dirty = true;
+    public PlayerStatsAttachment() {
+        for (Attributes a : Attributes.values()) {
+            attributes.put(a, 0);
+        }
+    }
+    public int getCurrentHealth() { return currentHealth; }
+    public int getCurrentMana()   { return currentMana; }
+    public int getOvershield()    { return overshield; }
+    public void setCurrentHealth(int v) {
+        int max = (int) Math.max(1, getSnapshot().maxHealth);
+        currentHealth = Math.max(0, Math.min(v, max));
+    }
+    public void setCurrentMana(int v) {
+        int max = (int) Math.max(1, getSnapshot().maxMana);
+        currentMana = Math.max(0, Math.min(v, max));
+    }
+    /**
+     * Установить текущий overshield с учётом верхней границы.
+     * Верхнюю границу можно задавать через снапшот (например, статы/аффиксы),
+     * иначе — ограничиваем «разумным» максимумом по здоровью.
+     */
+    public void setOvershield(int v) {
+        int maxOs = estimateMaxOvershield();
+        overshield = Math.max(0, Math.min(v, maxOs));
+    }
+    public void addOvershield(int delta) {
+        if (delta <= 0) return;
+        setOvershield(overshield + delta);
+    }
+    /**
+     * Списать часть overshield, вернуть сколько НЕ покрылось (остаток урона).
+     * Удобно вызывать из DamageEngine перед уроном по здоровью.
+     */
+    public int consumeOvershield(int amount) {
+        if (amount <= 0 || overshield <= 0) return amount;
+        int used = Math.min(amount, overshield);
+        overshield -= used;
+        return amount - used; // остаток, который пойдёт в здоровье/дальше по пайплайну
+    }
+    private int estimateMaxOvershield() {
+        return (int) Math.max(1, getSnapshot().maxHealth);
+    }
+    public void markDirty() { this.dirty = true; }
+    public int getAttribute(Attributes attr) {
+        return attributes.getOrDefault(attr, 0);
+    }
+    public void setAttribute(Attributes attr, int value) {
+        attributes.put(attr, Math.max(0, value));
+        dirty = true;
+    }
+    public void addAttribute(Attributes attr, int delta) {
+        attributes.put(attr, Math.max(0, getAttribute(attr) + delta));
+        dirty = true;
+    }
+    public int getUnspentPoints() { return unspentPoints; }
+    public void setUnspentPoints(int v) { unspentPoints = Math.max(0, v); }
+    public void addUnspentPoints(int amount) { if (amount > 0) unspentPoints += amount; }
+    public int hardCapFor(Attributes attr) {
+        return BalanceData.attrs().cap(attr);
+    }
+    public boolean tryAllocatePoint(Attributes attr) {
+        if (unspentPoints <= 0) return false;
+        int cap = hardCapFor(attr);
+        int cur = getAttribute(attr);
+        if (cur >= cap) return false;
+        setAttribute(attr, cur + 1);
+        unspentPoints--;
+        return true;
+    }
+    public StatSnapshot getSnapshot() {
+        if (dirty) {
+            snapshot = StatCalculator.calculate(this);
+            dirty = false;
+        }
+        return snapshot;
+    }
+    /**
+     * Полный снапшот с применением аффиксов владельца.
+     * Если owner == null — вернёт базовый вариант как в {@link #getSnapshot()}.
+     */
+    public StatSnapshot getSnapshotWithAffixes(Player owner) {
+        if (dirty) {
+            if (owner != null) {
+                snapshot = StatCalculator.calculateWithAffixes(this, owner);
+            } else {
+                snapshot = StatCalculator.calculate(this);
+            }
+            dirty = false;
+        }
+        return snapshot;
+    }
+    /**
+     * Принудительный пересчёт "база + аффиксы" на СЕРВЕРЕ и синк на клиент (HUD).
+     * Дёргай из обработчиков экипировки/Curios и из любых мест, где меняются статы.
+     */
+    public void recalcAndSync(ServerPlayer sp) {
+        if (sp == null) return;
+        StatSnapshot snap = StatCalculator.calculateWithAffixes(this, sp);
+        int newMaxHp = (int) Math.max(1, Math.floor(snap.maxHealth));
+        int newMaxMp = (int) Math.max(1, Math.floor(snap.maxMana));
+        setCurrentHealth(Math.min(getCurrentHealth(), newMaxHp));
+        setCurrentMana(Math.min(getCurrentMana(),     newMaxMp));
+        this.snapshot = snap;
+        this.dirty = false;
+        StatEffects.applyAll(sp);
+    }
+    public static final StreamCodec<RegistryFriendlyByteBuf, PlayerStatsAttachment> STREAM_CODEC =
+            StreamCodec.of(PlayerStatsAttachment::encode, PlayerStatsAttachment::decode);
+    private static void encode(RegistryFriendlyByteBuf buf, PlayerStatsAttachment att) {
+        buf.writeVarInt(att.unspentPoints);
+        buf.writeVarInt(att.currentHealth);
+        buf.writeVarInt(att.currentMana);
+        buf.writeVarInt(att.overshield); // <<< новое поле
+        for (Attributes a : Attributes.values()) {
+            buf.writeVarInt(att.getAttribute(a));
+        }
+    }
+    private static PlayerStatsAttachment decode(RegistryFriendlyByteBuf buf) {
+        PlayerStatsAttachment att = new PlayerStatsAttachment();
+        att.unspentPoints = buf.readVarInt();
+        att.currentHealth = buf.readVarInt();
+        att.currentMana   = buf.readVarInt();
+        att.overshield    = buf.readVarInt(); // <<< читаем в том же порядке
+        for (Attributes a : Attributes.values()) {
+            att.attributes.put(a, buf.readVarInt());
+        }
+        att.dirty = true;
+        return att;
+    }
+    public static PlayerStatsAttachment get(Player player) {
+        return player.getData(ModAttachments.PLAYER_STATS.get());
+    }
+    public static Attributes parseAttrId(String id) {
+        if (id == null) return null;
+        try {
+            return Attributes.valueOf(id.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\attach\PlayerStatsAttachment.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\attach\ThreatService.java
+package com.doomspire.grimcore.attach;
+import com.doomspire.grimcore.stat.ModAttachments; // ← если пакет другой, поправь импорт
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import java.util.UUID;
+/**
+ * Централизованный сервис угрозы без тик-затухания:
+ *  - конвертация нанесённого урона в БАЗОВУЮ угрозу,
+ *  - добавление постоянной (base) угрозы,
+ *  - добавление временной (temp) угрозы с авто-сбросом по таймеру,
+ *  - чтение total/top.
+ *
+ * Событий/подписок тут нет — только прямые вызовы из боёвки/спеллов.
+ */
+public final class ThreatService {
+    private ThreatService() {}
+    public static final float THREAT_PER_DAMAGE = 1.0f;
+    public static float threatGenMultiplier(Player source) {
+        return 1.0f;
+    }
+    public static void addThreatFromDamage(LivingEntity victim, Player attacker, float damage) {
+        if (!(victim.level() instanceof ServerLevel) || attacker == null || damage <= 0f) return;
+        MobThreatAttachment att = victim.getData(ModAttachments.MOB_THREAT.get());
+        if (att == null) return;
+        float mult = THREAT_PER_DAMAGE * threatGenMultiplier(attacker);
+        att.addBaseThreat(attacker.getUUID(), damage * mult);
+    }
+    public static void addThreatFlat(LivingEntity victim, UUID playerId, float amount) {
+        if (!(victim.level() instanceof ServerLevel) || playerId == null || amount <= 0f) return;
+        MobThreatAttachment att = victim.getData(ModAttachments.MOB_THREAT.get());
+        if (att != null) {
+            att.addBaseThreat(playerId, amount);
+        }
+    }
+    public static void addTempThreat(LivingEntity victim, UUID playerId, float amount, long durationMs) {
+        if (!(victim.level() instanceof ServerLevel) || playerId == null || amount <= 0f || durationMs <= 0L) return;
+        MobThreatAttachment att = victim.getData(ModAttachments.MOB_THREAT.get());
+        if (att != null) {
+            att.addTempThreat(playerId, amount, durationMs);
+        }
+    }
+    public static float getThreat(LivingEntity victim, UUID playerId) {
+        MobThreatAttachment att = victim.getData(ModAttachments.MOB_THREAT.get());
+        return (att != null) ? att.totalThreatFor(playerId, System.currentTimeMillis()) : 0f;
+    }
+    public static UUID topThreatPlayer(LivingEntity victim) {
+        MobThreatAttachment att = victim.getData(ModAttachments.MOB_THREAT.get());
+        return (att != null) ? att.topThreatPlayer(System.currentTimeMillis()) : null;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\attach\ThreatService.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\combat\DamageContext.java
+package com.doomspire.grimcore.combat;
+import com.doomspire.grimcore.stat.DamageTypes;
+import net.minecraft.world.entity.LivingEntity;
+import java.util.EnumMap;
+/**
+ * Контекст одного удара/заклинания.
+ * Заполняется перед вызовом DamageEngine.
+ */
+public class DamageContext {
+    public final LivingEntity attacker;
+    public final LivingEntity target;
+    public final EnumMap<DamageTypes, Float> damageMap = new EnumMap<>(DamageTypes.class);
+    public boolean critical = false;
+    public DamageContext(LivingEntity attacker, LivingEntity target) {
+        this.attacker = attacker;
+        this.target = target;
+        for (DamageTypes t : DamageTypes.values()) damageMap.put(t, 0f);
+    }
+    public DamageContext add(DamageTypes type, float amount) {
+        damageMap.put(type, damageMap.get(type) + amount);
+        return this;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\combat\DamageContext.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\combat\DamageEngine.java
+package com.doomspire.grimcore.combat;
+import com.doomspire.grimcore.attach.MobStatsAttachment;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.attach.ThreatService;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.stat.DamageTypes;
+import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimcore.stat.ResistTypes;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import java.util.concurrent.ThreadLocalRandom;
+public final class DamageEngine {
+    private DamageEngine() {}
+    public static float resolveAndApply(DamageContext ctx) {
+        final LivingEntity target = ctx.target;
+        StatSnapshot tSnap;
+        boolean targetIsPlayer = target.getData(ModAttachments.PLAYER_STATS.get()) != null;
+        if (targetIsPlayer) {
+            PlayerStatsAttachment tAtt = target.getData(ModAttachments.PLAYER_STATS.get());
+            if (tAtt == null) return 0f;
+            tSnap = (target instanceof Player pT)
+                    ? tAtt.getSnapshotWithAffixes(pT)
+                    : tAtt.getSnapshot();
+            if (ThreadLocalRandom.current().nextFloat() < tSnap.evasionChance) {
+                return 0f;
+            }
+        } else {
+            MobStatsAttachment tAtt = target.getData(ModAttachments.MOB_STATS.get());
+            if (tAtt == null) return 0f;
+            tSnap = tAtt.getSnapshot();
+            if (ThreadLocalRandom.current().nextFloat() < tSnap.evasionChance) {
+                return 0f;
+            }
+        }
+        StatSnapshot aSnap = null;
+        if (ctx.attacker != null) {
+            var aPlayer = ctx.attacker.getData(ModAttachments.PLAYER_STATS.get());
+            if (aPlayer != null) {
+                aSnap = (ctx.attacker instanceof Player pA)
+                        ? aPlayer.getSnapshotWithAffixes(pA)
+                        : aPlayer.getSnapshot();
+            } else {
+                var aMob = ctx.attacker.getData(ModAttachments.MOB_STATS.get());
+                if (aMob != null) aSnap = aMob.getSnapshot();
+            }
+        }
+        float total = 0f;
+        for (var entry : ctx.damageMap.entrySet()) {
+            DamageTypes type = entry.getKey();
+            float dmg = entry.getValue();
+            if (dmg <= 0f) continue;
+            if (aSnap != null) {
+                boolean rollCrit = ctx.critical || ThreadLocalRandom.current().nextFloat() < aSnap.critChance;
+                if (rollCrit) {
+                    dmg *= (1f + Math.max(0f, aSnap.critDamage)); // +50% => 0.5
+                }
+            }
+            float resist = switch (type) {
+                case PHYS_MELEE, PHYS_RANGED -> tSnap.resistances.getOrDefault(ResistTypes.PHYS, 0f);
+                case FIRE -> tSnap.resistances.getOrDefault(ResistTypes.FIRE, 0f);
+                case FROST -> tSnap.resistances.getOrDefault(ResistTypes.FROST, 0f);
+                case LIGHTNING -> tSnap.resistances.getOrDefault(ResistTypes.LIGHTNING, 0f);
+                case POISON -> tSnap.resistances.getOrDefault(ResistTypes.POISON, 0f);
+            };
+            resist = Math.max(0f, Math.min(resist, 0.90f)); // хард-кап 90%
+            dmg *= (1f - resist);
+            total += Math.max(0f, dmg);
+        }
+        int applied; // фактически нанесённый урон (после overshield и DR_all)
+        if (targetIsPlayer) {
+            PlayerStatsAttachment tAtt = target.getData(ModAttachments.PLAYER_STATS.get());
+            int incoming = Math.max(0, Math.round(total));
+            int afterOS = tAtt.consumeOvershield(incoming);
+            boolean osChanged = (afterOS != incoming);
+            float drAll = clamp01(readDamageReductionAll(tSnap), 0.90f);
+            float afterDR = afterOS * (1f - drAll);
+            applied = Math.max(0, Math.round(afterDR));
+            if (applied > 0) {
+                tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
+            }
+            if (osChanged || applied > 0) {
+                tAtt.markDirty();
+                if (target instanceof ServerPlayer spT) {
+                    GrimcoreNetworking.syncPlayerStats(spT, tAtt); // мгновенный HUD-синк цели
+                }
+            }
+        } else {
+            float drAll = clamp01(readDamageReductionAll(tSnap), 0.90f);
+            float afterDR = total * (1f - drAll);
+            applied = Math.max(0, Math.round(afterDR));
+            if (applied > 0) {
+                MobStatsAttachment tAtt = target.getData(ModAttachments.MOB_STATS.get());
+                tAtt.setCurrentHealth(tAtt.getCurrentHealth() - applied);
+                tAtt.markDirty();
+            }
+        }
+        if (applied > 0 && ctx.attacker instanceof Player pA) {
+            ThreatService.addThreatFromDamage(target, pA, applied);
+        }
+        if (aSnap != null && applied > 0 && ctx.attacker instanceof LivingEntity attackerLe) {
+            int heal = Math.round(applied * Math.max(0f, aSnap.lifesteal));
+            int mana = Math.round(applied * Math.max(0f, aSnap.manasteal));
+            var aPlayer = attackerLe.getData(ModAttachments.PLAYER_STATS.get());
+            if (aPlayer != null) {
+                boolean changed = false;
+                if (heal > 0) {
+                    aPlayer.setCurrentHealth(aPlayer.getCurrentHealth() + heal);
+                    changed = true;
+                }
+                if (mana > 0) {
+                    aPlayer.setCurrentMana(aPlayer.getCurrentMana() + mana);
+                    changed = true;
+                }
+                if (changed) {
+                    aPlayer.markDirty();
+                    if (attackerLe instanceof ServerPlayer spA) {
+                        GrimcoreNetworking.syncPlayerStats(spA, aPlayer);
+                    }
+                }
+            } else {
+                var aMob = attackerLe.getData(ModAttachments.MOB_STATS.get());
+                if (aMob != null && heal > 0) {
+                    aMob.setCurrentHealth(aMob.getCurrentHealth() + heal);
+                    aMob.markDirty();
+                }
+            }
+        }
+        return applied;
+    }
+    private static float readDamageReductionAll(StatSnapshot snap) {
+        try {
+            var f = snap.getClass().getField("damageReductionAll"); // публичное поле
+            Object v = f.get(snap);
+            if (v instanceof Number n) return n.floatValue();
+        } catch (Throwable ignored) {
+            try { // попробуем геттер на всякий случай
+                var m = snap.getClass().getMethod("damageReductionAll");
+                Object v = m.invoke(snap);
+                if (v instanceof Number n) return n.floatValue();
+            } catch (Throwable ignored2) {}
+        }
+        return 0f;
+    }
+    private static float clamp01(float v, float hardCap) {
+        if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
+        if (hardCap <= 0f) hardCap = 1f;
+        return Math.max(0f, Math.min(v, hardCap));
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\combat\DamageEngine.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\combat\EnvironmentalDamage.java
+package com.doomspire.grimcore.combat;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import java.util.Map;
+public final class EnvironmentalDamage {
+    private EnvironmentalDamage(){}
+    private static final Map<net.minecraft.resources.ResourceKey<net.minecraft.world.damagesource.DamageType>, Float> PERCENTS = Map.of(
+            DamageTypes.FALL, 0.15f,
+            DamageTypes.DROWN, 0.10f,
+            DamageTypes.LAVA, 0.25f,
+            DamageTypes.ON_FIRE, 0.08f,
+            DamageTypes.IN_FIRE, 0.12f,
+            DamageTypes.HOT_FLOOR, 0.10f,
+            DamageTypes.SWEET_BERRY_BUSH, 0.04f,
+            DamageTypes.OUTSIDE_BORDER, 1.0f
+    );
+    public static Float percentFor(DamageSource src) {
+        for (var e : PERCENTS.entrySet()) {
+            if (src.is(e.getKey())) return e.getValue();
+        }
+        return null;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\combat\EnvironmentalDamage.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\CommandBusHandlers.java
+package com.doomspire.grimcore;
+import com.doomspire.grimcore.commands.GrimfateCommands;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+@EventBusSubscriber(modid = Grimcore.MODID)
+public final class CommandBusHandlers {
+    private CommandBusHandlers(){}
+    @SubscribeEvent
+    public static void onRegisterCommands(RegisterCommandsEvent e) {
+        GrimfateCommands.register(e.getDispatcher());
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\CommandBusHandlers.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\commands\GrimfateCommands.java
+package com.doomspire.grimcore.commands;
+import com.doomspire.grimcore.attach.PlayerProgressAttachment;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.net.ProgressNetworking;
+import com.doomspire.grimcore.stat.ModAttachments;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import java.util.Collection;
+import java.util.List;
+public final class GrimfateCommands {
+    private GrimfateCommands(){}
+    public static void register(CommandDispatcher<CommandSourceStack> d) {
+        d.register(
+                Commands.literal("grimfate")
+                        .requires(src -> src.hasPermission(2)) // только операторы по умолчанию
+                        .then(Commands.literal("give")
+                                .then(Commands.literal("exp")
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                                .executes(ctx -> {
+                                                    ServerPlayer target = ctx.getSource().getPlayerOrException();
+                                                    int amount = IntegerArgumentType.getInteger(ctx, "amount");
+                                                    return giveExp(ctx.getSource(), List.of(target), amount);
+                                                })
+                                                .then(Commands.argument("targets", EntityArgument.players())
+                                                        .executes(ctx -> {
+                                                            Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
+                                                            int amount = IntegerArgumentType.getInteger(ctx, "amount");
+                                                            return giveExp(ctx.getSource(), targets, amount);
+                                                        })
+                                                )
+                                        )
+                                )
+                        )
+        );
+    }
+    private static int giveExp(CommandSourceStack src, Collection<ServerPlayer> targets, int amount) {
+        int totalLevels = 0;
+        for (ServerPlayer player : targets) {
+            PlayerProgressAttachment prog = player.getData(ModAttachments.PLAYER_PROGRESS.get());
+            PlayerStatsAttachment    stats= player.getData(ModAttachments.PLAYER_STATS.get());
+            if (prog == null || stats == null) continue;
+            int levels = prog.addExp(amount);
+            if (levels > 0) {
+                stats.addUnspentPoints(levels);
+                stats.markDirty();
+                GrimcoreNetworking.syncPlayerStats(player, stats);         // мгновенный HUD (очки/полосы)
+            }
+            ProgressNetworking.syncPlayerProgress(player, prog);            // мгновенный HUD (XP/уровень)
+            totalLevels += levels;
+            src.sendSuccess(() -> Component.literal(
+                    "Given " + amount + " XP to " + player.getGameProfile().getName() +
+                            (levels > 0 ? (" (+" + levels + " level)") : "")), true);
+        }
+        return Math.max(1, totalLevels);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\commands\GrimfateCommands.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\config\CoreCommonConfig.java
+package com.doomspire.grimcore.config;
+import net.neoforged.neoforge.common.ModConfigSpec;
+public final class CoreCommonConfig {
+    private CoreCommonConfig() {}
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\config\CoreCommonConfig.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\data\component\ClassRestrictionComponent.java
+package com.doomspire.grimcore.data.component;
+import com.doomspire.grimcore.spell.api.SpellSchool;
+import com.mojang.serialization.Codec;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Objects;
+import java.util.Set;
+/**
+ * Разрешённые дисциплины (школы), при которых предмет активирует бонусы/эффект.
+ * Например: только WARCRY/TECHNIQUE.
+ *
+ * Иммутабельный компонент с корректными equals/hashCode.
+ */
+public final class ClassRestrictionComponent {
+    private final EnumSet<SpellSchool> allowed; // внутреннее хранилище
+    public ClassRestrictionComponent(Set<SpellSchool> allowed) {
+        EnumSet<SpellSchool> s = allowed == null || allowed.isEmpty()
+                ? EnumSet.noneOf(SpellSchool.class)
+                : EnumSet.copyOf(allowed);
+        this.allowed = s;
+    }
+    public boolean isAllowed(SpellSchool school) {
+        return allowed.isEmpty() || allowed.contains(school);
+    }
+    public Set<SpellSchool> allowed() {
+        return Collections.unmodifiableSet(allowed);
+    }
+    public static final Codec<SpellSchool> SCHOOL_CODEC =
+            Codec.STRING.xmap(s -> SpellSchool.valueOf(s.toUpperCase()), v -> v.name().toLowerCase());
+    public static final Codec<ClassRestrictionComponent> CODEC =
+            SCHOOL_CODEC.listOf().xmap(list -> new ClassRestrictionComponent(Set.copyOf(list)),
+                    c -> java.util.List.copyOf(c.allowed()));
+    public static final StreamCodec<RegistryFriendlyByteBuf, ClassRestrictionComponent> STREAM_CODEC =
+            StreamCodec.of(
+                    (buf, c) -> {
+                        ByteBufCodecs.VAR_INT.encode(buf, c.allowed.size());
+                        for (var s : c.allowed) ByteBufCodecs.fromCodec(SCHOOL_CODEC).encode(buf, s);
+                    },
+                    buf -> {
+                        int n = ByteBufCodecs.VAR_INT.decode(buf);
+                        EnumSet<SpellSchool> set = EnumSet.noneOf(SpellSchool.class);
+                        for (int i = 0; i < n; i++) set.add(ByteBufCodecs.fromCodec(SCHOOL_CODEC).decode(buf));
+                        return new ClassRestrictionComponent(set);
+                    }
+            );
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ClassRestrictionComponent that)) return false;
+        return Objects.equals(allowed, that.allowed);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(allowed);
+    }
+    @Override
+    public String toString() {
+        return "ClassRestrictionComponent" + allowed;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\data\component\ClassRestrictionComponent.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\data\component\ResistBonusComponent.java
+package com.doomspire.grimcore.data.component;
+import com.doomspire.grimcore.stat.DamageTypes;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import java.util.EnumMap;
+import java.util.Map;
+public record ResistBonusComponent(Map<DamageTypes, Float> byType) {
+    public static final Codec<DamageTypes> TYPE_CODEC =
+            Codec.STRING.xmap(s -> DamageTypes.valueOf(s.toUpperCase()), t -> t.name().toLowerCase());
+    public static final Codec<Map<DamageTypes, Float>> MAP_CODEC = Codec.unboundedMap(TYPE_CODEC, Codec.FLOAT);
+    public static final Codec<ResistBonusComponent> CODEC = RecordCodecBuilder.create(i -> i.group(
+            MAP_CODEC.fieldOf("by_type").forGetter(ResistBonusComponent::byType)
+    ).apply(i, ResistBonusComponent::new));
+    public static final StreamCodec<RegistryFriendlyByteBuf, ResistBonusComponent> STREAM_CODEC =
+            new StreamCodec<>() {
+                @Override public ResistBonusComponent decode(RegistryFriendlyByteBuf buf) {
+                    int n = buf.readVarInt();
+                    Map<DamageTypes, Float> map = new EnumMap<>(DamageTypes.class);
+                    for (int k = 0; k < n; k++) {
+                        DamageTypes t = DamageTypes.valueOf(buf.readUtf().toUpperCase());
+                        map.put(t, buf.readFloat());
+                    }
+                    return new ResistBonusComponent(map);
+                }
+                @Override public void encode(RegistryFriendlyByteBuf buf, ResistBonusComponent v) {
+                    var m = v.byType();
+                    buf.writeVarInt(m.size());
+                    m.forEach((t, f) -> { buf.writeUtf(t.name().toLowerCase()); buf.writeFloat(f); });
+                }
+            };
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\data\component\ResistBonusComponent.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\data\component\StatBonusComponent.java
+package com.doomspire.grimcore.data.component;
+import com.doomspire.grimcore.stat.Attributes;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Objects;
+/**
+ * Иммутабельный data-component с бонусами к атрибутам, напр.:
+ * {"strength": 3, "intelligence": 2}
+ *
+ * Требования NeoForge к компонентам:
+ *  - иммутабельность
+ *  - корректные equals/hashCode
+ */
+public final class StatBonusComponent {
+    private final EnumMap<Attributes, Integer> bonus; // иммутабельное содержимое
+    public StatBonusComponent(Map<Attributes, Integer> map) {
+        EnumMap<Attributes, Integer> tmp = new EnumMap<>(Attributes.class);
+        if (map != null) {
+            for (var e : map.entrySet()) {
+                if (e.getKey() != null) {
+                    int v = e.getValue() == null ? 0 : e.getValue();
+                    if (v != 0) tmp.put(e.getKey(), v);
+                }
+            }
+        }
+        this.bonus = tmp.isEmpty() ? new EnumMap<>(Attributes.class) : new EnumMap<>(tmp);
+    }
+    public int get(Attributes a) {
+        Integer v = bonus.get(a);
+        return v == null ? 0 : v;
+    }
+    public Map<Attributes, Integer> all() {
+        return Collections.unmodifiableMap(bonus);
+    }
+    public static final Codec<Attributes> ATTR_CODEC =
+            Codec.STRING.xmap(s -> Attributes.valueOf(s.toUpperCase()), a -> a.name().toLowerCase());
+    public static final Codec<StatBonusComponent> CODEC =
+            Codec.unboundedMap(ATTR_CODEC, Codec.INT)
+                    .xmap(StatBonusComponent::new, c -> c.all());
+    public static final StreamCodec<RegistryFriendlyByteBuf, StatBonusComponent> STREAM_CODEC =
+            StreamCodec.of(
+                    (buf, c) -> {
+                        var map = c.bonus;
+                        ByteBufCodecs.VAR_INT.encode(buf, map.size());
+                        for (var e : map.entrySet()) {
+                            ByteBufCodecs.fromCodec(ATTR_CODEC).encode(buf, e.getKey());
+                            ByteBufCodecs.VAR_INT.encode(buf, e.getValue());
+                        }
+                    },
+                    buf -> {
+                        int n = ByteBufCodecs.VAR_INT.decode(buf);
+                        EnumMap<Attributes, Integer> m = new EnumMap<>(Attributes.class);
+                        for (int i = 0; i < n; i++) {
+                            Attributes a = ByteBufCodecs.fromCodec(ATTR_CODEC).decode(buf);
+                            int v = ByteBufCodecs.VAR_INT.decode(buf);
+                            if (v != 0) m.put(a, v);
+                        }
+                        return new StatBonusComponent(m);
+                    }
+            );
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof StatBonusComponent that)) return false;
+        return Objects.equals(bonus, that.bonus);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(bonus);
+    }
+    @Override
+    public String toString() {
+        return "StatBonusComponent" + bonus;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\data\component\StatBonusComponent.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\data\ItemBonusHelper.java
+package com.doomspire.grimcore.data;
+import com.doomspire.grimcore.data.component.StatBonusComponent;
+import com.doomspire.grimcore.stat.Attributes;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
+public final class ItemBonusHelper {
+    private ItemBonusHelper(){}
+    public static int sum(Player p, Attributes attr) {
+        int total = 0;
+        for (var slot : EquipmentSlot.values()) {
+            var stack = p.getItemBySlot(slot);
+            if (stack.isEmpty()) continue;
+            var comp = stack.get(ModDataComponents.STAT_BONUS.get());
+            if (comp != null) total += comp.get(attr);
+        }
+        return total;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\data\ItemBonusHelper.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\data\ModDataComponents.java
+package com.doomspire.grimcore.data;
+import com.doomspire.grimcore.Grimcore;
+import com.doomspire.grimcore.data.component.ClassRestrictionComponent;
+import com.doomspire.grimcore.data.component.StatBonusComponent;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.core.component.DataComponentType;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+public final class ModDataComponents {
+    private ModDataComponents() {}
+    public static final DeferredRegister<DataComponentType<?>> COMPONENT_TYPES =
+            DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, Grimcore.MODID);
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<StatBonusComponent>> STAT_BONUS =
+            COMPONENT_TYPES.register("stat_bonus", () ->
+                    DataComponentType.<StatBonusComponent>builder()
+                            .persistent(StatBonusComponent.CODEC)
+                            .networkSynchronized(StatBonusComponent.STREAM_CODEC)
+                            .build()
+            );
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ClassRestrictionComponent>> CLASS_RESTRICTION =
+            COMPONENT_TYPES.register("class_restriction", () ->
+                    DataComponentType.<ClassRestrictionComponent>builder()
+                            .persistent(ClassRestrictionComponent.CODEC)
+                            .networkSynchronized(ClassRestrictionComponent.STREAM_CODEC)
+                            .build()
+            );
+    public static void init(net.neoforged.bus.api.IEventBus modBus) {
+        COMPONENT_TYPES.register(modBus);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\data\ModDataComponents.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\Balance.java
+package com.doomspire.grimcore.datapack;
+import com.doomspire.grimcore.datapack.codec.AttributesBalance;
+import com.doomspire.grimcore.datapack.codec.LevelsCurve;
+import com.doomspire.grimcore.datapack.codec.SpellTuning;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
+public final class Balance {
+    private Balance() {}
+    private static volatile LevelsCurve levels = LevelsCurve.defaults();
+    private static volatile AttributesBalance attributes = AttributesBalance.defaults();
+    private static volatile SpellTuning spells = SpellTuning.defaults();
+    public static void set(LevelsCurve l, AttributesBalance a, SpellTuning s) {
+        levels = (l != null) ? l : LevelsCurve.defaults();
+        attributes = (a != null) ? a : AttributesBalance.defaults();
+        spells = (s != null) ? s : SpellTuning.defaults();
+    }
+    public static LevelsCurve levels() { return levels; }
+    public static AttributesBalance attributes() { return attributes; }
+    public static SpellTuning spells() { return spells; }
+    public static @Nullable SpellTuning.Entry getSpellEntry(ResourceLocation id) {
+        return spells.byId().get(id);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\Balance.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\BalanceData.java
+package com.doomspire.grimcore.datapack;
+import com.doomspire.grimcore.datapack.codec.AttributesBalance;
+import com.doomspire.grimcore.datapack.codec.LevelsCurve;
+import com.doomspire.grimcore.datapack.codec.SpellTuning;
+import com.doomspire.grimcore.stat.Attributes;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
+import java.util.EnumMap;
+import java.util.Map;
+/**
+ * Глобальный кэш загруженных из datapack'ов балансовых таблиц.
+ * Потокобезопасность: доступ только с сервера-треда при reload/старте.
+ */
+public final class BalanceData {
+    private static final Logger LOG = LogUtils.getLogger();
+    private static volatile LevelsCurve levelsCurve = LevelsCurve.defaults();
+    private static volatile AttributesBalance attributes = AttributesBalance.defaults();
+    private static volatile SpellTuning spellTuning = SpellTuning.defaults();
+    private BalanceData() {}
+    public static LevelsCurve levels() { return levelsCurve; }
+    public static AttributesBalance attrs() { return attributes; }
+    public static SpellTuning spells() { return spellTuning; }
+    static void apply(LevelsCurve lv, AttributesBalance ab, SpellTuning st) {
+        if (lv != null) levelsCurve = lv;
+        if (ab != null) attributes = ab;
+        if (st != null) spellTuning = st;
+        LOG.info("[Grim] Balance data applied: levels={}, attrs={}, spells={}",
+                levelsCurve.summary(), attributes.summary(), spellTuning.summary());
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\BalanceData.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\BalanceReloadListener.java
+package com.doomspire.grimcore.datapack;
+import com.doomspire.grimcore.datapack.codec.AttributesBalance;
+import com.doomspire.grimcore.datapack.codec.LevelsCurve;
+import com.doomspire.grimcore.datapack.codec.SpellTuning;
+import com.mojang.logging.LogUtils;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import org.slf4j.Logger;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+/**
+ * Читает JSON из:
+ *  - data/grimfate/balance/levels.json
+ *  - data/grimfate/balance/attributes.json
+ *  - data/grimfate/balance/spells.json
+ * и применяет в BalanceData.
+ *
+ * 1.21.1 / NeoForge: регистрируемся через AddReloadListenerEvent.
+ */
+public final class BalanceReloadListener extends SimplePreparableReloadListener<BalanceReloadListener.Data> {
+    private static final Logger LOG = LogUtils.getLogger();
+    public record Data(LevelsCurve levels, AttributesBalance attrs, SpellTuning spells) {}
+    @SubscribeEvent
+    public static void onAddReloadListeners(AddReloadListenerEvent e) {
+        e.addListener(new BalanceReloadListener());
+    }
+    @Override
+    protected Data prepare(ResourceManager rm, ProfilerFiller profiler) {
+        var levels = readJson(rm, "grimfate", "balance/levels.json", LevelsCurve.CODEC);
+        var attrs  = readJson(rm, "grimfate", "balance/attributes.json", AttributesBalance.CODEC);
+        var spells = readJson(rm, "grimfate", "balance/spells.json", SpellTuning.CODEC);
+        com.doomspire.grimcore.datapack.Balance.set(levels, attrs, spells);
+        return new Data(levels, attrs, spells);
+    }
+    @Override
+    protected void apply(Data data, ResourceManager rm, ProfilerFiller profiler) {
+        BalanceData.apply(
+                data.levels() != null ? data.levels() : LevelsCurve.defaults(),
+                data.attrs()  != null ? data.attrs()  : AttributesBalance.defaults(),
+                data.spells() != null ? data.spells() : SpellTuning.defaults()
+        );
+        LOG.info("[Grim] BalanceReloadListener applied.");
+    }
+    private static <T> T readJson(ResourceManager rm, String namespace, String path, Codec<T> codec) {
+        try {
+            ResourceLocation rl = ResourceLocation.fromNamespaceAndPath(namespace, path);
+            var opt = rm.getResource(rl);
+            if (opt.isEmpty()) return null;
+            try (var in = opt.get().open();
+                 var br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+                var json = com.google.gson.JsonParser.parseReader(br);
+                var parsed = codec.parse(JsonOps.INSTANCE, json);
+                return parsed.result().orElse(null);
+            }
+        } catch (Exception ex) {
+            LOG.error("[Grim] Failed to read json {}/{}: {}", namespace, path, ex.toString());
+            return null;
+        }
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\BalanceReloadListener.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\codec\AttributesBalance.java
+package com.doomspire.grimcore.datapack.codec;
+import com.doomspire.grimcore.stat.Attributes;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import java.util.Collections;
+import java.util.Locale;
+import java.util.Map;
+/**
+ * Баланс атрибутов: коэффициенты на 1 очко атрибута, + опциональная базовая секция.
+ * Загружается из datapack: data/<ns>/balance/attributes.json
+ */
+public record AttributesBalance(Map<String, Rule> byAttr, Base base) {
+    public static final Codec<AttributesBalance> CODEC = RecordCodecBuilder.create(i -> i.group(
+            Codec.unboundedMap(Codec.STRING, Rule.CODEC).fieldOf("by_attr").forGetter(AttributesBalance::byAttr),
+            Base.CODEC.optionalFieldOf("base", Base.DEFAULT).forGetter(AttributesBalance::base)
+    ).apply(i, AttributesBalance::new));
+    public static AttributesBalance defaults() {
+        return new AttributesBalance(Collections.emptyMap(), Base.DEFAULT);
+    }
+    public Rule get(Attributes attr) {
+        if (attr == null || byAttr == null) return null;
+        String k1 = attr.name().toLowerCase(Locale.ROOT);
+        Rule r = byAttr.get(k1);
+        if (r != null) return r;
+        Rule r2 = byAttr.get(attr.name());
+        if (r2 != null) return r2;
+        return byAttr.get(attr.toString());
+    }
+    public int cap(Attributes attr) {
+        Rule r = get(attr);
+        return r != null ? r.cap() : 99;
+    }
+    public String summary() {
+        int n = (byAttr != null) ? byAttr.size() : 0;
+        return "AttributesBalance{rules=" + n
+                + ", baseHP=" + (base != null ? base.baseMaxHealth() : Base.DEFAULT.baseMaxHealth())
+                + ", baseMP=" + (base != null ? base.baseMaxMana() : Base.DEFAULT.baseMaxMana())
+                + "}";
+    }
+    public record Rule(
+            int cap,
+            double maxHealthPer,
+            double regenHpPer,
+            double maxManaPer,
+            double regenMpPer,
+            float physMeleePer,
+            float physRangedPer,
+            float elemDamagePer,
+            float moveSpeedPctPer,
+            float baseCritChance,
+            float baseCritDamage,
+            float baseLifesteal,
+            float baseManasteal,
+            float evasionChancePer
+    ) {
+        public static final Codec<Rule> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.INT.optionalFieldOf("cap", 99).forGetter(Rule::cap),
+                Codec.DOUBLE.optionalFieldOf("max_health_per", 0.0).forGetter(Rule::maxHealthPer),
+                Codec.DOUBLE.optionalFieldOf("regen_hp_per",   0.0).forGetter(Rule::regenHpPer),
+                Codec.DOUBLE.optionalFieldOf("max_mana_per",  0.0).forGetter(Rule::maxManaPer),
+                Codec.DOUBLE.optionalFieldOf("regen_mp_per",  0.0).forGetter(Rule::regenMpPer),
+                Codec.FLOAT.optionalFieldOf("phys_melee_per",     0.0f).forGetter(Rule::physMeleePer),
+                Codec.FLOAT.optionalFieldOf("phys_ranged_per",    0.0f).forGetter(Rule::physRangedPer),
+                Codec.FLOAT.optionalFieldOf("elem_damage_per",    0.0f).forGetter(Rule::elemDamagePer),
+                Codec.FLOAT.optionalFieldOf("move_speed_pct_per", 0.0f).forGetter(Rule::moveSpeedPctPer),
+                Codec.FLOAT.optionalFieldOf("base_crit_chance",   0.0f).forGetter(Rule::baseCritChance),
+                Codec.FLOAT.optionalFieldOf("base_crit_damage",   0.5f).forGetter(Rule::baseCritDamage),
+                Codec.FLOAT.optionalFieldOf("base_lifesteal",     0.0f).forGetter(Rule::baseLifesteal),
+                Codec.FLOAT.optionalFieldOf("base_manasteal",     0.0f).forGetter(Rule::baseManasteal),
+                Codec.FLOAT.optionalFieldOf("evasion_chance_per", 0.01f).forGetter(Rule::evasionChancePer)
+        ).apply(i, Rule::new));
+    }
+    public record Base(
+            float baseMaxHealth,
+            float baseRegenHealth,
+            float baseMaxMana,
+            float baseRegenMana
+    ) {
+        public static final Base DEFAULT = new Base(100f, 1f, 100f, 1f);
+        public static final Codec<Base> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.FLOAT.optionalFieldOf("max_health",   100f).forGetter(Base::baseMaxHealth),
+                Codec.FLOAT.optionalFieldOf("regen_health", 1f).forGetter(Base::baseRegenHealth),
+                Codec.FLOAT.optionalFieldOf("max_mana",     100f).forGetter(Base::baseMaxMana),
+                Codec.FLOAT.optionalFieldOf("regen_mana",   1f).forGetter(Base::baseRegenMana)
+        ).apply(i, Base::new));
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\codec\AttributesBalance.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\codec\LevelsCurve.java
+package com.doomspire.grimcore.datapack.codec;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+public record LevelsCurve(int maxLevel, double base, double growth) {
+    public static final Codec<LevelsCurve> CODEC = RecordCodecBuilder.create(i -> i.group(
+            Codec.INT.fieldOf("max_level").forGetter(LevelsCurve::maxLevel),
+            Codec.DOUBLE.fieldOf("base").forGetter(LevelsCurve::base),
+            Codec.DOUBLE.fieldOf("growth").forGetter(LevelsCurve::growth)
+    ).apply(i, LevelsCurve::new));
+    public static LevelsCurve defaults() {
+        return new LevelsCurve(50, 100.0, 1.10); // прежние дефолты, пока не пришли данные из датапака
+    }
+    public String summary() {
+        return "max=" + maxLevel + ", base=" + base + ", growth=" + growth;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\codec\LevelsCurve.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\codec\SpellTuning.java
+package com.doomspire.grimcore.datapack.codec;
+import com.doomspire.grimcore.spell.api.SpellSchool;
+import com.doomspire.grimcore.spell.api.SpellTag;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
+import java.util.List;
+import java.util.Map;
+public record SpellTuning(Map<ResourceLocation, Entry> byId) {
+    public static final Codec<ResourceLocation> RL_CODEC = ResourceLocation.CODEC;
+    public static final Codec<SpellSchool> SCHOOL_CODEC =
+            Codec.STRING.xmap(s -> SpellSchool.valueOf(s.toUpperCase()), v -> v.name().toLowerCase());
+    public static final Codec<SpellTag> TAG_CODEC =
+            Codec.STRING.xmap(s -> SpellTag.valueOf(s.toUpperCase()), v -> v.name().toLowerCase());
+    public static final Codec<Scaling> SCALING_CODEC = RecordCodecBuilder.create(i -> i.group(
+            Codec.DOUBLE.optionalFieldOf("vitality", 0.0).forGetter(Scaling::vitality),
+            Codec.DOUBLE.optionalFieldOf("strength", 0.0).forGetter(Scaling::strength),
+            Codec.DOUBLE.optionalFieldOf("intelligence", 0.0).forGetter(Scaling::intelligence),
+            Codec.DOUBLE.optionalFieldOf("spirit", 0.0).forGetter(Scaling::spirit),
+            Codec.DOUBLE.optionalFieldOf("dexterity", 0.0).forGetter(Scaling::dexterity),
+            Codec.DOUBLE.optionalFieldOf("evasion", 0.0).forGetter(Scaling::evasion)
+    ).apply(i, Scaling::new));
+    public static final Codec<Entry> ENTRY_CODEC = RecordCodecBuilder.create(i -> i.group(
+            SCHOOL_CODEC.fieldOf("school").forGetter(Entry::school),
+            Codec.list(TAG_CODEC).optionalFieldOf("tags", List.of()).forGetter(Entry::tags),
+            Codec.INT.optionalFieldOf("base_cost", 0).forGetter(Entry::baseCost),
+            Codec.INT.optionalFieldOf("base_cooldown", 0).forGetter(Entry::baseCooldown),
+            SCALING_CODEC.optionalFieldOf("scaling", Scaling.ZERO).forGetter(Entry::scaling),
+            Codec.list(Codec.STRING).optionalFieldOf("forbidden_weapons", List.of()).forGetter(Entry::forbiddenWeapons),
+            Codec.list(Codec.STRING).optionalFieldOf("allowed_armor_tags", List.of()).forGetter(Entry::allowedArmorTags)
+    ).apply(i, Entry::new));
+    public static final Codec<Map<ResourceLocation, Entry>> MAP_CODEC =
+            Codec.unboundedMap(RL_CODEC, ENTRY_CODEC);
+    public static final Codec<SpellTuning> CODEC =
+            RecordCodecBuilder.create(i -> i.group(
+                    MAP_CODEC.fieldOf("spells").forGetter(SpellTuning::byId)
+            ).apply(i, SpellTuning::new));
+    public static SpellTuning defaults() {
+        return new SpellTuning(Map.of());
+    }
+    public String summary() {
+        return "spells=" + (byId != null ? byId.size() : 0);
+    }
+    public record Entry(
+            SpellSchool school,
+            List<SpellTag> tags,
+            int baseCost,
+            int baseCooldown,
+            Scaling scaling,
+            List<String> forbiddenWeapons,
+            List<String> allowedArmorTags
+    ) {}
+    public record Scaling(
+            double vitality,
+            double strength,
+            double intelligence,
+            double spirit,
+            double dexterity,
+            double evasion
+    ) {
+        public static final Scaling ZERO = new Scaling(0,0,0,0,0,0);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\datapack\codec\SpellTuning.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\events\CoreDamageEvents.java
+package com.doomspire.grimcore.events;
+import com.doomspire.grimcore.attach.MobStatsAttachment;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.attach.ThreatService;            // ← добавлено
+import com.doomspire.grimcore.combat.DamageContext;
+import com.doomspire.grimcore.combat.DamageEngine;
+import com.doomspire.grimcore.combat.EnvironmentalDamage;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.stat.DamageTypes;
+import com.doomspire.grimcore.stat.ModAttachments;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;               // ← добавлено
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+public final class CoreDamageEvents {
+    private CoreDamageEvents() {}
+    /**
+     * Ядро обработки урона. Никакой предметной/спелл-логики здесь нет.
+     * Сначала экологический урон (% от MaxHP), затем боевой пайплайн.
+     */
+    @SubscribeEvent
+    public static void onLivingDamage(LivingDamageEvent.Pre event) {
+        LivingEntity living = event.getEntity();
+        if (living.level().isClientSide() || !living.isAlive()) return;
+        Float pct = EnvironmentalDamage.percentFor(event.getSource());
+        if (pct != null) {
+            if (living instanceof ServerPlayer sp) {
+                PlayerStatsAttachment ps = sp.getData(ModAttachments.PLAYER_STATS.get());
+                if (ps != null) {
+                    int max = (int) Math.max(1, ps.getSnapshot().maxHealth);
+                    int delta = Math.max(1, Math.round(max * pct));
+                    ps.setCurrentHealth(ps.getCurrentHealth() - delta);
+                    ps.markDirty();
+                    GrimcoreNetworking.syncPlayerStats(sp, ps);
+                    event.setNewDamage(0f);
+                    if (ps.getCurrentHealth() <= 0) killByGeneric(sp);
+                }
+                return;
+            } else {
+                MobStatsAttachment ms = living.getData(ModAttachments.MOB_STATS.get());
+                if (ms != null) {
+                    int max = (int) Math.max(1, ms.getSnapshot().maxHealth);
+                    int delta = Math.max(1, Math.round(max * pct));
+                    ms.setCurrentHealth(ms.getCurrentHealth() - delta);
+                    ms.markDirty();
+                    event.setNewDamage(0f);
+                    if (ms.getCurrentHealth() <= 0) killByGeneric(living);
+                }
+                return;
+            }
+        }
+        float amountAfterContent = event.getNewDamage();
+        if (amountAfterContent <= 0f) return;
+        Entity src = event.getSource() != null ? event.getSource().getEntity() : null;
+        if (living instanceof ServerPlayer serverPlayer) {
+            LivingEntity attacker = (src instanceof LivingEntity le) ? le : null;
+            DamageContext ctx = new DamageContext(attacker, serverPlayer);
+            if (attacker != null) {
+                MobStatsAttachment aStats = attacker.getData(ModAttachments.MOB_STATS.get());
+                if (aStats != null) {
+                    float phys = aStats.getSnapshot().damage.getOrDefault(DamageTypes.PHYS_MELEE, amountAfterContent);
+                    ctx.add(DamageTypes.PHYS_MELEE, phys);
+                } else {
+                    ctx.add(DamageTypes.PHYS_MELEE, amountAfterContent);
+                }
+            } else {
+                ctx.add(DamageTypes.PHYS_MELEE, amountAfterContent);
+            }
+            DamageEngine.resolveAndApply(ctx);
+            event.setNewDamage(0f);
+            PlayerStatsAttachment att = serverPlayer.getData(ModAttachments.PLAYER_STATS.get());
+            if (att != null && att.getCurrentHealth() <= 0) killByGeneric(serverPlayer);
+            return;
+        }
+        {
+            float base = amountAfterContent;
+            if (src instanceof LivingEntity le) {
+                MobStatsAttachment aStats = le.getData(ModAttachments.MOB_STATS.get());
+                if (aStats != null) {
+                    base = aStats.getSnapshot().damage.getOrDefault(DamageTypes.PHYS_MELEE, base);
+                }
+            }
+            MobStatsAttachment tStats = living.getData(ModAttachments.MOB_STATS.get());
+            if (tStats != null) {
+                int before = tStats.getCurrentHealth();
+                int applied = Math.max(0, Math.min(before, Math.round(base))); // фактически нанесённый урон
+                if (applied > 0 && src instanceof Player pA) {
+                    ThreatService.addThreatFromDamage(living, pA, applied);
+                }
+                tStats.setCurrentHealth(before - applied);
+                tStats.markDirty();
+                event.setNewDamage(0f);
+                if ((before - applied) <= 0) killByGeneric(living);
+            }
+        }
+    }
+    private static void killByGeneric(LivingEntity entity) {
+        entity.setHealth(0f);
+        DamageSource genericKill = new DamageSource(
+                entity.level().registryAccess()
+                        .registryOrThrow(Registries.DAMAGE_TYPE)
+                        .getHolderOrThrow(net.minecraft.world.damagesource.DamageTypes.GENERIC_KILL)
+        );
+        entity.hurt(genericKill, Float.MAX_VALUE);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\events\CoreDamageEvents.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\events\CorePlayerEvents.java
+package com.doomspire.grimcore.events;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimcore.stat.StatEffects;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+public final class CorePlayerEvents {
+    private CorePlayerEvents() {}
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        PlayerStatsAttachment stats = player.getData(ModAttachments.PLAYER_STATS.get());
+        if (stats == null) return;
+        var base = stats.getSnapshot(); // базовый снапшот (без аффиксов)
+        if (stats.getCurrentHealth() <= 0) stats.setCurrentHealth((int) base.maxHealth);
+        if (stats.getCurrentMana()   <= 0) stats.setCurrentMana((int) base.maxMana);
+        stats.markDirty();
+        var snap = stats.getSnapshotWithAffixes(player);
+        stats.setCurrentHealth(Math.min(stats.getCurrentHealth(), (int) snap.maxHealth));
+        stats.setCurrentMana(Math.min(stats.getCurrentMana(),   (int) snap.maxMana));
+        GrimcoreNetworking.syncPlayerStats(player, stats);
+        StatEffects.applyAll(player);
+    }
+    @SubscribeEvent
+    public static void onEquipChange(LivingEquipmentChangeEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        PlayerStatsAttachment att = sp.getData(ModAttachments.PLAYER_STATS.get());
+        if (att == null) return;
+        att.markDirty();
+        var snap = att.getSnapshotWithAffixes(sp);
+        att.setCurrentHealth(Math.min(att.getCurrentHealth(), (int) snap.maxHealth));
+        att.setCurrentMana(Math.min(att.getCurrentMana(),   (int) snap.maxMana));
+        GrimcoreNetworking.syncPlayerStats(sp, att);
+        StatEffects.applyAll(sp);
+    }
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        StatEffects.applyAll(player);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\events\CorePlayerEvents.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\events\MobSpawnInit.java
+package com.doomspire.grimcore.events;
+import com.doomspire.grimcore.attach.MobStatsAttachment;
+import com.doomspire.grimcore.stat.ModAttachments;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+public final class MobSpawnInit {
+    private MobSpawnInit(){}
+    @SubscribeEvent
+    public static void onJoin(EntityJoinLevelEvent event) {
+        if (event.getLevel().isClientSide()) return;
+        if (!(event.getEntity() instanceof LivingEntity living)) return;
+        if (living instanceof net.minecraft.world.entity.player.Player) return;
+        MobStatsAttachment att = living.getData(ModAttachments.MOB_STATS.get());
+        if (att == null) {
+            att = new MobStatsAttachment();
+            living.setData(ModAttachments.MOB_STATS.get(), att);
+        }
+        MobTuning.applyPerEntityOverrides((ServerLevel) event.getLevel(), living, att);
+        int max = (int)Math.max(1, att.getSnapshot().maxHealth);
+        if (att.getCurrentHealth() <= 0) att.setCurrentHealth(max);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\events\MobSpawnInit.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\events\MobTuning.java
+package com.doomspire.grimcore.events;
+import com.doomspire.grimcore.attach.MobStatsAttachment;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+/**
+ * Заглушка-провайдер пер-мобных оверрайдов.
+ * На следующем шаге подменим на чтение JSON из datapack.
+ */
+public final class MobTuning {
+    private MobTuning(){}
+    public static void applyPerEntityOverrides(ServerLevel level, LivingEntity mob, MobStatsAttachment att) {
+        ResourceLocation id = mob.getType().builtInRegistryHolder().key().location();
+        if ("minecraft".equals(id.getNamespace()) && "zombie".equals(id.getPath())) {
+            att.addAttribute(com.doomspire.grimcore.stat.Attributes.VITALITY, 3);
+            att.addAttribute(com.doomspire.grimcore.stat.Attributes.STRENGTH, 2);
+        } else if ("minecraft".equals(id.getNamespace()) && "spider".equals(id.getPath())) {
+            att.addAttribute(com.doomspire.grimcore.stat.Attributes.EVASION, 5);
+            att.addAttribute(com.doomspire.grimcore.stat.Attributes.DEXTERITY, 3);
+        }
+        att.markDirty();
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\events\MobTuning.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\events\RegenTicker.java
+package com.doomspire.grimcore.events;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+/**
+ * Серверная регенерация HP/MP с аккумуляторами.
+ * - читает РЕАЛЬНЫЕ значения из снапшота с АФФИКСАМИ
+ * - применяет целые очки, дробную часть копит
+ * - клампит по НОВЫМ капам из снапшота
+ * - синкает на клиент не чаще, чем раз в 10 тиков и только при изменениях
+ */
+public final class RegenTicker {
+    private RegenTicker(){}
+    private static final class Accum {
+        double hpFrac = 0.0;
+        double mpFrac = 0.0;
+        int    lastSyncedHp  = Integer.MIN_VALUE;
+        int    lastSyncedMp  = Integer.MIN_VALUE;
+        int    lastSyncedMaxHp = Integer.MIN_VALUE;
+        int    lastSyncedMaxMp = Integer.MIN_VALUE;
+        long   lastSyncGameTime = 0L;
+    }
+    private static final Map<UUID, Accum> ACCUMS = new HashMap<>();
+    private static final int SYNC_COOLDOWN_TICKS = 10;
+    @SubscribeEvent
+    public static void onPlayerTick(PlayerTickEvent.Post e) {
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        var level = sp.serverLevel();
+        PlayerStatsAttachment att = sp.getData(ModAttachments.PLAYER_STATS.get());
+        if (att == null) return;
+        StatSnapshot snap = att.getSnapshotWithAffixes(sp);
+        int maxHp = (int) Math.max(1, Math.floor(snap.maxHealth));
+        int maxMp = (int) Math.max(1, Math.floor(snap.maxMana));
+        double hpPerTick = Math.max(0.0, snap.regenHealth) / 20.0;
+        double mpPerTick = Math.max(0.0, snap.regenMana)   / 20.0;
+        var a = ACCUMS.computeIfAbsent(sp.getUUID(), k -> new Accum());
+        a.hpFrac += hpPerTick;
+        a.mpFrac += mpPerTick;
+        int curHp = att.getCurrentHealth();
+        int curMp = att.getCurrentMana();
+        int hpGainWhole = (int) Math.floor(a.hpFrac);
+        int mpGainWhole = (int) Math.floor(a.mpFrac);
+        boolean changed = false;
+        if (hpGainWhole > 0 && curHp < maxHp) {
+            int allowed = Math.min(hpGainWhole, maxHp - curHp);
+            if (allowed > 0) {
+                a.hpFrac -= allowed;              // списываем ровно применённую целую часть
+                att.setCurrentHealth(curHp + allowed);
+                curHp = att.getCurrentHealth();
+                changed = true;
+            }
+        }
+        if (mpGainWhole > 0 && curMp < maxMp) {
+            int allowed = Math.min(mpGainWhole, maxMp - curMp);
+            if (allowed > 0) {
+                a.mpFrac -= allowed;
+                att.setCurrentMana(curMp + allowed);
+                curMp = att.getCurrentMana();
+                changed = true;
+            }
+        }
+        boolean capsChanged = (maxHp != a.lastSyncedMaxHp) || (maxMp != a.lastSyncedMaxMp);
+        boolean hpChanged   = (curHp != a.lastSyncedHp);
+        boolean mpChanged   = (curMp != a.lastSyncedMp);
+        long now = level.getGameTime();
+        if ((capsChanged || hpChanged || mpChanged) && now - a.lastSyncGameTime >= SYNC_COOLDOWN_TICKS) {
+            GrimcoreNetworking.syncPlayerStats(sp, att);
+            a.lastSyncedHp    = curHp;
+            a.lastSyncedMp    = curMp;
+            a.lastSyncedMaxHp = maxHp;
+            a.lastSyncedMaxMp = maxMp;
+            a.lastSyncGameTime = now;
+        }
+    }
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent e) {
+        if (e.getEntity() != null) {
+            ACCUMS.remove(e.getEntity().getUUID());
+        }
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\events\RegenTicker.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\events\XpEvents.java
+package com.doomspire.grimcore.events;
+import com.doomspire.grimcore.attach.MobStatsAttachment;
+import com.doomspire.grimcore.attach.PlayerProgressAttachment;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.net.ProgressNetworking;
+import com.doomspire.grimcore.stat.ModAttachments;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+public final class XpEvents {
+    private XpEvents(){}
+    public static void registerToBus() {
+        NeoForge.EVENT_BUS.register(XpEvents.class);
+    }
+    @SubscribeEvent
+    public static void onLivingDeath(LivingDeathEvent event) {
+        if (event.getEntity().level().isClientSide()) return;
+        LivingEntity dead = event.getEntity();
+        if (dead instanceof ServerPlayer) return;
+        ServerPlayer killer = null;
+        if (event.getSource() != null && event.getSource().getEntity() instanceof ServerPlayer sp) {
+            killer = sp;
+        } else if (dead.getKillCredit() instanceof ServerPlayer sp2) {
+            killer = sp2;
+        }
+        if (killer == null) return;
+        int maxHp;
+        MobStatsAttachment mobAtt = dead.getData(ModAttachments.MOB_STATS.get());
+        if (mobAtt != null) {
+            maxHp = Math.max(1, (int) mobAtt.getSnapshot().maxHealth);
+        } else {
+            maxHp = Math.max(1, (int) Math.ceil(dead.getMaxHealth()));
+        }
+        int xp = Math.max(1, Math.round((float) Math.pow(maxHp, 0.80) * 4f));
+        PlayerProgressAttachment prog = killer.getData(ModAttachments.PLAYER_PROGRESS.get());
+        PlayerStatsAttachment stats   = killer.getData(ModAttachments.PLAYER_STATS.get());
+        if (prog == null || stats == null) return;
+        int levels = prog.addExp(xp);
+        if (levels > 0) {
+            stats.addUnspentPoints(levels); // выдаём очки за ап-левел
+            stats.markDirty();
+            GrimcoreNetworking.syncPlayerStats(killer, stats); // мгновенно обновим HUD (очки можно показывать)
+        }
+        ProgressNetworking.syncPlayerProgress(killer, prog);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\events\XpEvents.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\Grimcore.java
+package com.doomspire.grimcore;
+import com.doomspire.grimcore.data.ModDataComponents;
+import com.doomspire.grimcore.events.*;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
+@Mod(Grimcore.MODID)
+public final class Grimcore {
+    public static final String MODID = "grimcore";
+    public Grimcore(IEventBus modEventBus, ModContainer container) {
+        com.doomspire.grimcore.stat.ModAttachments.ATTACHMENT_TYPES.register(modEventBus);
+        ModDataComponents.init(modEventBus);
+        NeoForge.EVENT_BUS.register(CoreDamageEvents.class);
+        NeoForge.EVENT_BUS.register(CorePlayerEvents.class);
+        NeoForge.EVENT_BUS.register(MobSpawnInit.class);
+        NeoForge.EVENT_BUS.register(RegenTicker.class);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\Grimcore.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\item\comp\BlockBonusComponent.java
+package com.doomspire.grimcore.item.comp;
+@org.jetbrains.annotations.ApiStatus.Experimental
+public class BlockBonusComponent {
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\item\comp\BlockBonusComponent.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\item\comp\ClassRestrictionComponent.java
+package com.doomspire.grimcore.item.comp;
+@org.jetbrains.annotations.ApiStatus.Experimental
+public class ClassRestrictionComponent {
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\item\comp\ClassRestrictionComponent.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\item\comp\StatBonusComponent.java
+package com.doomspire.grimcore.item.comp;
+@org.jetbrains.annotations.ApiStatus.Experimental
+public class StatBonusComponent {
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\item\comp\StatBonusComponent.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\ModBusHandlers.java
+package com.doomspire.grimcore;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.net.ProgressNetworking;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+@EventBusSubscriber(modid = Grimcore.MODID) // без bus = ...
+public final class ModBusHandlers {
+    private ModBusHandlers() {}
+    @SubscribeEvent
+    public static void onRegisterPayloads(RegisterPayloadHandlersEvent e) {
+        GrimcoreNetworking.register(e);
+        ProgressNetworking.register(e);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\ModBusHandlers.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\net\GrimcoreNetworking.java
+package com.doomspire.grimcore.net;
+import com.doomspire.grimcore.Grimcore;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.stat.ModAttachments;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+public final class GrimcoreNetworking {
+    private GrimcoreNetworking() {}
+    public static void register(final RegisterPayloadHandlersEvent event) {
+        var registrar = event.registrar(Grimcore.MODID);
+        registrar.playToClient(
+                S2C_SyncPlayerStats.TYPE,
+                S2C_SyncPlayerStats.STREAM_CODEC,
+                (payload, ctx) -> {
+                    var mc = Minecraft.getInstance();
+                    Player clientPlayer = mc.player;
+                    if (clientPlayer == null) return;
+                    clientPlayer.setData(ModAttachments.PLAYER_STATS.get(), payload.att());
+                    var stats = clientPlayer.getData(ModAttachments.PLAYER_STATS.get());
+                    if (stats != null) {
+                        stats.markDirty();
+                        stats.getSnapshotWithAffixes(clientPlayer);
+                    }
+                }
+        );
+    }
+    public static void syncPlayerStats(ServerPlayer target, PlayerStatsAttachment att) {
+        PacketDistributor.sendToPlayer(target, new S2C_SyncPlayerStats(att));
+    }
+    public record S2C_SyncPlayerStats(PlayerStatsAttachment att) implements CustomPacketPayload {
+        public static final Type<S2C_SyncPlayerStats> TYPE =
+                new Type<>(ResourceLocation.fromNamespaceAndPath(Grimcore.MODID, "sync_player_stats"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, S2C_SyncPlayerStats> STREAM_CODEC =
+                StreamCodec.composite(
+                        PlayerStatsAttachment.STREAM_CODEC, S2C_SyncPlayerStats::att,
+                        S2C_SyncPlayerStats::new
+                );
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\net\GrimcoreNetworking.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\net\ProgressNetworking.java
+package com.doomspire.grimcore.net;
+import com.doomspire.grimcore.Grimcore;
+import com.doomspire.grimcore.attach.PlayerProgressAttachment;
+import com.doomspire.grimcore.stat.ModAttachments;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+public final class ProgressNetworking {
+    private ProgressNetworking(){}
+    public static void register(final RegisterPayloadHandlersEvent event) {
+        var registrar = event.registrar(Grimcore.MODID);
+        registrar.playToClient(
+                S2C_SyncPlayerProgress.TYPE,
+                S2C_SyncPlayerProgress.STREAM_CODEC,
+                (payload, ctx) -> {
+                    var player = Minecraft.getInstance().player;
+                    if (player != null) {
+                        player.setData(ModAttachments.PLAYER_PROGRESS.get(), payload.att());
+                    }
+                }
+        );
+    }
+    public static void syncPlayerProgress(ServerPlayer target, PlayerProgressAttachment att) {
+        PacketDistributor.sendToPlayer(target, new S2C_SyncPlayerProgress(att));
+    }
+    public record S2C_SyncPlayerProgress(PlayerProgressAttachment att) implements CustomPacketPayload {
+        public static final Type<S2C_SyncPlayerProgress> TYPE =
+                new Type<>(ResourceLocation.fromNamespaceAndPath(Grimcore.MODID, "sync_player_progress"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, S2C_SyncPlayerProgress> STREAM_CODEC =
+                StreamCodec.composite(
+                        PlayerProgressAttachment.STREAM_CODEC, S2C_SyncPlayerProgress::att,
+                        S2C_SyncPlayerProgress::new
+                );
+        @Override
+        public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\net\ProgressNetworking.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\runtime\PlayerRuntimeData.java
+package com.doomspire.grimcore.runtime;
+/**
+ * Лёгкий runtime-хаб для каждого игрока.
+ * Не сериализуется. Хранится в ConcurrentHashMap на сервере.
+ */
+public class PlayerRuntimeData {
+    public double healthAccumulator = 0.0;
+    public double manaAccumulator = 0.0;
+    public long lastSyncTick = 0L; // gameTime последнего синка
+    public boolean dirty = false;  // пометка для внешних систем
+    public int cachedDamage = -1;
+    public long cacheUntilTick = 0L;
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\runtime\PlayerRuntimeData.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\runtime\PlayerRuntimeManager.java
+package com.doomspire.grimcore.runtime;
+import net.minecraft.server.level.ServerPlayer;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+/**
+ * Простой manager для runtime-данных (сервер).
+ */
+public final class PlayerRuntimeManager {
+    private static final ConcurrentHashMap<UUID, PlayerRuntimeData> RUNTIME = new ConcurrentHashMap<>();
+    private PlayerRuntimeManager() {}
+    public static PlayerRuntimeData getOrCreate(ServerPlayer player) {
+        return RUNTIME.computeIfAbsent(player.getUUID(), uuid -> new PlayerRuntimeData());
+    }
+    public static PlayerRuntimeData get(ServerPlayer player) {
+        return RUNTIME.get(player.getUUID());
+    }
+    public static void remove(ServerPlayer player) {
+        if (player != null) RUNTIME.remove(player.getUUID());
+    }
+    public static void remove(UUID uuid) {
+        if (uuid != null) RUNTIME.remove(uuid);
+    }
+    public static void clearAll() {
+        RUNTIME.clear();
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\runtime\PlayerRuntimeManager.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\CastResult.java
+package com.doomspire.grimcore.spell.api;
+public enum CastResult {
+    OK,
+    NOT_ENOUGH_MANA,
+    ON_COOLDOWN,
+    BLOCKED,
+    FAIL
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\CastResult.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\Spell.java
+package com.doomspire.grimcore.spell.api;
+import net.minecraft.resources.ResourceLocation;
+import java.util.Set;
+public interface Spell {
+    ResourceLocation id();
+    SpellSchool school();
+    int manaCost(SpellContext ctx);
+    int cooldownTicks(SpellContext ctx);
+    CastResult cast(SpellContext ctx);
+    Set<SpellTag> tags();
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\Spell.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\SpellContext.java
+package com.doomspire.grimcore.spell.api;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.Nullable;
+public final class SpellContext {
+    public final ServerLevel level;
+    public final Player caster;
+    public final int slot;                  // слот хотбара спеллов; -1 если вне хотбара
+    public final double aimX, aimY, aimZ;   // произвольные «наводочные» параметры
+    @Nullable public final Object tuning;   // объект tюнинга (деcериализованный из SpellTuning), типизируем позже
+    public SpellContext(ServerLevel level, Player caster, int slot, double aimX, double aimY, double aimZ, @Nullable Object tuning) {
+        this.level = level;
+        this.caster = caster;
+        this.slot = slot;
+        this.aimX = aimX;
+        this.aimY = aimY;
+        this.aimZ = aimZ;
+        this.tuning = tuning;
+    }
+    public static SpellContext simple(ServerLevel lvl, Player caster) {
+        return new SpellContext(lvl, caster, -1, 0, 0, 0, null);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\SpellContext.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\SpellSchool.java
+package com.doomspire.grimcore.spell.api;
+public enum SpellSchool {
+    FIRE, FROST, LIGHTNING, POISON,
+    TECHNIQUE, WARCRY, AURA, ARCANE, SHADOW,
+    UTILITY
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\SpellSchool.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\SpellTag.java
+package com.doomspire.grimcore.spell.api;
+public enum SpellTag {
+    MELEE, RANGED, BUFF, DEBUFF, MOVEMENT, PROJECTILE, AREA,
+    CHANNELED, DOT, SHIELD, SUMMON, WEAPON_SKILL
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\SpellTag.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponGate.java
+package com.doomspire.grimcore.spell.api;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiFunction;
+/**
+ * Проверяет предмет в руках игрока против {@link WeaponRequirement}.
+ * Учитывает теги, (опционально) двуручность и занятость offhand.
+ */
+public final class WeaponGate {
+    public static final TagKey<Item> TWO_HANDED =
+            TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("grimfate", "two_handed"));
+    private static volatile BiFunction<ItemStack, Player, Boolean> TWO_HANDED_RESOLVER = null;
+    private WeaponGate() {}
+    public static Result check(Player player, WeaponRequirement req) {
+        Objects.requireNonNull(player, "player");
+        Objects.requireNonNull(req, "requirement");
+        ItemStack main = player.getMainHandItem();
+        Result mainRes = checkStackAgainstRequirement(main, player, req, InteractionHand.MAIN_HAND, true);
+        if (mainRes.ok) return mainRes;
+        ItemStack off = player.getOffhandItem();
+        Result offRes = checkStackAgainstRequirement(off, player, req, InteractionHand.OFF_HAND, true);
+        if (offRes.ok) return offRes;
+        return preferInformative(mainRes, offRes);
+    }
+    /**
+     * Точечная проверка стака в конкретной руке.
+     * @param enforceOffhandBlock если true — при двуручности запрещаем занятый offhand.
+     */
+    public static Result checkStackAgainstRequirement(ItemStack stack,
+                                                      Player player,
+                                                      WeaponRequirement req,
+                                                      InteractionHand hand,
+                                                      boolean enforceOffhandBlock) {
+        if (stack.isEmpty()) {
+            return Result.failKey("grimfate.msg.weapon_required",
+                    "Требуется подходящее оружие в " + prettyHand(hand) + ".");
+        }
+        if (!matchesAny(stack, req.anyOfTags())) {
+            return Result.failKey("grimfate.msg.weapon_required",
+                    "Оружие в " + prettyHand(hand) + " не подходит (нет нужной категории).");
+        }
+        if (!matchesAll(stack, req.allOfTags())) {
+            return Result.failKey("grimfate.msg.weapon_required",
+                    "Оружие в " + prettyHand(hand) + " не подходит (не все требования выполнены).");
+        }
+        if (!matchesNone(stack, req.noneOfTags())) {
+            return Result.failKey("grimfate.msg.weapon_forbidden",
+                    "Оружие в " + prettyHand(hand) + " запрещено для этого умения.");
+        }
+        if (req.twoHandedOnly()) {
+            boolean isTwoHanded = isTwoHanded(stack, player);
+            if (!isTwoHanded) {
+                return Result.failKey("grimfate.msg.two_handed_needed", "Нужно двуручное оружие.");
+            }
+            if (enforceOffhandBlock && !player.getOffhandItem().isEmpty()) {
+                return Result.failKey("grimfate.msg.free_offhand", "Освободите вторую руку для двуручного оружия.");
+            }
+        }
+        return Result.ok(hand);
+    }
+    public static void setTwoHandedResolver(BiFunction<ItemStack, Player, Boolean> resolver) {
+        TWO_HANDED_RESOLVER = resolver;
+    }
+    private static boolean isTwoHanded(ItemStack stack, Player player) {
+        if (stack.is(TWO_HANDED)) return true;
+        BiFunction<ItemStack, Player, Boolean> resolver = TWO_HANDED_RESOLVER;
+        if (resolver != null) {
+            try {
+                Boolean r = resolver.apply(stack, player);
+                if (Boolean.TRUE.equals(r)) return true;
+            } catch (Throwable ignored) {}
+        }
+        return false;
+    }
+    private static boolean matchesAny(ItemStack stack, Set<TagKey<Item>> tags) {
+        if (tags == null || tags.isEmpty()) return true;
+        for (TagKey<Item> t : tags) if (stack.is(t)) return true;
+        return false;
+    }
+    private static boolean matchesAll(ItemStack stack, Set<TagKey<Item>> tags) {
+        if (tags == null || tags.isEmpty()) return true;
+        for (TagKey<Item> t : tags) if (!stack.is(t)) return false;
+        return true;
+    }
+    private static boolean matchesNone(ItemStack stack, Set<TagKey<Item>> tags) {
+        if (tags == null || tags.isEmpty()) return true;
+        for (TagKey<Item> t : tags) if (stack.is(t)) return false;
+        return true;
+    }
+    private static String prettyHand(InteractionHand hand) {
+        return hand == InteractionHand.MAIN_HAND ? "основной руке" : "второй руке";
+    }
+    private static Result preferInformative(Result a, Result b) {
+        String ra = a.reason == null ? "" : a.reason;
+        String rb = b.reason == null ? "" : b.reason;
+        return (ra.length() >= rb.length()) ? a : b;
+    }
+    public static final class Result {
+        public final boolean ok;
+        public final String reasonKey;
+        public final String reason;
+        public final InteractionHand usedHand;
+        private Result(boolean ok, String reasonKey, String reason, InteractionHand usedHand) {
+            this.ok = ok;
+            this.reasonKey = reasonKey;
+            this.reason = reason;
+            this.usedHand = usedHand;
+        }
+        public static Result ok(InteractionHand hand) {
+            return new Result(true, null, null, hand);
+        }
+        public static Result failKey(String key, String fallbackText) {
+            return new Result(false, key, fallbackText, null);
+        }
+        public static Result fail(String fallbackText) {
+            return new Result(false, null, fallbackText, null);
+        }
+        @Override
+        public String toString() {
+            return ok ? "OK(" + usedHand + ")" : "FAIL(key=" + reasonKey + ", text=" + reason + ")";
+        }
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponGate.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponRequirement.java
+package com.doomspire.grimcore.spell.api;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+/**
+ * Семантика:
+ *  - anyOfTags — хотя бы один из тегов должен совпасть;
+ *  - allOfTags — каждый из тегов должен совпасть;
+ *  - noneOfTags — ни один из тегов не должен совпасть (запрещённые категории);
+ *  - twoHandedOnly — предмет должен быть двуручным (см. WeaponGate.TWO_HANDED и внешний резолвер).
+ */
+public final class WeaponRequirement {
+    private final Set<TagKey<Item>> anyOfTags;
+    private final Set<TagKey<Item>> allOfTags;
+    private final Set<TagKey<Item>> noneOfTags;
+    private final boolean twoHandedOnly;
+    private WeaponRequirement(Set<TagKey<Item>> anyOf,
+                              Set<TagKey<Item>> allOf,
+                              Set<TagKey<Item>> noneOf,
+                              boolean twoHandedOnly) {
+        this.anyOfTags = anyOf == null ? Collections.emptySet() : Set.copyOf(anyOf);
+        this.allOfTags = allOf == null ? Collections.emptySet() : Set.copyOf(allOf);
+        this.noneOfTags = noneOf == null ? Collections.emptySet() : Set.copyOf(noneOf);
+        this.twoHandedOnly = twoHandedOnly;
+    }
+    public Set<TagKey<Item>> anyOfTags()   { return anyOfTags; }
+    public Set<TagKey<Item>> allOfTags()   { return allOfTags; }
+    public Set<TagKey<Item>> noneOfTags()  { return noneOfTags; }
+    public boolean twoHandedOnly()         { return twoHandedOnly; }
+    public static Builder builder() { return new Builder(); }
+    public static final class Builder {
+        private final LinkedHashSet<TagKey<Item>> any = new LinkedHashSet<>();
+        private final LinkedHashSet<TagKey<Item>> all = new LinkedHashSet<>();
+        private final LinkedHashSet<TagKey<Item>> none = new LinkedHashSet<>();
+        private boolean twoHanded;
+        public Builder anyOf(TagKey<Item> tag) { if (tag != null) any.add(tag); return this; }
+        public Builder anyOf(ResourceLocation tagId) { return anyOf(tagKey(tagId)); }
+        public Builder allOf(TagKey<Item> tag) { if (tag != null) all.add(tag); return this; }
+        public Builder allOf(ResourceLocation tagId) { return allOf(tagKey(tagId)); }
+        public Builder noneOf(TagKey<Item> tag) { if (tag != null) none.add(tag); return this; }
+        public Builder noneOf(ResourceLocation tagId) { return noneOf(tagKey(tagId)); }
+        public Builder requireTwoHanded(boolean v) { this.twoHanded = v; return this; }
+        public WeaponRequirement build() {
+            return new WeaponRequirement(any, all, none, twoHanded);
+        }
+        private static TagKey<Item> tagKey(ResourceLocation id) {
+            Objects.requireNonNull(id, "tag id");
+            return TagKey.create(Registries.ITEM, id);
+        }
+    }
+    public static WeaponRequirement stavesOnly() {
+        return builder()
+                .anyOf(ResourceLocation.fromNamespaceAndPath("grimfate", "staves"))
+                .build();
+    }
+    public static WeaponRequirement bowsOnly() {
+        return builder()
+                .anyOf(ResourceLocation.fromNamespaceAndPath("grimfate", "bows"))
+                .build();
+    }
+    public static WeaponRequirement twoHandedFrom(ResourceLocation... families) {
+        Builder b = builder().requireTwoHanded(true);
+        if (families != null) for (ResourceLocation id : families) b.anyOf(id);
+        return b.build();
+    }
+    @Override
+    public String toString() {
+        return "WeaponRequirement{any=" + anyOfTags + ", all=" + allOfTags +
+                ", none=" + noneOfTags + ", twoHanded=" + twoHandedOnly + "}";
+    }
+}
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\api\WeaponRequirement.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltResult.java
+package com.doomspire.grimcore.spell.autobolt;
+public record AutoBoltResult(boolean ok, String reason, int cooldownTicks, float projectileSpeed) {
+    public static AutoBoltResult ok(int cd, float speed) { return new AutoBoltResult(true, null, cd, speed); }
+    public static AutoBoltResult denied(String why)       { return new AutoBoltResult(false, why, 0, 0.0f); }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltResult.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltService.java
+package com.doomspire.grimcore.spell.autobolt;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.net.GrimcoreNetworking;
+import com.doomspire.grimcore.spell.autobolt.AutoBoltResult;
+import com.doomspire.grimcore.spell.autobolt.AutoBoltTuning;
+import com.doomspire.grimcore.stat.ModAttachments;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+/**
+ * Ядро авто-атаки посоха: валидация/баланс/списание ресурсов.
+ * НИЧЕГО не спавним и не играем звуки — это задача grimfate.
+ */
+public final class AutoBoltService {
+    public static AutoBoltResult computeAndConsume(ServerPlayer sp, ItemStack usedStaff) {
+        PlayerStatsAttachment stats = sp.getData(ModAttachments.PLAYER_STATS.get());
+        if (stats == null) return AutoBoltResult.denied("no_stats");
+        StatSnapshot snap = stats.getSnapshot(); // кэшируемый снапшот из аттача
+        if (sp.getCooldowns().isOnCooldown(usedStaff.getItem())) {
+            return AutoBoltResult.denied("cooldown");
+        }
+        AutoBoltTuning tuning = AutoBoltTuning.get();
+        int manaCost = tuning.manaCost(snap, usedStaff);
+        if (stats.getCurrentMana() < manaCost) {
+            return AutoBoltResult.denied("not_enough_mana");
+        }
+        int cdTicks = tuning.cooldownTicks(snap, usedStaff);
+        float projSpeed = tuning.projectileSpeed(snap, usedStaff);
+        stats.setCurrentMana(stats.getCurrentMana() - manaCost);
+        stats.markDirty();
+        GrimcoreNetworking.syncPlayerStats(sp, stats);
+        return AutoBoltResult.ok(cdTicks, projSpeed);
+    }
+    private AutoBoltService() {}
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltService.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltTuning.java
+package com.doomspire.grimcore.spell.autobolt;
+import com.doomspire.grimcore.datapack.Balance;
+import com.doomspire.grimcore.datapack.codec.SpellTuning;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+/**
+ * Все данные берутся из Balance/SpellTuning (datapack).
+ *
+ * ВАЖНО: поле projectile_speed читается «мягко»:
+ *  - если SpellTuning.Entry уже поддерживает projectileSpeed() — используем его;
+ *  - иначе пытаемся найти параметр "projectile_speed" в доп.полях (если таковые есть);
+ *  - иначе берём безопасный дефолт (как у ванильной стрелы).
+ *
+ * Datapack-пример (data/grimfate/spells.json):
+ * {
+ *   "id": "grimfate:auto_bolt_staff",
+ *   "baseCost": 3,
+ *   "baseCooldown": 8,
+ *   "projectile_speed": 1.6
+ * }
+ */
+public final class AutoBoltTuning {
+    public static final ResourceLocation AUTO_BOLT_ID =
+            ResourceLocation.fromNamespaceAndPath("grimfate", "auto_bolt_staff");
+    private static final float DEFAULT_PROJECTILE_SPEED = 1.6f;
+    private static final float MIN_PROJECTILE_SPEED = 0.4f;
+    private static final float MAX_PROJECTILE_SPEED = 3.5f;
+    public int manaCost(StatSnapshot snap, ItemStack staff) {
+        SpellTuning.Entry e = Balance.getSpellEntry(AUTO_BOLT_ID);
+        return (e != null) ? Math.max(0, e.baseCost()) : 0;
+    }
+    public int cooldownTicks(StatSnapshot snap, ItemStack staff) {
+        SpellTuning.Entry e = Balance.getSpellEntry(AUTO_BOLT_ID);
+        return (e != null) ? Math.max(0, e.baseCooldown()) : 0;
+    }
+    /**
+     * Скорость снаряда (базовая). Баллистика (гравитация/drag) настраивается в сущности проектайла.
+     * Здесь только базовый модуль скорости вылета.
+     */
+    public float projectileSpeed(StatSnapshot snap, ItemStack staff) {
+        SpellTuning.Entry e = Balance.getSpellEntry(AUTO_BOLT_ID);
+        float v = DEFAULT_PROJECTILE_SPEED;
+        if (e != null) {
+            try {
+                var m = e.getClass().getMethod("projectileSpeed");
+                Object ret = m.invoke(e);
+                if (ret instanceof Number n) v = n.floatValue();
+            } catch (NoSuchMethodException ignored) {
+                try {
+                    var mExtra = e.getClass().getMethod("extra");
+                    Object extra = mExtra.invoke(e); // ожидаем Map<String,Object> либо подобное
+                    if (extra instanceof java.util.Map<?,?> map) {
+                        Object val = map.get("projectile_speed");
+                        if (val instanceof Number n) v = n.floatValue();
+                        else if (val instanceof String s) v = Float.parseFloat(s);
+                    }
+                } catch (Throwable ignored2) {
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        if (Float.isNaN(v) || Float.isInfinite(v)) v = DEFAULT_PROJECTILE_SPEED;
+        if (v < MIN_PROJECTILE_SPEED) v = MIN_PROJECTILE_SPEED;
+        if (v > MAX_PROJECTILE_SPEED) v = MAX_PROJECTILE_SPEED;
+        return v;
+    }
+    public static AutoBoltTuning get() { return new AutoBoltTuning(); }
+    private AutoBoltTuning() {}
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\AutoBoltTuning.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\impl\AutoBoltSpell.java
+package com.doomspire.grimcore.spell.autobolt.impl;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.spell.api.CastResult;
+import com.doomspire.grimcore.spell.api.Spell;
+import com.doomspire.grimcore.spell.api.SpellContext;
+import com.doomspire.grimcore.spell.api.SpellSchool;
+import com.doomspire.grimcore.spell.api.SpellTag;
+import com.doomspire.grimcore.spell.api.WeaponGate;
+import com.doomspire.grimcore.spell.api.WeaponRequirement;
+import com.doomspire.grimcore.spell.autobolt.AutoBoltService;
+import com.doomspire.grimcore.spell.autobolt.AutoBoltTuning;
+import com.doomspire.grimcore.stat.StatSnapshot;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import java.util.Collections;
+import java.util.Set;
+/**
+ * Ядровой спелл авто-болта для посохов:
+ * - требования к оружию: только #grimfate:staves;
+ * - расход/кулдаун берутся из AutoBoltTuning;
+ * - при cast выполняется только проверка + списание ресурсов через AutoBoltService;
+ *   сам спавн снаряда делается на стороне grimfate.
+ */
+public final class AutoBoltSpell implements Spell {
+    private static final ResourceLocation ID =
+            ResourceLocation.fromNamespaceAndPath("grimfate", "auto_bolt_staff");
+    private static final WeaponRequirement REQ_STAFF = WeaponRequirement.stavesOnly();
+    private static final AutoBoltTuning TUNING = AutoBoltTuning.get();
+    @Override
+    public ResourceLocation id() {
+        return ID;
+    }
+    @Override
+    public SpellSchool school() {
+        return SpellSchool.ARCANE;
+    }
+    @Override
+    public Set<SpellTag> tags() {
+        return Collections.emptySet();
+    }
+    @Override
+    public int manaCost(SpellContext ctx) {
+        Player p = asPlayer(ctx.caster);
+        if (p == null) return 0;
+        ItemStack staff = findStaffInHands(p);
+        StatSnapshot snap = PlayerStatsAttachment.get(p).getSnapshot();
+        return TUNING.manaCost(snap, staff);
+    }
+    @Override
+    public int cooldownTicks(SpellContext ctx) {
+        Player p = asPlayer(ctx.caster);
+        if (p == null) return 0;
+        ItemStack staff = findStaffInHands(p);
+        StatSnapshot snap = PlayerStatsAttachment.get(p).getSnapshot();
+        return TUNING.cooldownTicks(snap, staff);
+    }
+    @Override
+    public CastResult cast(SpellContext ctx) {
+        if (!(ctx.caster instanceof ServerPlayer sp)) {
+            return CastResult.FAIL;
+        }
+        WeaponGate.Result gate = WeaponGate.check(sp, REQ_STAFF);
+        if (!gate.ok) return CastResult.FAIL;
+        ItemStack staff = sp.getItemInHand(
+                gate.usedHand != null ? gate.usedHand : InteractionHand.MAIN_HAND);
+        var res = AutoBoltService.computeAndConsume(sp, staff);
+        return res.ok() ? CastResult.OK : CastResult.FAIL;
+    }
+    private static Player asPlayer(LivingEntity e) {
+        return (e instanceof Player pl) ? pl : null;
+    }
+    private static ItemStack findStaffInHands(Player p) {
+        ItemStack main = p.getMainHandItem();
+        if (!main.isEmpty() && isStaff(main)) return main;
+        ItemStack off = p.getOffhandItem();
+        if (!off.isEmpty() && isStaff(off)) return off;
+        return ItemStack.EMPTY;
+    }
+    private static boolean isStaff(ItemStack stack) {
+        return true;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\autobolt\impl\AutoBoltSpell.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\spell\GrimSpells.java
+package com.doomspire.grimcore.spell;
+import com.doomspire.grimcore.spell.api.Spell;
+import net.minecraft.resources.ResourceLocation;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+/**
+ * Простой реестр спеллов в рантайме.
+ * Регистрация выполняется на общих инициализациях мода или при загрузке datapack-тюнинга (в т.ч. референс-спеллы).
+ */
+public final class GrimSpells {
+    private GrimSpells() {}
+    private static final Map<ResourceLocation, Spell> REGISTRY = new LinkedHashMap<>();
+    public static void register(Spell spell) {
+        REGISTRY.put(spell.id(), spell);
+    }
+    public static Spell get(ResourceLocation id) {
+        return REGISTRY.get(id);
+    }
+    public static Map<ResourceLocation, Spell> all() {
+        return Collections.unmodifiableMap(REGISTRY);
+    }
+    public static void clear() {
+        REGISTRY.clear();
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\spell\GrimSpells.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\stat\Attributes.java
+package com.doomspire.grimcore.stat;
+/**
+ * Базовые атрибуты, которые игрок получает и распределяет при повышении уровня.
+ */
+public enum Attributes {
+    VITALITY,      // здоровье, реген, бонус к блоку
+    STRENGTH,      // физический урон ближнего боя
+    INTELLIGENCE,  // урон заклинаний и стихий
+    SPIRIT,        // мана, реген маны
+    DEXTERITY,     // физический урон дальнего боя
+    EVASION,       // шанс уворота
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\stat\Attributes.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\stat\DamageTypes.java
+package com.doomspire.grimcore.stat;
+/**
+ * Типы урона. Используются в DamageContext и StatSnapshot.
+ */
+public enum DamageTypes {
+    PHYS_MELEE,
+    PHYS_RANGED,
+    FIRE,
+    FROST,
+    LIGHTNING,
+    POISON
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\stat\DamageTypes.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\stat\ModAttachments.java
+package com.doomspire.grimcore.stat;
+import com.doomspire.grimcore.Grimcore;
+import com.doomspire.grimcore.attach.*;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.attachment.AttachmentType;
+public final class ModAttachments {
+    private ModAttachments() {}
+    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
+            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Grimcore.MODID);
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<PlayerStatsAttachment>> PLAYER_STATS =
+            ATTACHMENT_TYPES.register("player_stats",
+                    () -> AttachmentType.builder(PlayerStatsAttachment::new)
+                            .sync(PlayerStatsAttachment.STREAM_CODEC) // сеть ОК
+                            .build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<MobStatsAttachment>> MOB_STATS =
+            ATTACHMENT_TYPES.register("mob_stats",
+                    () -> AttachmentType.builder(MobStatsAttachment::new)
+                            .sync(MobStatsAttachment.STREAM_CODEC) // можно выключить, если на клиенте не нужно
+                            .build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<PlayerProgressAttachment>> PLAYER_PROGRESS =
+            ATTACHMENT_TYPES.register("player_progress", () ->
+                    AttachmentType.builder(PlayerProgressAttachment::new)
+                            .serialize(PlayerProgressAttachment.CODEC)        // автосейв в сейв игрока
+                            .sync(PlayerProgressAttachment.STREAM_CODEC)      // авто-синк при замене
+                            .build()
+            );
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<PlayerLoadoutAttachment>> PLAYER_LOADOUT =
+            ATTACHMENT_TYPES.register("player_loadout",
+                    () -> AttachmentType.builder(PlayerLoadoutAttachment::new)
+                            .serialize(PlayerLoadoutAttachment.CODEC)      // хот-бар сохраняется
+                            .sync(PlayerLoadoutAttachment.STREAM_CODEC)     // ВАЖНО: клиент видит изменения
+                            .build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<MobThreatAttachment>> MOB_THREAT =
+            ATTACHMENT_TYPES.register("mob_threat",
+                    () -> AttachmentType.builder(MobThreatAttachment::new)
+                            .sync(MobThreatAttachment.STREAM_CODEC) // сеть
+                            .build());
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\stat\ModAttachments.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\stat\PlayerProgress.java
+package com.doomspire.grimcore.stat;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+/**
+ * Чистые данные об уровне игрока.
+ * Только хранение + сериализация в NBT/сеть.
+ */
+public record PlayerProgress(int level, int exp, int expCap) {
+    public static final Codec<PlayerProgress> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.INT.fieldOf("level").forGetter(PlayerProgress::level),
+            Codec.INT.fieldOf("exp").forGetter(PlayerProgress::exp),
+            Codec.INT.fieldOf("exp_cap").forGetter(PlayerProgress::expCap)
+    ).apply(instance, PlayerProgress::new));
+    public static final StreamCodec<FriendlyByteBuf, PlayerProgress> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.INT, PlayerProgress::level,
+            ByteBufCodecs.INT, PlayerProgress::exp,
+            ByteBufCodecs.INT, PlayerProgress::expCap,
+            PlayerProgress::new
+    );
+    public static final PlayerProgress DEFAULT = new PlayerProgress(1, 0, 100);
+    /**
+     * Вспомогательный метод для проверки прогресса на клиенте (HUD).
+     */
+    public String hudString() {
+        return "Lvl " + level + " (" + exp + "/" + expCap + ")";
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\stat\PlayerProgress.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\stat\ResistTypes.java
+package com.doomspire.grimcore.stat;
+/**
+ * Сопротивления урону. Применяются в DamageEngine.
+ */
+public enum ResistTypes {
+    PHYS,
+    FIRE,
+    FROST,
+    LIGHTNING,
+    POISON
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\stat\ResistTypes.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatCalculator.java
+package com.doomspire.grimcore.stat;
+import com.doomspire.grimcore.affix.AffixAggregator;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.datapack.Balance;
+import com.doomspire.grimcore.datapack.codec.AttributesBalance;
+import net.minecraft.world.entity.LivingEntity;
+import java.util.function.Function;
+public class StatCalculator {
+    private static AttributesBalance.Rule rule(Attributes attr) {
+        var m = Balance.attributes().byAttr();
+        return m != null ? m.get(attr) : null;
+    }
+    private static float readD(AttributesBalance.Rule r,
+                               java.util.function.ToDoubleFunction<AttributesBalance.Rule> getter,
+                               float def) {
+        if (r == null) return def;
+        return (float) getter.applyAsDouble(r);
+    }
+    private static float readF(AttributesBalance.Rule r,
+                               java.util.function.Function<AttributesBalance.Rule, Float> getter,
+                               float def) {
+        if (r == null) return def;
+        Float v = getter.apply(r);
+        return v != null ? v : def;
+    }
+    public static StatSnapshot calculate(PlayerStatsAttachment att) {
+        StatSnapshot snapshot = new StatSnapshot();
+        int vit    = att.getAttribute(Attributes.VITALITY);
+        int str    = att.getAttribute(Attributes.STRENGTH);
+        int intel  = att.getAttribute(Attributes.INTELLIGENCE);
+        int spirit = att.getAttribute(Attributes.SPIRIT);
+        int dex    = att.getAttribute(Attributes.DEXTERITY);
+        int eva    = att.getAttribute(Attributes.EVASION);
+        var rVit = rule(Attributes.VITALITY);
+        var rSpr = rule(Attributes.SPIRIT);
+        var rDex = rule(Attributes.DEXTERITY);
+        var rStr = rule(Attributes.STRENGTH);
+        var rInt = rule(Attributes.INTELLIGENCE);
+        var rEva = rule(Attributes.EVASION);
+        final float BASE_HP  = 100f;
+        final float BASE_HPR = 1f;
+        final float BASE_MP  = 100f;
+        final float BASE_MPR = 1f;
+        float hpPerVit  = readD(rVit, AttributesBalance.Rule::maxHealthPer, 20f);
+        float hprPerVit = readD(rVit, AttributesBalance.Rule::regenHpPer,   1f);
+        snapshot.maxHealth   = BASE_HP  + vit * hpPerVit;
+        snapshot.regenHealth = BASE_HPR + vit * hprPerVit;
+        float mpPerSpr  = readD(rSpr, AttributesBalance.Rule::maxManaPer, 30f);
+        float mprPerSpr = readD(rSpr, AttributesBalance.Rule::regenMpPer,  3f);
+        snapshot.maxMana   = BASE_MP  + spirit * mpPerSpr;
+        snapshot.regenMana = BASE_MPR + spirit * mprPerSpr;
+        float physMeleePerStr  = readF(rStr, AttributesBalance.Rule::physMeleePer,   0.03f);
+        float physRangedPerDex = readF(rDex, AttributesBalance.Rule::physRangedPer,  0.03f);
+        float elemPerInt       = readF(rInt, AttributesBalance.Rule::elemDamagePer,  0.02f);
+        snapshot.damage.put(DamageTypes.PHYS_MELEE,  str * physMeleePerStr);
+        snapshot.damage.put(DamageTypes.PHYS_RANGED, dex * physRangedPerDex);
+        snapshot.damage.put(DamageTypes.FIRE,        intel * elemPerInt);
+        snapshot.damage.put(DamageTypes.FROST,       intel * elemPerInt);
+        snapshot.damage.put(DamageTypes.LIGHTNING,   intel * elemPerInt);
+        snapshot.damage.put(DamageTypes.POISON,      intel * elemPerInt);
+        snapshot.critChance    = readF(rDex, AttributesBalance.Rule::baseCritChance, 0f);
+        snapshot.critDamage    = readF(rDex, AttributesBalance.Rule::baseCritDamage, 0.5f);
+        snapshot.lifesteal     = readF(rStr, AttributesBalance.Rule::baseLifesteal,  0f);
+        snapshot.manasteal     = readF(rSpr, AttributesBalance.Rule::baseManasteal,  0f);
+        snapshot.evasionChance = eva * readF(rEva, AttributesBalance.Rule::evasionChancePer, 0.01f);
+        snapshot.moveSpeedPct  = dex * readF(rDex, AttributesBalance.Rule::moveSpeedPctPer, 0.25f);
+        snapshot.damageReductionAll = clamp01(snapshot.damageReductionAll);
+        snapshot.evasionChance      = clamp01(snapshot.evasionChance);
+        return snapshot;
+    }
+    private static void applyResistAll(StatSnapshot s) {
+        if (s.resistAll == 0f) return;
+        float m = 1f + s.resistAll;
+        for (var k : s.resistances.keySet()) {
+            s.resistances.computeIfPresent(k, (kk, v) -> v * m);
+        }
+    }
+    /**
+     * Полный расчёт со всеми модификаторами предметов/аффиксов.
+     * ВНИМАНИЕ: owner может быть null — тогда вернётся чистая версия без аффиксов.
+     */
+    public static StatSnapshot calculateWithAffixes(PlayerStatsAttachment att, LivingEntity owner) {
+        StatSnapshot snap = calculate(att);
+        if (owner != null) {
+            AffixAggregator.applyAll(snap, owner);
+            applyResistAll(snap);
+        }
+        return snap;
+    }
+    private static float clamp01(float v) {
+        if (Float.isNaN(v) || Float.isInfinite(v)) return 0f;
+        return Math.max(0f, Math.min(1f, v));
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatCalculator.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatEffects.java
+package com.doomspire.grimcore.stat;
+import com.doomspire.grimcore.attach.PlayerStatsAttachment;
+import com.doomspire.grimcore.stat.ModAttachments;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+/**
+ * Применяет эффекты из статов к ванильным атрибутам игрока.
+ * ЕДИНАЯ точка – тут же и снимаем/обновляем модификаторы.
+ */
+public final class StatEffects {
+    private StatEffects() {}
+    public static final ResourceLocation MOVE_SPEED_ID =
+            ResourceLocation.fromNamespaceAndPath("grimcore", "dex_move_speed");
+    /**
+     * Применяет все эффекты заново на основе текущего снапшота статов.
+     * Вызывать после любого изменения статов/экипировки и при логине/респауне.
+     */
+    public static void applyAll(ServerPlayer sp) {
+        PlayerStatsAttachment att = sp.getData(ModAttachments.PLAYER_STATS.get());
+        if (att == null) return;
+        var snap = att.getSnapshot();
+        applyMoveSpeed(sp, snap.moveSpeedPct);
+    }
+    private static void applyMoveSpeed(ServerPlayer sp, double percent) {
+        AttributeInstance inst = sp.getAttribute(Attributes.MOVEMENT_SPEED);
+        if (inst == null) return;
+        inst.removeModifier(MOVE_SPEED_ID);
+        double addTotal = percent / 100.0;
+        if (addTotal == 0.0) return;
+        AttributeModifier mod = new AttributeModifier(
+                MOVE_SPEED_ID,
+                addTotal,
+                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+        );
+        inst.addPermanentModifier(mod);
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatEffects.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatSnapshot.java
+package com.doomspire.grimcore.stat;
+import java.util.EnumMap;
+/**
+ * Используется в боевом движке и GUI.
+ */
+public class StatSnapshot {
+    public float maxHealth;
+    public float regenHealth;
+    public float maxMana;
+    public float regenMana;
+    public EnumMap<DamageTypes, Float> damage = new EnumMap<>(DamageTypes.class);
+    public EnumMap<ResistTypes, Float> resistances = new EnumMap<>(ResistTypes.class);
+    public float critChance;
+    public float critDamage;
+    public float lifesteal;
+    public float manasteal;
+    public float evasionChance;
+    public double moveSpeedPct; // бонус к скорости в процентах (например 7.5 = +7.5%)
+    /**
+     * Глобальная редукция входящего урона (после резистов), 0..1.
+     * Пример: 0.20f = -20% ко всему входящему урону.
+     * Рассчитывается в StatCalculator из аффиксов/бафов/источников защиты.
+     */
+    public float damageReductionAll;
+    public float armorFlat = 0f;
+    public float resistAll = 0f;            // доля: 0.10 = +10% ко всем resistances
+    public float attackSpeed = 0f;
+    public StatSnapshot copy() {
+        StatSnapshot out = new StatSnapshot();
+        out.maxHealth = this.maxHealth;
+        out.regenHealth = this.regenHealth;
+        out.maxMana = this.maxMana;
+        out.regenMana = this.regenMana;
+        out.critChance = this.critChance;
+        out.damageReductionAll = this.damageReductionAll;
+        out.damage.putAll(this.damage);
+        out.resistances.putAll(this.resistances);
+        out.armorFlat = this.armorFlat;
+        out.resistAll = this.resistAll;
+        out.attackSpeed = this.attackSpeed;
+        out.lifesteal = this.lifesteal;
+        out.manasteal = this.manasteal;
+        out.evasionChance = this.evasionChance;
+        return out;
+    }
+    public void reset() {
+        maxHealth = regenHealth = 0f;
+        maxMana = regenMana = 0f;
+        critChance = 0f;
+        damageReductionAll = 0f;
+        damage.clear();
+        resistances.clear();
+        armorFlat = 0f;
+        resistAll = 0f;
+        attackSpeed = 0f;
+        lifesteal = 0f;
+        manasteal = 0f;
+        evasionChance = 0f;
+    }
+    public void add(StatSnapshot other) {
+        if (other == null) return;
+        maxHealth += other.maxHealth;
+        regenHealth += other.regenHealth;
+        maxMana += other.maxMana;
+        regenMana += other.regenMana;
+        critChance += other.critChance;
+        damageReductionAll += other.damageReductionAll;
+        for (var e : other.damage.entrySet()) {
+            damage.merge(e.getKey(), e.getValue(), Float::sum);
+        }
+        for (var e : other.resistances.entrySet()) {
+            resistances.merge(e.getKey(), e.getValue(), Float::sum);
+        }
+        armorFlat += other.armorFlat;
+        resistAll += other.resistAll;
+        attackSpeed += other.attackSpeed;
+        lifesteal += other.lifesteal;
+        manasteal += other.manasteal;
+        evasionChance += other.evasionChance;
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\stat\StatSnapshot.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\xp\LevelTable.java
+package com.doomspire.grimcore.xp;
+import com.doomspire.grimcore.datapack.BalanceData;
+public final class LevelTable {
+    private static final int MAX_LEVEL = 50; // временно, вынесем в конфиг
+    private static final int BASE = 100;
+    private static final double GROWTH = 1.10; // +10% к требованию на уровень
+    private LevelTable() {}
+    public static int expForLevel(int level) {
+        if (level <= 0) return BASE;
+        return (int) Math.round(BASE * Math.pow(GROWTH, level - 1));
+    }
+    public static int capForLevel(int level) {
+        int sum = 0;
+        for (int i = 1; i <= level; i++) {
+            sum += expForLevel(i);
+        }
+        return sum;
+    }
+    public static int maxLevel() {
+        return Math.max(1, BalanceData.levels().maxLevel());
+    }
+    public static long totalXpForLevel(int level) {
+        var lv = BalanceData.levels();
+        int L = Math.max(1, Math.min(level, lv.maxLevel()));
+        double base = lv.base();
+        double growth = lv.growth();
+        double sum = 0.0;
+        double term = base;
+        for (int i = 1; i < L; i++) {
+            sum += term;
+            term *= growth;
+        }
+        return Math.round(sum);
+    }
+    public static int xpForNextLevel(int level) {
+        var lv = BalanceData.levels();
+        int L = Math.max(1, Math.min(level, lv.maxLevel()));
+        return (int)Math.round(lv.base() * Math.pow(lv.growth(), Math.max(0, L-1)));
+    }
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\xp\LevelTable.java
+
+НАЧАЛО: .\grimcore\src\main\java\com\doomspire\grimcore\xp\Rewards.java
+package com.doomspire.grimcore.xp;
+public class Rewards {
+}
+
+КОНЕЦ: .\grimcore\src\main\java\com\doomspire\grimcore\xp\Rewards.java
+
