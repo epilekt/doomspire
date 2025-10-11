@@ -1,0 +1,33 @@
+{
+	"nodes":[
+		{"id":"feba5ff81a7392ad","type":"text","text":"⚔️**ИСКАТЕЛЬ ГИБЕЛИ**\n+1 Стойкость\n+1 Сила","x":-180,"y":-100,"width":220,"height":80,"color":"#ff8080"},
+		{"id":"3b2019206a5806b7","type":"text","text":"🏹**ИСКАТЕЛЬ РАЗДОРА**\n+1 Ловкость\n+1 Уклонение","x":140,"y":-220,"width":240,"height":80,"color":"#75ffbf"},
+		{"id":"c0c05ce899e93a82","type":"text","text":"🔮**ИСКАТЕЛЬ КОВАРСТВА**\n+1 Интеллект\n+1 Дух","x":440,"y":-100,"width":268,"height":80,"color":"#a37cfe"},
+		{"id":"8d4c781531d2ac78","type":"text","text":"+1% Урон ближнего боя","x":-70,"y":-434,"width":244,"height":60},
+		{"id":"32f5b2a85bc66e77","type":"text","text":"+1% Урон дальнего боя","x":320,"y":-434,"width":240,"height":60},
+		{"id":"1e1b66e33c983486","type":"text","text":"🗡️АССАСИН\n+1% Скорость атаки\n+1% Скорость передвижения\n+1% Урон ядом","x":-78,"y":-720,"width":250,"height":145},
+		{"id":"f10a6f29988a6816","type":"text","text":"🏹ОХОТНИК\n+2% Скорость передвижения\n+10 Мана\n+1% Точность","x":315,"y":-720,"width":285,"height":133},
+		{"id":"b7860cda29b257d6","type":"text","text":"⚔️БЕРСЕРК\n+2% Урон ближнего боя\n+1% Критический урон\n+20 Здоровье\n+5 Генерация угрозы","x":-480,"y":-720,"width":243,"height":145},
+		{"id":"06e407c74eab3243","type":"text","text":"+1% Урон ближнего боя","x":-408,"y":-434,"width":228,"height":60},
+		{"id":"fd121c5c58c4fcb6","type":"text","text":"+1 Броня","x":-623,"y":-434,"width":120,"height":60},
+		{"id":"52bc1aa0ffac11ca","type":"text","text":"🛡️РЫЦАРЬ\n+2 Броня\n+2% Физическое сопротивление\n+1 Регенерация здоровья\n+10 Генерация угрозы","x":-860,"y":-720,"width":237,"height":180},
+		{"id":"4d808c2b257832de","type":"text","text":"🧙‍♂️МАГ\n+1% Урон огнем\n+1% Урон льдом\n+1 Регенерация маны\n+20 Мана","x":760,"y":-723,"width":250,"height":148},
+		{"id":"dc6b6e9acdd51110","type":"text","text":"+1% Точность","x":676,"y":-434,"width":168,"height":60},
+		{"id":"752ab801b852671c","type":"text","text":"+10 Мана","x":980,"y":-434,"width":136,"height":60},
+		{"id":"95178db15b7e4fcc","type":"text","text":"🪽СВЯЩЕННИК\n+1 Сила исцеления\n+1% Физическое сопротивление\n+1% Урон молнией","x":1140,"y":-723,"width":290,"height":135}
+	],
+	"edges":[
+		{"id":"8d562b4f44360865","fromNode":"feba5ff81a7392ad","fromSide":"top","toNode":"06e407c74eab3243","toSide":"bottom"},
+		{"id":"c2c8fc1afe1ae374","fromNode":"feba5ff81a7392ad","fromSide":"top","toNode":"fd121c5c58c4fcb6","toSide":"bottom"},
+		{"id":"b24730d99e82cd54","fromNode":"3b2019206a5806b7","fromSide":"top","toNode":"32f5b2a85bc66e77","toSide":"bottom"},
+		{"id":"ab7eef8d006a8274","fromNode":"3b2019206a5806b7","fromSide":"top","toNode":"8d4c781531d2ac78","toSide":"bottom"},
+		{"id":"72ce36853a7111bc","fromNode":"c0c05ce899e93a82","fromSide":"top","toNode":"752ab801b852671c","toSide":"bottom"},
+		{"id":"d4402a1cef22fb83","fromNode":"c0c05ce899e93a82","fromSide":"top","toNode":"dc6b6e9acdd51110","toSide":"bottom"},
+		{"id":"129b6fdb0ac05721","fromNode":"06e407c74eab3243","fromSide":"top","toNode":"b7860cda29b257d6","toSide":"bottom"},
+		{"id":"1c5b6348ebd129b9","fromNode":"fd121c5c58c4fcb6","fromSide":"top","toNode":"52bc1aa0ffac11ca","toSide":"bottom"},
+		{"id":"9a3be202b62c0a32","fromNode":"8d4c781531d2ac78","fromSide":"top","toNode":"1e1b66e33c983486","toSide":"bottom"},
+		{"id":"647928c151099e32","fromNode":"32f5b2a85bc66e77","fromSide":"top","toNode":"f10a6f29988a6816","toSide":"bottom"},
+		{"id":"231f7af3372fdc53","fromNode":"752ab801b852671c","fromSide":"top","toNode":"95178db15b7e4fcc","toSide":"bottom"},
+		{"id":"f597fed0eb1130eb","fromNode":"dc6b6e9acdd51110","fromSide":"top","toNode":"4d808c2b257832de","toSide":"bottom"}
+	]
+}
