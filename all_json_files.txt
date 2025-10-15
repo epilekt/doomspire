@@ -1,0 +1,2694 @@
+FILE: D:\doomspire\grimcore\src\main\resources\data\grimcore\mobs\minecraft\zombie.json
+CONTENT:
+{
+  "attributes": {
+    "vitality": 3,
+    "strength": 2,
+    "dexterity": 0,
+    "intelligence": 0,
+    "evasion": 0
+  },
+  "resistances": {
+    "phys": 0.10,
+    "fire": 0.00,
+    "frost": 0.00,
+    "lightning": 0.00,
+    "poison": 0.00
+  },
+  "damage": {
+    "phys_melee": 25.0
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\geo\armor\copper_armor_set.geo.json
+CONTENT:
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.copper_armor_set",
+				"texture_width": 128,
+				"texture_height": 128,
+				"visible_bounds_width": 2,
+				"visible_bounds_height": 3.5,
+				"visible_bounds_offset": [0, 1.25, 0]
+			},
+			"bones": [
+				{
+					"name": "bipedHead",
+					"pivot": [0, 24, 0]
+				},
+				{
+					"name": "armorHead",
+					"parent": "bipedHead",
+					"pivot": [0, 24, 0],
+					"cubes": [
+						{"origin": [-5, 29, -5], "size": [10, 4, 10], "pivot": [0, 31, 0], "rotation": [-7.5, 0, 0], "uv": [0, 0]},
+						{"origin": [-1, 27, -6], "size": [2, 5, 1], "pivot": [0, 28, -5], "rotation": [-7.5, 0, 0], "uv": [38, 30]}
+					]
+				},
+				{
+					"name": "bipedBody",
+					"pivot": [0, 24, 0]
+				},
+				{
+					"name": "armorBody",
+					"parent": "bipedBody",
+					"pivot": [0, 24, 0],
+					"cubes": [
+						{"origin": [-1.7, 18, -3], "size": [5, 5, 6], "pivot": [-0.7, 21, -2], "rotation": [0, 0, 45], "uv": [28, 37]},
+						{"origin": [1.3, 14, -3], "size": [2, 2, 1], "pivot": [-0.7, 17, -2], "rotation": [0, 0, 45], "uv": [22, 43]},
+						{"origin": [3, 10.75, -2.5], "size": [2, 14.25, 5], "pivot": [4, 23, 0], "rotation": [0, 0, 45], "uv": [0, 43]},
+						{"origin": [-6.5, 23, -2.5], "size": [14.25, 2, 5], "pivot": [-5.5, 23, 0], "rotation": [0, 0, 45], "uv": [0, 30]},
+						{"origin": [-4.5, 13, -2.5], "size": [9.25, 1, 5], "uv": [0, 37]}
+					]
+				},
+				{
+					"name": "bipedRightArm",
+					"pivot": [-5, 22, 0]
+				},
+				{
+					"name": "armorRightArm",
+					"parent": "bipedRightArm",
+					"pivot": [-5, 22, 0]
+				},
+				{
+					"name": "bipedLeftArm",
+					"pivot": [5, 22, 0]
+				},
+				{
+					"name": "armorLeftArm",
+					"parent": "bipedLeftArm",
+					"pivot": [5, 22, 0]
+				},
+				{
+					"name": "bipedLeftLeg",
+					"pivot": [2, 12, 0]
+				},
+				{
+					"name": "armorLeftLeg",
+					"parent": "bipedLeftLeg",
+					"pivot": [2, 12, 0],
+					"cubes": [
+						{"origin": [0.25, 6, -3], "size": [2, 2, 2], "pivot": [1.25, 6, -2], "rotation": [0, 0, 45], "uv": [40, 8]},
+						{"origin": [-0.5, 5.75, -2.5], "size": [5, 2, 5], "uv": [56, 16]}
+					]
+				},
+				{
+					"name": "armorLeftBoot",
+					"parent": "bipedLeftLeg",
+					"pivot": [2, 12, 0],
+					"cubes": [
+						{"origin": [-0.5, 0, -3.5], "size": [5, 2, 6], "uv": [56, 8]}
+					]
+				},
+				{
+					"name": "bipedRightLeg",
+					"pivot": [-2, 12, 0]
+				},
+				{
+					"name": "armorRightLeg",
+					"parent": "bipedRightLeg",
+					"pivot": [-2, 12, 0],
+					"cubes": [
+						{"origin": [-3.75, 6, -3], "size": [2, 2, 2], "pivot": [-2.75, 6, -2], "rotation": [0, 0, 45], "uv": [40, 8]},
+						{"origin": [-4.5, 5.75, -2.5], "size": [5, 2, 5], "uv": [56, 16]}
+					]
+				},
+				{
+					"name": "armorRightBoot",
+					"parent": "bipedRightLeg",
+					"pivot": [-2, 12, 0],
+					"cubes": [
+						{"origin": [-4.5, 0, -3.5], "size": [5, 2, 6], "uv": [56, 8]}
+					]
+				}
+			]
+		}
+	]
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\geo\armor\linen_armor_set.geo.json
+CONTENT:
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.linen_armor_set",
+				"texture_width": 128,
+				"texture_height": 128,
+				"visible_bounds_width": 3,
+				"visible_bounds_height": 3.5,
+				"visible_bounds_offset": [0, 1.25, 0]
+			},
+			"bones": [
+				{
+					"name": "bipedHead",
+					"pivot": [0, 24, 0]
+				},
+				{
+					"name": "armorHead",
+					"parent": "bipedHead",
+					"pivot": [0, 24, 0],
+					"cubes": [
+						{"origin": [-6, 28, -6], "size": [12, 2, 12], "pivot": [0, 28, 0], "rotation": [-5, 0, 0], "uv": [0, 0]},
+						{"origin": [-4.5, 30, -4.25], "size": [9, 4, 9], "pivot": [0, 31, -0.25], "rotation": [-5, 0, 0], "uv": [0, 14]}
+					]
+				},
+				{
+					"name": "bipedBody",
+					"pivot": [0, 24, 0]
+				},
+				{
+					"name": "armorBody",
+					"parent": "bipedBody",
+					"pivot": [0, 24, 0],
+					"cubes": [
+						{"origin": [-5.5, 23, -3], "size": [11, 3, 8], "pivot": [0, 24, 4], "rotation": [7.5, 0, 0], "uv": [0, 27]},
+						{"origin": [-5, 12, 1.25], "size": [10, 11, 3], "pivot": [0, 19, 2.25], "rotation": [7.5, 0, 0], "uv": [32, 45]},
+						{"origin": [-4.5, 11.75, -2.5], "size": [9, 11.25, 5], "uv": [38, 14]}
+					]
+				},
+				{
+					"name": "bipedRightArm",
+					"pivot": [-5, 22, 0]
+				},
+				{
+					"name": "armorRightArm",
+					"parent": "bipedRightArm",
+					"pivot": [-5, 22, 0],
+					"cubes": [
+						{"origin": [-8.5, 16, -2.5], "size": [4.5, 8.5, 5], "uv": [62, 29]}
+					]
+				},
+				{
+					"name": "bipedLeftArm",
+					"pivot": [5, 22, 0]
+				},
+				{
+					"name": "armorLeftArm",
+					"parent": "bipedLeftArm",
+					"pivot": [5, 22, 0],
+					"cubes": [
+						{"origin": [4, 16, -2.5], "size": [4.5, 8.5, 5], "uv": [0, 67]}
+					]
+				},
+				{
+					"name": "bipedLeftLeg",
+					"pivot": [2, 12, 0]
+				},
+				{
+					"name": "armorLeftLeg",
+					"parent": "bipedLeftLeg",
+					"pivot": [2, 12, 0],
+					"cubes": [
+						{"origin": [-0.5, 4.75, -2.5], "size": [5, 8, 5], "uv": [0, 54]}
+					]
+				},
+				{
+					"name": "armorLeftBoot",
+					"parent": "bipedLeftLeg",
+					"pivot": [2, 12, 0],
+					"cubes": [
+						{"origin": [-0.5, -0.25, -3.5], "size": [5, 3, 6], "uv": [68, 0]}
+					]
+				},
+				{
+					"name": "bipedRightLeg",
+					"pivot": [-2, 12, 0]
+				},
+				{
+					"name": "armorRightLeg",
+					"parent": "bipedRightLeg",
+					"pivot": [-2, 12, 0],
+					"cubes": [
+						{"origin": [-4.5, 4.75, -2.5], "size": [5, 8, 5], "uv": [0, 54]}
+					]
+				},
+				{
+					"name": "armorRightBoot",
+					"parent": "bipedRightLeg",
+					"pivot": [-2, 12, 0],
+					"cubes": [
+						{"origin": [-4.5, -0.25, -3.5], "size": [5, 3, 6], "uv": [68, 0]}
+					]
+				}
+			]
+		}
+	]
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\geo\armor\rawhide_armor_set.geo.json
+CONTENT:
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.rawhide_armor_set",
+				"texture_width": 128,
+				"texture_height": 128,
+				"visible_bounds_width": 3,
+				"visible_bounds_height": 3.5,
+				"visible_bounds_offset": [0, 1.25, 0]
+			},
+			"bones": [
+				{
+					"name": "bipedHead",
+					"pivot": [0, 24, 0]
+				},
+				{
+					"name": "armorHead",
+					"parent": "bipedHead",
+					"pivot": [0, 24, 0],
+					"cubes": [
+						{"origin": [-5, 23, -6], "size": [10, 11, 11], "pivot": [0, 32, 0], "rotation": [10, 0, 0], "uv": [0, 0]},
+						{"origin": [-4.5, 29.5, 1.25], "size": [9, 5, 8], "pivot": [0, 29.5, 2.25], "rotation": [-22.5, 0, 0], "uv": [32, 22]}
+					]
+				},
+				{
+					"name": "bipedBody",
+					"pivot": [0, 24, 0]
+				},
+				{
+					"name": "armorBody",
+					"parent": "bipedBody",
+					"pivot": [0, 24, 0],
+					"cubes": [
+						{"origin": [-4.5, 12, -2.5], "size": [9, 4, 5], "uv": [42, 0]},
+						{"origin": [-5, 15, -1], "size": [10, 10, 5], "pivot": [-3.5, 16, 1], "rotation": [10, 0, 0], "uv": [32, 35]},
+						{"origin": [-5, 15, -4], "size": [10, 9, 4], "pivot": [-3.5, 16, -1], "rotation": [-10, 0, 0], "uv": [0, 38]},
+						{"origin": [-5, 10, -4], "size": [4, 4, 1], "pivot": [0, 10, -3], "rotation": [-22.5, 0, 0], "uv": [16, 60]},
+						{"origin": [1, 10, -4], "size": [4, 4, 1], "pivot": [7, 10, -3], "rotation": [-22.5, 0, 0], "uv": [66, 29]},
+						{"origin": [-5.5, 12, -2.5], "size": [1, 4, 5], "pivot": [-9.5, 12, -3], "rotation": [0, 0, 22.5], "uv": [16, 51]},
+						{"origin": [5.5, 8.5, -2.5], "size": [1, 4, 5], "pivot": [1.5, 8.5, -3], "rotation": [0, 0, -25], "uv": [60, 66]},
+						{"origin": [-5, 10.5, 3], "size": [10, 4, 1], "pivot": [0, 10.5, 4], "rotation": [22.5, 0, 0], "uv": [62, 43]}
+					]
+				},
+				{
+					"name": "bipedRightArm",
+					"pivot": [-5, 22, 0]
+				},
+				{
+					"name": "armorRightArm",
+					"parent": "bipedRightArm",
+					"pivot": [-5, 22, 0],
+					"cubes": [
+						{"origin": [-9, 23, -3], "size": [5, 2, 6], "pivot": [-7, 22, 0], "rotation": [0, 0, -10], "uv": [62, 35]}
+					]
+				},
+				{
+					"name": "bipedLeftArm",
+					"pivot": [5, 22, 0]
+				},
+				{
+					"name": "armorLeftArm",
+					"parent": "bipedLeftArm",
+					"pivot": [5, 22, 0],
+					"cubes": [
+						{"origin": [4, 23, -3], "size": [5, 2, 6], "pivot": [7, 22, 0], "rotation": [0, 0, 10], "uv": [16, 66]}
+					]
+				},
+				{
+					"name": "bipedLeftLeg",
+					"pivot": [2, 12, 0]
+				},
+				{
+					"name": "armorLeftLeg",
+					"parent": "bipedLeftLeg",
+					"pivot": [2, 12, 0],
+					"cubes": [
+						{"origin": [-0.5, 5, -2.5], "size": [5, 7, 5], "uv": [62, 9]}
+					]
+				},
+				{
+					"name": "armorLeftBoot",
+					"parent": "bipedLeftLeg",
+					"pivot": [2, 12, 0],
+					"cubes": [
+						{"origin": [-0.5, 0, -3.5], "size": [5, 2, 6], "uv": [66, 21]}
+					]
+				},
+				{
+					"name": "bipedRightLeg",
+					"pivot": [-2, 12, 0]
+				},
+				{
+					"name": "armorRightLeg",
+					"parent": "bipedRightLeg",
+					"pivot": [-2, 12, 0],
+					"cubes": [
+						{"origin": [-4.5, 5, -2.5], "size": [5, 7, 5], "uv": [62, 9]}
+					]
+				},
+				{
+					"name": "armorRightBoot",
+					"parent": "bipedRightLeg",
+					"pivot": [-2, 12, 0],
+					"cubes": [
+						{"origin": [-4.5, 0, -3.5], "size": [5, 2, 6], "uv": [66, 21]}
+					]
+				}
+			]
+		}
+	]
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\lang\en_us.json
+CONTENT:
+{
+  "key.categories.grimfate": "Grimfate",
+  "key.grimfate.open_stats": "Open Stats",
+
+  "key.grimfate.spellslot_1": "Spell Slot 1",
+  "key.grimfate.spellslot_2": "Spell Slot 2",
+  "key.grimfate.spellslot_3": "Spell Slot 3",
+  "key.grimfate.spellslot_4": "Spell Slot 4",
+  "key.grimfate.spellslot_5": "Spell Slot 5",
+  "key.grimfate.spellslot_6": "Spell Slot 6",
+
+  "screen.grimfate.stats_hub": "Attributes",
+  "screen.grimfate.unspent": "Unspent points: %s",
+
+  "attr.grimfate.vitality": "Vitality",
+  "attr.grimfate.strength": "Strength",
+  "attr.grimfate.intelligence": "Intelligence",
+  "attr.grimfate.spirit": "Spirit",
+  "attr.grimfate.dexterity": "Dexterity",
+  "attr.grimfate.evasion": "Evasion",
+
+  "attr.tip.vitality": "Increases health and regen.",
+  "attr.tip.strength": "Increases physical melee damage.",
+  "attr.tip.intelligence": "Increases spell power.",
+  "attr.tip.spirit": "Increases max mana and mana regen.",
+  "attr.tip.dexterity": "Increases physical ranged damage.",
+  "attr.tip.evasion": "Dodge chance.",
+
+  "grimfate.ui.stats.open": "Open Attributes",
+  "itemGroup.grimfate.equipment": "Grimfate • Equipment",
+  "itemGroup.grimfate.materials": "Grimfate • Materials",
+  "itemGroup.grimfate.mobs": "Grimfate • Mobs",
+
+  "item.grimfate.copper_sword": "Copper Sword",
+  "item.grimfate.scholar_staff": "Scholar's Staff",
+  "item.grimfate.weakling_bow": "Weakling Bow",
+  "item.grimfate.copperforced_shield": "Copperforced Shield",
+
+  "item.grimfate.copper_helmet": "Copper Helmet",
+  "item.grimfate.copper_chestplate": "Copper Chestplate",
+  "item.grimfate.copper_leggings": "Copper Leggings",
+  "item.grimfate.copper_boots": "Copper Boots",
+
+  "item.grimfate.rawhide_hood": "Rawhide Hood",
+  "item.grimfate.rawhide_jacket": "Rawhide Jacket",
+  "item.grimfate.rawhide_wraps": "Rawhide Wraps",
+  "item.grimfate.rawhide_boots": "Rawhide Boots",
+
+  "item.grimfate.linen_hat": "Linen Hat",
+  "item.grimfate.linen_cape": "Linen Cape",
+  "item.grimfate.linen_pants": "Linen Pants",
+  "item.grimfate.linen_shoes": "Linen Shoes",
+
+  "item.grimfate.copper_ring": "Copper Ring",
+  "item.grimfate.bronze_ring": "Bronze Ring",
+  "item.grimfate.copper_necklace": "Copper Necklace",
+  "item.grimfate.bronze_necklace": "Bronze Necklace",
+
+  "item.grimfate.fiber": "Fiber",
+  "item.grimfate.canvas_fabric": "Canvas Fabric",
+  "item.grimfate.pork_fat": "Pork Fat",
+  "item.grimfate.rawhide": "Rawhide",
+
+  "rarity.grimfate.common": "Common",
+  "rarity.grimfate.uncommon": "Uncommon",
+  "rarity.grimfate.rare": "Rare",
+  "rarity.grimfate.epic": "Epic",
+  "rarity.grimfate.legendary": "Legendary",
+
+  "affix.grimfate.plus_vitality": "+%s Vitality",
+  "affix.grimfate.plus_strength": "+%s Strength",
+  "affix.grimfate.phys_damage_percent": "+%s Physical Damage",
+  "affix.grimfate.attack_speed": "+%s Attack Speed",
+  "affix.grimfate.armor_flat": "+%s Armor",
+  "affix.grimfate.resist_all_percent": "+%s All Resistances",
+  "affix.grimfate.crit_chance_percent": "+%s Critical Chance",
+
+  "entity.grimfate.bolt": "Bolt"
+}
+
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\lang\ru_ru.json
+CONTENT:
+{
+  "key.categories.grimfate": "Grimfate",
+  "key.grimfate.open_stats": "Открыть аттрибуты",
+
+  "key.grimfate.spellslot_1": "Слот заклинания 1",
+  "key.grimfate.spellslot_2": "Слот заклинания 2",
+  "key.grimfate.spellslot_3": "Слот заклинания 3",
+  "key.grimfate.spellslot_4": "Слот заклинания 4",
+  "key.grimfate.spellslot_5": "Слот заклинания 5",
+  "key.grimfate.spellslot_6": "Слот заклинания 6",
+
+  "screen.grimfate.stats_hub": "Аттрибуты",
+  "screen.grimfate.unspent": "Непотраченные очки: %s",
+
+  "attr.grimfate.vitality": "Стойкость",
+  "attr.grimfate.strength": "Сила",
+  "attr.grimfate.intelligence": "Интеллект",
+  "attr.grimfate.spirit": "Дух",
+  "attr.grimfate.dexterity": "Ловкость",
+  "attr.grimfate.evasion": "Уклонение",
+
+  "attr.tip.vitality": "Повышение здоровья и регенерации здоровья.",
+  "attr.tip.strength": "Повышение урона ближнего боя.",
+  "attr.tip.intelligence": "Повышение урона от заклинаний.",
+  "attr.tip.spirit": "Повышение маны и регенерации маны.",
+  "attr.tip.dexterity": "Повышение урона дальнего боя.",
+  "attr.tip.evasion": "Шанс уклонения.",
+
+  "grimfate.ui.stats.open": "Открыть аттрибуты",
+  "itemGroup.grimfate.equipment": "Grimfate • Снаряжение",
+  "itemGroup.grimfate.materials": "Grimfate • Материалы",
+  "itemGroup.grimfate.mobs": "Grimfate • Мобы и Боссы",
+
+  "item.grimfate.copper_sword": "Медный меч",
+  "item.grimfate.scholar_staff": "Посох школяра",
+  "item.grimfate.weakling_bow": "Слабенький лук",
+  "item.grimfate.copperforced_shield": "Укрпеленный медью щит",
+
+  "item.grimfate.copper_helmet": "Медный шлем",
+  "item.grimfate.copper_chestplate": "Медная грудная пластина",
+  "item.grimfate.copper_leggings": "Медные наколенники",
+  "item.grimfate.copper_boots": "Медные ботинки",
+
+  "item.grimfate.rawhide_hood": "Сыромятный капюшон",
+  "item.grimfate.rawhide_jacket": "Сыромятная куртка",
+  "item.grimfate.rawhide_wraps": "Сыромятные обмотки",
+  "item.grimfate.rawhide_boots": "Сыромятная обувь",
+
+  "item.grimfate.linen_hat": "Холщевая шляпа",
+  "item.grimfate.linen_cape": "Холщевая накидка",
+  "item.grimfate.linen_pants": "Холщевые штаны",
+  "item.grimfate.linen_shoes": "Холщевая обувь",
+
+  "item.grimfate.copper_ring": "Медное кольцо",
+  "item.grimfate.bronze_ring": "Бронзовое кольцо",
+  "item.grimfate.copper_necklace": "Медное ожерелье",
+  "item.grimfate.bronze_necklace": "Бронзовое ожерелье",
+
+  "item.grimfate.fiber": "Волокно",
+  "item.grimfate.canvas_fabric": "Холщевая ткань",
+  "item.grimfate.pork_fat": "Свиной жир",
+  "item.grimfate.rawhide": "Сыромять",
+
+  "rarity.grimfate.common": "Обычное",
+  "rarity.grimfate.uncommon": "Необычное",
+  "rarity.grimfate.rare": "Редкое",
+  "rarity.grimfate.epic": "Эпическое",
+  "rarity.grimfate.legendary": "Легендарное",
+
+  "affix.grimfate.plus_vitality": "+%s к Стойкости",
+  "affix.grimfate.plus_strength": "+%s к Силе",
+  "affix.grimfate.phys_damage_percent": "+%s к Физическому урону",
+  "affix.grimfate.attack_speed": "+%s к Скорости атаки",
+  "affix.grimfate.armor_flat": "+%s Броня",
+  "affix.grimfate.resist_all_percent": "+%s Все сопротивления",
+  "affix.grimfate.crit_chance_percent": "+%s Шанс крит. удара",
+
+  "entity.grimfate.bolt": "Bolt"
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\bronze_necklace.json
+CONTENT:
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/bronze_necklace"
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\bronze_ring.json
+CONTENT:
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/bronze_ring"
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\canvas_fabric.json
+CONTENT:
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/canvas_fabric"
+  }
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield.json
+CONTENT:
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   { "parent": "grimfate:item/copperforced_shield_3d" },
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/copperforced_shield_2d" },
+    "fixed":  { "parent": "grimfate:item/copperforced_shield_2d" },
+    "ground": { "parent": "grimfate:item/copperforced_shield_2d" },
+    "head":   { "parent": "grimfate:item/copperforced_shield_2d" }
+  }
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_2d.json
+CONTENT:
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/copperforced_shield_2d"
+  }
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copperforced_shield_3d.json
+CONTENT:
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [64, 64],
+	"textures": {
+		"0": "grimfate:item/copperforced_shield_3d",
+		"particle": "block/copperforced_shield_3d"
+	},
+	"elements": [
+		{
+			"from": [2, 2, 7],
+			"to": [14, 14, 9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 0, 7]},
+			"faces": {
+				"north": {"uv": [4, 0, 7, 3], "texture": "#0"},
+				"east": {"uv": [4, 6, 4.5, 9], "texture": "#0"},
+				"south": {"uv": [4, 3, 7, 6], "texture": "#0"},
+				"west": {"uv": [4.5, 6, 5, 9], "texture": "#0"},
+				"up": {"uv": [8, 6.5, 5, 6], "texture": "#0"},
+				"down": {"uv": [8, 6.5, 5, 7], "texture": "#0"}
+			}
+		},
+		{
+			"from": [5.55, 7, 6],
+			"to": [9.55, 11, 8],
+			"rotation": {"angle": -45, "axis": "z", "origin": [6.6, 8, 6]},
+			"faces": {
+				"north": {"uv": [7, 0, 8, 1], "texture": "#0"},
+				"east": {"uv": [7, 4.5, 7.5, 5.5], "texture": "#0"},
+				"south": {"uv": [7, 1, 8, 2], "texture": "#0"},
+				"west": {"uv": [5, 7, 5.5, 8], "texture": "#0"},
+				"up": {"uv": [6.5, 7.5, 5.5, 7], "texture": "#0"},
+				"down": {"uv": [8, 5.5, 7, 6], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.5, 5.5, 9],
+			"to": [8.5, 10.5, 12],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 9, 9]},
+			"faces": {
+				"north": {"uv": [6.5, 7, 6.75, 8.25], "texture": "#0"},
+				"east": {"uv": [7, 2, 7.75, 3.25], "texture": "#0"},
+				"south": {"uv": [6.75, 7, 7, 8.25], "texture": "#0"},
+				"west": {"uv": [7, 3.25, 7.75, 4.5], "texture": "#0"},
+				"up": {"uv": [7.25, 7.75, 7, 7], "texture": "#0"},
+				"down": {"uv": [7.5, 7, 7.25, 7.75], "texture": "#0"}
+			}
+		},
+		{
+			"from": [0, 0, 8],
+			"to": [16, 16, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, 0, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 4, 4], "texture": "#0"},
+				"east": {"uv": [0, 0, 0, 4], "texture": "#0"},
+				"south": {"uv": [0, 4, 4, 8], "texture": "#0"},
+				"west": {"uv": [0, 0, 0, 4], "texture": "#0"},
+				"up": {"uv": [4, 0, 0, 0], "texture": "#0"},
+				"down": {"uv": [4, 0, 0, 0], "texture": "#0"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [0, -90, 0],
+			"translation": [3, -2, 1.5]
+		},
+		"thirdperson_lefthand": {
+			"rotation": [0, -90, 0],
+			"translation": [3, -2, 1.5]
+		},
+		"firstperson_righthand": {
+			"rotation": [23, 26, 30],
+			"translation": [2, -3, -2]
+		},
+		"firstperson_lefthand": {
+			"rotation": [17, -21, 12],
+			"translation": [2, -3.5, -2]
+		},
+		"ground": {
+			"translation": [0, 3.5, 0]
+		},
+		"gui": {
+			"rotation": [-26, -138, -5],
+			"scale": [0.9, 0.9, 0.9]
+		},
+		"head": {
+			"translation": [0, 0, -6.5]
+		},
+		"fixed": {
+			"translation": [0, 0, -5],
+			"scale": [4, 4, 4]
+		}
+	},
+	"groups": [
+		{
+			"name": "copperforced_shield_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3]
+		}
+	]
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copper_boots.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/copper_boots" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copper_chestplate.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/copper_chestplate" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copper_helmet.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/copper_helmet" } }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copper_leggings.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/copper_leggings" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copper_necklace.json
+CONTENT:
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/copper_necklace"
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copper_ring.json
+CONTENT:
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/copper_ring"
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword.json
+CONTENT:
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   { "parent": "grimfate:item/copper_sword_3d" },
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/copper_sword_2d" },
+    "fixed":  { "parent": "grimfate:item/copper_sword_2d" },
+    "ground": { "parent": "grimfate:item/copper_sword_2d" },
+    "head":   { "parent": "grimfate:item/copper_sword_2d" }
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_2d.json
+CONTENT:
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "grimfate:item/copper_sword_2d"
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\copper_sword_3d.json
+CONTENT:
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [32, 32],
+	"textures": {
+		"0": "grimfate:item/copper_sword_3d",
+		"particle": "block/copper_sword_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 0, 7],
+			"to": [9, 2, 9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 0, 7]},
+			"faces": {
+				"north": {"uv": [6, 6, 7, 7], "texture": "#0"},
+				"east": {"uv": [0, 6.5, 1, 7.5], "texture": "#0"},
+				"south": {"uv": [1.5, 6.5, 2.5, 7.5], "texture": "#0"},
+				"west": {"uv": [3, 6.5, 4, 7.5], "texture": "#0"},
+				"up": {"uv": [5.5, 7.5, 4.5, 6.5], "texture": "#0"},
+				"down": {"uv": [8.5, 3, 7.5, 4], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.5, 2, 7.5],
+			"to": [8.5, 6, 8.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6.5, 2, 6.5]},
+			"faces": {
+				"north": {"uv": [7.5, 4.5, 8, 6.5], "texture": "#0"},
+				"east": {"uv": [6, 7.5, 6.5, 9.5], "texture": "#0"},
+				"south": {"uv": [7, 7.5, 7.5, 9.5], "texture": "#0"},
+				"west": {"uv": [0, 8, 0.5, 10], "texture": "#0"},
+				"up": {"uv": [9.5, 3.5, 9, 3], "texture": "#0"},
+				"down": {"uv": [4.5, 9, 4, 9.5], "texture": "#0"}
+			}
+		},
+		{
+			"from": [6, 6, 7],
+			"to": [10, 7, 9],
+			"rotation": {"angle": 0, "axis": "z", "origin": [10, 5, 6]},
+			"faces": {
+				"north": {"uv": [1, 8, 3, 8.5], "texture": "#0"},
+				"east": {"uv": [1, 9, 2, 9.5], "texture": "#0"},
+				"south": {"uv": [3.5, 8, 5.5, 8.5], "texture": "#0"},
+				"west": {"uv": [2.5, 9, 3.5, 9.5], "texture": "#0"},
+				"up": {"uv": [8, 1, 6, 0], "texture": "#0"},
+				"down": {"uv": [8, 1.5, 6, 2.5], "texture": "#0"}
+			}
+		},
+		{
+			"from": [6.5, 7, 7.5],
+			"to": [9.5, 19, 8.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 7, 6.5]},
+			"faces": {
+				"north": {"uv": [0, 0, 1.5, 6], "texture": "#0"},
+				"east": {"uv": [4, 0, 4.5, 6], "texture": "#0"},
+				"south": {"uv": [2, 0, 3.5, 6], "texture": "#0"},
+				"west": {"uv": [5, 0, 5.5, 6], "texture": "#0"},
+				"up": {"uv": [9.5, 7.5, 8, 7], "texture": "#0"},
+				"down": {"uv": [9.5, 8, 8, 8.5], "texture": "#0"}
+			}
+		},
+		{
+			"from": [5.775, 19.2, 7.525],
+			"to": [7.875, 21.3, 8.475],
+			"rotation": {"angle": -45, "axis": "z", "origin": [5.9, 18.2, 14.4]},
+			"faces": {
+				"north": {"uv": [6, 3, 7, 4], "texture": "#0"},
+				"east": {"uv": [8.5, 0, 9, 1], "texture": "#0"},
+				"south": {"uv": [6, 4.5, 7, 5.5], "texture": "#0"},
+				"west": {"uv": [8.5, 1.5, 9, 2.5], "texture": "#0"},
+				"up": {"uv": [9.5, 5, 8.5, 4.5], "texture": "#0"},
+				"down": {"uv": [9.5, 5.5, 8.5, 6], "texture": "#0"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [0, 90, 0],
+			"translation": [0, 2, 1]
+		},
+		"thirdperson_lefthand": {
+			"rotation": [0, 90, 0],
+			"translation": [0, 2, 1]
+		},
+		"firstperson_righthand": {
+			"rotation": [0, 90, 0],
+			"translation": [1.25, 3, -0.25]
+		},
+		"firstperson_lefthand": {
+			"rotation": [0, 90, 0],
+			"translation": [1.25, 3, -0.25]
+		},
+		"ground": {
+			"rotation": [0, 0, 150],
+			"translation": [0, 5, 0]
+		},
+		"gui": {
+			"rotation": [0, 0, -45],
+			"translation": [-1.25, -1.5, 0]
+		},
+		"fixed": {
+			"rotation": [0, 0, 45],
+			"translation": [1, -1, 0]
+		}
+	},
+	"groups": [
+		{
+			"name": "copper_sword_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3, 4]
+		}
+	]
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\fiber.json
+CONTENT:
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/fiber"
+  }
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\linen_cape.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/linen_cape" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\linen_hat.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/linen_hat" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\linen_pants.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/linen_pants" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\linen_shoes.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/linen_shoes" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\pork_fat.json
+CONTENT:
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/pork_fat"
+  }
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\rawhide.json
+CONTENT:
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "grimfate:item/rawhide"
+  }
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_boots.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/rawhide_boots" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_hood.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/rawhide_hood" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_jacket.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/rawhide_jacket" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\rawhide_wraps.json
+CONTENT:
+{ "parent": "item/generated", "textures": { "layer0": "grimfate:item/rawhide_wraps" } }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff.json
+CONTENT:
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   { "parent": "grimfate:item/scholar_staff_3d" },
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/scholar_staff_2d" },
+    "fixed":  { "parent": "grimfate:item/scholar_staff_2d" },
+    "ground": { "parent": "grimfate:item/scholar_staff_2d" },
+    "head":   { "parent": "grimfate:item/scholar_staff_2d" }
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff_2d.json
+CONTENT:
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "grimfate:item/scholar_staff_2d"
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\scholar_staff_3d.json
+CONTENT:
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [64, 64],
+	"textures": {
+		"0": "grimfate:item/scholar_staff_3d",
+		"particle": "block/scholar_staff_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 0, 7],
+			"to": [9, 25, 9],
+			"rotation": {"angle": 0, "axis": "x", "origin": [7, 0, 7]},
+			"faces": {
+				"north": {"uv": [5.5, 0, 6, 6.25], "texture": "#0"},
+				"east": {"uv": [6.25, 0, 6.75, 6.25], "texture": "#0"},
+				"south": {"uv": [5.5, 6.5, 6, 12.75], "texture": "#0"},
+				"west": {"uv": [6.25, 6.5, 6.75, 12.75], "texture": "#0"},
+				"up": {"uv": [7.5, 0.5, 7, 0], "texture": "#0"},
+				"down": {"uv": [7.5, 0.75, 7, 1.25], "texture": "#0"}
+			}
+		},
+		{
+			"from": [3, 9, 8],
+			"to": [13, 29, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 22, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 2.5, 5], "texture": "#0"},
+				"east": {"uv": [7, 1.5, 7, 6.5], "texture": "#0"},
+				"south": {"uv": [2.75, 0, 5.25, 5], "texture": "#0"},
+				"west": {"uv": [7, 6.75, 7, 11.75], "texture": "#0"},
+				"up": {"uv": [9.75, 1.5, 7.25, 1.5], "texture": "#0"},
+				"down": {"uv": [9.75, 1.75, 7.25, 1.75], "texture": "#0"}
+			}
+		},
+		{
+			"from": [8, 9, 3],
+			"to": [8, 29, 13],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 22, 7]},
+			"faces": {
+				"north": {"uv": [7.25, 2, 7.25, 7], "texture": "#0"},
+				"east": {"uv": [0, 5.25, 2.5, 10.25], "texture": "#0"},
+				"south": {"uv": [7.25, 7.25, 7.25, 12.25], "texture": "#0"},
+				"west": {"uv": [2.75, 5.25, 5.25, 10.25], "texture": "#0"},
+				"up": {"uv": [7.5, 4.5, 7.5, 2], "texture": "#0"},
+				"down": {"uv": [7.5, 4.75, 7.5, 7.25], "texture": "#0"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [20, 0, 0],
+			"translation": [-0.25, 0, 1.5]
+		},
+		"thirdperson_lefthand": {
+			"rotation": [20, 0, 0],
+			"translation": [-0.25, 0, 1.25]
+		},
+		"firstperson_righthand": {
+			"rotation": [-10, 0, 0],
+			"translation": [2, -2.5, 0]
+		},
+		"firstperson_lefthand": {
+			"rotation": [-10, 0, 0],
+			"translation": [2, -2.5, 0]
+		},
+		"ground": {
+			"rotation": [30, 0, 0],
+			"translation": [0, 4, 0]
+		},
+		"gui": {
+			"rotation": [0, 0, -45],
+			"translation": [-3.5, -3.75, 0]
+		},
+		"fixed": {
+			"rotation": [0, 0, 45],
+			"translation": [4, -3.75, -0.25]
+		}
+	},
+	"groups": [
+		{
+			"name": "scholar_staff_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2]
+		}
+	]
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow.json
+CONTENT:
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base":   {
+    "parent": "grimfate:item/weakling_bow_3d"
+  },
+  "perspectives": {
+    "gui":    { "parent": "grimfate:item/weakling_bow_2d" },
+    "fixed":  { "parent": "grimfate:item/weakling_bow_2d" },
+    "ground": { "parent": "grimfate:item/weakling_bow_2d" },
+    "head":   { "parent": "grimfate:item/weakling_bow_2d" }
+  },
+  "overrides": [
+    { "predicate": { "pull": 0.65, "pulling": 1 }, "model": "grimfate:item/weakling_bow_3dpull2" },
+    { "predicate": { "pull": 0.10, "pulling": 1 }, "model": "grimfate:item/weakling_bow_3dpull1" },
+    { "predicate": { "pulling": 1 },               "model": "grimfate:item/weakling_bow_3dpull0" }
+  ]
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_2d.json
+CONTENT:
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "grimfate:item/weakling_bow_2d"
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3d.json
+CONTENT:
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [32, 32],
+	"textures": {
+		"0": "grimfate:item/weakling_bow_3d",
+		"particle": "block/weakling_bow_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 9, 6],
+			"to": [9, 16, 8],
+			"rotation": {"angle": 0, "axis": "x", "origin": [7, 9, 6]},
+			"faces": {
+				"north": {"uv": [0, 0, 1, 3.5], "texture": "#0"},
+				"east": {"uv": [1.5, 0, 2.5, 3.5], "texture": "#0"},
+				"south": {"uv": [3, 0, 4, 3.5], "texture": "#0"},
+				"west": {"uv": [0, 4, 1, 7.5], "texture": "#0"},
+				"up": {"uv": [11, 10, 10, 9], "texture": "#0"},
+				"down": {"uv": [11, 10.5, 10, 11.5], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.1, 4.2, 7],
+			"to": [8.9, 9.2, 9],
+			"rotation": {"angle": -22.5, "axis": "x", "origin": [7, 7.2, 7]},
+			"faces": {
+				"north": {"uv": [5.5, 0, 6.5, 2.5], "texture": "#0"},
+				"east": {"uv": [5.5, 3, 6.5, 5.5], "texture": "#0"},
+				"south": {"uv": [5.5, 6, 6.5, 8.5], "texture": "#0"},
+				"west": {"uv": [7, 0, 8, 2.5], "texture": "#0"},
+				"up": {"uv": [1, 12, 0, 11], "texture": "#0"},
+				"down": {"uv": [12.5, 0, 11.5, 1], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.35, -0.4, 9.2],
+			"to": [8.65, 4.6, 10.7],
+			"rotation": {"angle": -22.5, "axis": "x", "origin": [7, 2.6, 8.95]},
+			"faces": {
+				"north": {"uv": [8.5, 3, 9.25, 5.5], "texture": "#0"},
+				"east": {"uv": [8.5, 6, 9.25, 8.5], "texture": "#0"},
+				"south": {"uv": [5.5, 9, 6.25, 11.5], "texture": "#0"},
+				"west": {"uv": [7, 9, 7.75, 11.5], "texture": "#0"},
+				"up": {"uv": [12.25, 5.25, 11.5, 4.5], "texture": "#0"},
+				"down": {"uv": [12.25, 6, 11.5, 6.75], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.1, 16, 6.3],
+			"to": [8.9, 21, 8.3],
+			"rotation": {"angle": 22.5, "axis": "x", "origin": [7, 16, 6.3]},
+			"faces": {
+				"north": {"uv": [7, 3, 8, 5.5], "texture": "#0"},
+				"east": {"uv": [7, 6, 8, 8.5], "texture": "#0"},
+				"south": {"uv": [0, 8, 1, 10.5], "texture": "#0"},
+				"west": {"uv": [8.5, 0, 9.5, 2.5], "texture": "#0"},
+				"up": {"uv": [12.5, 2.5, 11.5, 1.5], "texture": "#0"},
+				"down": {"uv": [12.5, 3, 11.5, 4], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.35, 20.6, 8.45],
+			"to": [8.65, 25.6, 9.95],
+			"rotation": {"angle": 22.5, "axis": "x", "origin": [7, 20.6, 8.2]},
+			"faces": {
+				"north": {"uv": [8.5, 9, 9.25, 11.5], "texture": "#0"},
+				"east": {"uv": [10, 0, 10.75, 2.5], "texture": "#0"},
+				"south": {"uv": [10, 3, 10.75, 5.5], "texture": "#0"},
+				"west": {"uv": [10, 6, 10.75, 8.5], "texture": "#0"},
+				"up": {"uv": [12.25, 8.25, 11.5, 7.5], "texture": "#0"},
+				"down": {"uv": [12.25, 9, 11.5, 9.75], "texture": "#0"}
+			}
+		},
+		{
+			"from": [7.75, 1, 11],
+			"to": [8.25, 24, 11.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7.2, 0, 11]},
+			"faces": {
+				"north": {"uv": [1.5, 4, 1.75, 15.5], "texture": "#0"},
+				"east": {"uv": [2.5, 4, 2.75, 15.5], "texture": "#0"},
+				"south": {"uv": [3.5, 4, 3.75, 15.5], "texture": "#0"},
+				"west": {"uv": [4.5, 0, 4.75, 11.5], "texture": "#0"},
+				"up": {"uv": [11.75, 10.75, 11.5, 10.5], "texture": "#0"},
+				"down": {"uv": [11.75, 11.5, 11.5, 11.75], "texture": "#0"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"thirdperson_lefthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"firstperson_righthand": {
+			"rotation": [20, 15, -75],
+			"translation": [-10, -1.25, -1.5]
+		},
+		"firstperson_lefthand": {
+			"rotation": [20, -15, -75],
+			"translation": [-6, 1.25, -5.75]
+		},
+		"ground": {
+			"rotation": [40, 0, 0],
+			"translation": [0, 3.75, 0]
+		},
+		"gui": {
+			"rotation": [0, 90, 0],
+			"translation": [0, -3.75, 0]
+		},
+		"fixed": {
+			"rotation": [0, 90, 0],
+			"translation": [-0.75, -4.25, 0]
+		}
+	},
+	"groups": [
+		{
+			"name": "weakling_bow_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3, 4, 5]
+		}
+	]
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull0.json
+CONTENT:
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [32, 32],
+	"textures": {
+		"3": "grimfate:item/weakling_bow_3dpull0",
+		"particle": "block/weakling_bow_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 9, 6],
+			"to": [9, 16, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 9, 6]},
+			"faces": {
+				"north": {"uv": [6.5, 1, 7.5, 4.5], "texture": "#3"},
+				"east": {"uv": [6.5, 4.5, 7.5, 8], "texture": "#3"},
+				"south": {"uv": [7.5, 1, 8.5, 4.5], "texture": "#3"},
+				"west": {"uv": [7.5, 4.5, 8.5, 8], "texture": "#3"},
+				"up": {"uv": [12, 12, 11, 11], "texture": "#3"},
+				"down": {"uv": [1, 11.5, 0, 12.5], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.1, 4.2, 7],
+			"to": [8.9, 9.2, 9],
+			"rotation": {"angle": -22.5, "axis": "x", "origin": [7, 7.2, 7]},
+			"faces": {
+				"north": {"uv": [6.5, 8, 7.5, 10.5], "texture": "#3"},
+				"east": {"uv": [7.5, 8, 8.5, 10.5], "texture": "#3"},
+				"south": {"uv": [8.5, 1, 9.5, 3.5], "texture": "#3"},
+				"west": {"uv": [8.5, 3.5, 9.5, 6], "texture": "#3"},
+				"up": {"uv": [2, 12.5, 1, 11.5], "texture": "#3"},
+				"down": {"uv": [12.5, 1, 11.5, 2], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.35, 0.1, 9.7],
+			"to": [8.65, 5.1, 11.2],
+			"rotation": {"angle": -45, "axis": "x", "origin": [7, 3.1, 9.45]},
+			"faces": {
+				"north": {"uv": [9.5, 6, 10.25, 8.5], "texture": "#3"},
+				"east": {"uv": [9.5, 8.5, 10.25, 11], "texture": "#3"},
+				"south": {"uv": [10.5, 1, 11.25, 3.5], "texture": "#3"},
+				"west": {"uv": [10.5, 3.5, 11.25, 6], "texture": "#3"},
+				"up": {"uv": [3.75, 12.25, 3, 11.5], "texture": "#3"},
+				"down": {"uv": [12.25, 3, 11.5, 3.75], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.1, 16, 6.3],
+			"to": [8.9, 21, 8.3],
+			"rotation": {"angle": 22.5, "axis": "x", "origin": [7, 16, 6.3]},
+			"faces": {
+				"north": {"uv": [8.5, 6, 9.5, 8.5], "texture": "#3"},
+				"east": {"uv": [8.5, 8.5, 9.5, 11], "texture": "#3"},
+				"south": {"uv": [9.5, 1, 10.5, 3.5], "texture": "#3"},
+				"west": {"uv": [9.5, 3.5, 10.5, 6], "texture": "#3"},
+				"up": {"uv": [3, 12.5, 2, 11.5], "texture": "#3"},
+				"down": {"uv": [12.5, 2, 11.5, 3], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.35, 20.6, 8.45],
+			"to": [8.65, 25.6, 9.95],
+			"rotation": {"angle": 45, "axis": "x", "origin": [7, 20.6, 8.2]},
+			"faces": {
+				"north": {"uv": [6, 10.5, 6.75, 13], "texture": "#3"},
+				"east": {"uv": [10.5, 6, 11.25, 8.5], "texture": "#3"},
+				"south": {"uv": [7, 10.5, 7.75, 13], "texture": "#3"},
+				"west": {"uv": [10.5, 8.5, 11.25, 11], "texture": "#3"},
+				"up": {"uv": [4.75, 12.25, 4, 11.5], "texture": "#3"},
+				"down": {"uv": [12.25, 4, 11.5, 4.75], "texture": "#3"}
+			}
+		},
+		{
+			"from": [8, 1, 10],
+			"to": [8, 24, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 11, 10]},
+			"faces": {
+				"north": {"uv": [0, 0, 0, 11.5], "texture": "#3"},
+				"east": {"uv": [0, 0, 3, 11.5], "texture": "#3"},
+				"south": {"uv": [0, 0, 0, 11.5], "texture": "#3"},
+				"west": {"uv": [3, 0, 6, 11.5], "texture": "#3"},
+				"up": {"uv": [0, 3, 0, 0], "texture": "#3"},
+				"down": {"uv": [0, 0, 0, 3], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.5, 12.5, -1],
+			"to": [8.5, 13.5, 15],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6.5, 12.5, 6]},
+			"faces": {
+				"north": {"uv": [6, 9, 6.5, 9.5], "texture": "#3"},
+				"east": {"uv": [6, 0, 14, 0.5], "texture": "#3"},
+				"south": {"uv": [6, 9, 6.5, 9.5], "texture": "#3"},
+				"west": {"uv": [6, 0.5, 14, 1], "texture": "#3"},
+				"up": {"uv": [6.5, 9, 6, 1], "texture": "#3"},
+				"down": {"uv": [6, 1, 6.5, 9], "texture": "#3"}
+			}
+		},
+		{
+			"from": [8, 12, -3],
+			"to": [8, 14, 0],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 12, -3]},
+			"faces": {
+				"north": {"uv": [0, 0, 0, 1], "texture": "#3"},
+				"east": {"uv": [8, 11, 9.5, 12], "texture": "#3"},
+				"south": {"uv": [0, 0, 0, 1], "texture": "#3"},
+				"west": {"uv": [9.5, 11, 11, 12], "texture": "#3"},
+				"up": {"uv": [0, 1.5, 0, 0], "texture": "#3"},
+				"down": {"uv": [0, 0, 0, 1.5], "texture": "#3"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"thirdperson_lefthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"firstperson_righthand": {
+			"rotation": [26, 21, -74],
+			"translation": [-10, -1.25, -1.5]
+		},
+		"firstperson_lefthand": {
+			"rotation": [20, -15, -75],
+			"translation": [-6, 1.25, -5.75]
+		},
+		"ground": {
+			"rotation": [40, 0, 0],
+			"translation": [0, 3.75, 0]
+		},
+		"gui": {
+			"rotation": [0, 90, 0],
+			"translation": [0, -3.75, 0]
+		},
+		"fixed": {
+			"rotation": [0, 90, 0],
+			"translation": [-0.75, -4.25, 0]
+		}
+	},
+	"groups": [
+		{
+			"name": "weakling_bow_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3, 4, 5, 6, 7]
+		}
+	]
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull1.json
+CONTENT:
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [64, 64],
+	"textures": {
+		"3": "grimfate:item/weakling_bow_3dpull1",
+		"particle": "block/weakling_bow_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 9, 6],
+			"to": [9, 16, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 9, 6]},
+			"faces": {
+				"north": {"uv": [4.5, 5.25, 5, 7], "texture": "#3"},
+				"east": {"uv": [5.25, 5.25, 5.75, 7], "texture": "#3"},
+				"south": {"uv": [0, 5.5, 0.5, 7.25], "texture": "#3"},
+				"west": {"uv": [0.75, 5.5, 1.25, 7.25], "texture": "#3"},
+				"up": {"uv": [4.25, 7.5, 3.75, 7], "texture": "#3"},
+				"down": {"uv": [7.5, 7, 7, 7.5], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.1, 4.7, 8],
+			"to": [8.9, 9.7, 10],
+			"rotation": {"angle": -45, "axis": "x", "origin": [7, 7.7, 8]},
+			"faces": {
+				"north": {"uv": [5.5, 1, 6, 2.25], "texture": "#3"},
+				"east": {"uv": [1.5, 5.5, 2, 6.75], "texture": "#3"},
+				"south": {"uv": [2.25, 5.5, 2.75, 6.75], "texture": "#3"},
+				"west": {"uv": [5.5, 2.5, 6, 3.75], "texture": "#3"},
+				"up": {"uv": [5, 7.75, 4.5, 7.25], "texture": "#3"},
+				"down": {"uv": [5.75, 7.25, 5.25, 7.75], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.35, 1.6, 11.45],
+			"to": [8.65, 6.6, 12.95],
+			"rotation": {"angle": -45, "axis": "x", "origin": [7, 4.6, 11.2]},
+			"faces": {
+				"north": {"uv": [6.25, 1, 6.625, 2.25], "texture": "#3"},
+				"east": {"uv": [6.25, 2.5, 6.625, 3.75], "texture": "#3"},
+				"south": {"uv": [6.75, 4, 7.125, 5.25], "texture": "#3"},
+				"west": {"uv": [6.75, 5.5, 7.125, 6.75], "texture": "#3"},
+				"up": {"uv": [7.875, 4.375, 7.5, 4], "texture": "#3"},
+				"down": {"uv": [7.875, 4.75, 7.5, 5.125], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.1, 16, 6.3],
+			"to": [8.9, 21, 8.3],
+			"rotation": {"angle": 45, "axis": "x", "origin": [7, 16, 6.3]},
+			"faces": {
+				"north": {"uv": [3, 5.5, 3.5, 6.75], "texture": "#3"},
+				"east": {"uv": [3.75, 5.5, 4.25, 6.75], "texture": "#3"},
+				"south": {"uv": [6, 4, 6.5, 5.25], "texture": "#3"},
+				"west": {"uv": [6, 5.5, 6.5, 6.75], "texture": "#3"},
+				"up": {"uv": [0.5, 8, 0, 7.5], "texture": "#3"},
+				"down": {"uv": [1.25, 7.5, 0.75, 8], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.35, 17.6, 9.7],
+			"to": [8.65, 19.1, 14.7],
+			"rotation": {"angle": -45, "axis": "x", "origin": [7, 19.35, 9.7]},
+			"faces": {
+				"north": {"uv": [7.5, 5.5, 7.875, 5.875], "texture": "#3"},
+				"east": {"uv": [7, 1, 8.25, 1.375], "texture": "#3"},
+				"south": {"uv": [7.5, 6.25, 7.875, 6.625], "texture": "#3"},
+				"west": {"uv": [1.5, 7, 2.75, 7.375], "texture": "#3"},
+				"up": {"uv": [7.375, 3, 7, 1.75], "texture": "#3"},
+				"down": {"uv": [3.375, 7, 3, 8.25], "texture": "#3"}
+			}
+		},
+		{
+			"from": [8, 2, 13],
+			"to": [8, 23, 21],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 11, 14]},
+			"faces": {
+				"north": {"uv": [1.5, 7.75, 1.5, 13], "texture": "#3"},
+				"east": {"uv": [0, 0, 2, 5.25], "texture": "#3"},
+				"south": {"uv": [1.5, 7.75, 1.5, 13], "texture": "#3"},
+				"west": {"uv": [2.25, 0, 4.25, 5.25], "texture": "#3"},
+				"up": {"uv": [1.75, 9.75, 1.75, 7.75], "texture": "#3"},
+				"down": {"uv": [1.75, 7.75, 1.75, 9.75], "texture": "#3"}
+			}
+		},
+		{
+			"from": [7.5, 12.5, 2],
+			"to": [8.5, 13.5, 18],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6.5, 12.5, 9]},
+			"faces": {
+				"north": {"uv": [5.5, 4, 5.75, 4.25], "texture": "#3"},
+				"east": {"uv": [4.5, 0, 8.5, 0.25], "texture": "#3"},
+				"south": {"uv": [5.5, 4.5, 5.75, 4.75], "texture": "#3"},
+				"west": {"uv": [4.5, 0.5, 8.5, 0.75], "texture": "#3"},
+				"up": {"uv": [4.75, 5, 4.5, 1], "texture": "#3"},
+				"down": {"uv": [5.25, 1, 5, 5], "texture": "#3"}
+			}
+		},
+		{
+			"from": [8, 12, 0],
+			"to": [8, 14, 3],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 12, 0]},
+			"faces": {
+				"north": {"uv": [7.75, 1.75, 7.75, 2.25], "texture": "#3"},
+				"east": {"uv": [7, 3.25, 7.75, 3.75], "texture": "#3"},
+				"south": {"uv": [7.75, 1.75, 7.75, 2.25], "texture": "#3"},
+				"west": {"uv": [6, 7, 6.75, 7.5], "texture": "#3"},
+				"up": {"uv": [2, 8.5, 2, 7.75], "texture": "#3"},
+				"down": {"uv": [2, 7.75, 2, 8.5], "texture": "#3"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"thirdperson_lefthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"firstperson_righthand": {
+			"rotation": [26, 21, -74],
+			"translation": [-10, -1.25, -1.5]
+		},
+		"firstperson_lefthand": {
+			"rotation": [20, -15, -75],
+			"translation": [-6, 1.25, -5.75]
+		},
+		"ground": {
+			"rotation": [40, 0, 0],
+			"translation": [0, 3.75, 0]
+		},
+		"gui": {
+			"rotation": [0, 90, 0],
+			"translation": [0, -3.75, 0]
+		},
+		"fixed": {
+			"rotation": [0, 90, 0],
+			"translation": [-0.75, -4.25, 0]
+		}
+	},
+	"groups": [
+		{
+			"name": "weakling_bow_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3, 4, 5, 6, 7]
+		}
+	]
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\assets\grimfate\models\item\weakling_bow_3dpull2.json
+CONTENT:
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"texture_size": [64, 64],
+	"textures": {
+		"2": "grimfate:item/weakling_bow_3dpull2",
+		"particle": "block/weakling_bow_3d"
+	},
+	"elements": [
+		{
+			"from": [7, 9, 6],
+			"to": [9, 16, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 9, 6]},
+			"faces": {
+				"north": {"uv": [4.75, 4.75, 5.25, 6.5], "texture": "#2"},
+				"east": {"uv": [0, 5, 0.5, 6.75], "texture": "#2"},
+				"south": {"uv": [5, 0.5, 5.5, 2.25], "texture": "#2"},
+				"west": {"uv": [0.75, 5, 1.25, 6.75], "texture": "#2"},
+				"up": {"uv": [5.25, 7.25, 4.75, 6.75], "texture": "#2"},
+				"down": {"uv": [7.5, 5, 7, 5.5], "texture": "#2"}
+			}
+		},
+		{
+			"from": [7.1, 4.7, 7.75],
+			"to": [8.9, 9.7, 9.75],
+			"rotation": {"angle": -45, "axis": "x", "origin": [7, 7.7, 7.75]},
+			"faces": {
+				"north": {"uv": [1.5, 5, 2, 6.25], "texture": "#2"},
+				"east": {"uv": [2.25, 5, 2.75, 6.25], "texture": "#2"},
+				"south": {"uv": [5, 2.5, 5.5, 3.75], "texture": "#2"},
+				"west": {"uv": [3, 5, 3.5, 6.25], "texture": "#2"},
+				"up": {"uv": [6, 7.5, 5.5, 7], "texture": "#2"},
+				"down": {"uv": [7.5, 5.75, 7, 6.25], "texture": "#2"}
+			}
+		},
+		{
+			"from": [7.35, 5.1, 9.95],
+			"to": [8.65, 6.6, 14.95],
+			"rotation": {"angle": 22.5, "axis": "x", "origin": [7, 4.85, 11.95]},
+			"faces": {
+				"north": {"uv": [1, 7.25, 1.375, 7.625], "texture": "#2"},
+				"east": {"uv": [6.25, 3.5, 7.5, 3.875], "texture": "#2"},
+				"south": {"uv": [7.25, 1.25, 7.625, 1.625], "texture": "#2"},
+				"west": {"uv": [6.25, 4.25, 7.5, 4.625], "texture": "#2"},
+				"up": {"uv": [6.625, 6.25, 6.25, 5], "texture": "#2"},
+				"down": {"uv": [6.875, 0.5, 6.5, 1.75], "texture": "#2"}
+			}
+		},
+		{
+			"from": [7.1, 16, 6.3],
+			"to": [8.9, 21, 8.3],
+			"rotation": {"angle": 45, "axis": "x", "origin": [7, 16, 6.3]},
+			"faces": {
+				"north": {"uv": [5.5, 4, 6, 5.25], "texture": "#2"},
+				"east": {"uv": [5.5, 5.5, 6, 6.75], "texture": "#2"},
+				"south": {"uv": [5.75, 0.5, 6.25, 1.75], "texture": "#2"},
+				"west": {"uv": [5.75, 2, 6.25, 3.25], "texture": "#2"},
+				"up": {"uv": [7.5, 7, 7, 6.5], "texture": "#2"},
+				"down": {"uv": [7.75, 0.5, 7.25, 1], "texture": "#2"}
+			}
+		},
+		{
+			"from": [7.35, 17.85, 9.95],
+			"to": [8.65, 19.35, 14.95],
+			"rotation": {"angle": -22.5, "axis": "x", "origin": [7, 19.6, 9.95]},
+			"faces": {
+				"north": {"uv": [1.75, 7.25, 2.125, 7.625], "texture": "#2"},
+				"east": {"uv": [1.5, 6.5, 2.75, 6.875], "texture": "#2"},
+				"south": {"uv": [7, 7.25, 7.375, 7.625], "texture": "#2"},
+				"west": {"uv": [6.5, 2, 7.75, 2.375], "texture": "#2"},
+				"up": {"uv": [3.375, 7.75, 3, 6.5], "texture": "#2"},
+				"down": {"uv": [6.625, 6.5, 6.25, 7.75], "texture": "#2"}
+			}
+		},
+		{
+			"from": [8, 4, 14],
+			"to": [8, 21, 22],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 11, 18]},
+			"faces": {
+				"north": {"uv": [2.5, 7.25, 2.5, 11.5], "texture": "#2"},
+				"east": {"uv": [0, 0, 2, 4.25], "texture": "#2"},
+				"south": {"uv": [2.75, 7.25, 2.75, 11.5], "texture": "#2"},
+				"west": {"uv": [2.25, 0, 4.25, 4.25], "texture": "#2"},
+				"up": {"uv": [3.75, 9.25, 3.75, 7.25], "texture": "#2"},
+				"down": {"uv": [4, 7.25, 4, 9.25], "texture": "#2"}
+			}
+		},
+		{
+			"from": [7.5, 12.5, 5],
+			"to": [8.5, 13.5, 21],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6.5, 12.5, 12]},
+			"faces": {
+				"north": {"uv": [3.75, 5, 4, 5.25], "texture": "#2"},
+				"east": {"uv": [0, 4.5, 4, 4.75], "texture": "#2"},
+				"south": {"uv": [5, 4, 5.25, 4.25], "texture": "#2"},
+				"west": {"uv": [4.5, 0, 8.5, 0.25], "texture": "#2"},
+				"up": {"uv": [4.75, 4.5, 4.5, 0.5], "texture": "#2"},
+				"down": {"uv": [4.5, 4.75, 4.25, 8.75], "texture": "#2"}
+			}
+		},
+		{
+			"from": [8, 12, 3],
+			"to": [8, 14, 6],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6, 12, 3]},
+			"faces": {
+				"north": {"uv": [3.75, 5.5, 3.75, 6], "texture": "#2"},
+				"east": {"uv": [6.5, 2.75, 7.25, 3.25], "texture": "#2"},
+				"south": {"uv": [4, 5.5, 4, 6], "texture": "#2"},
+				"west": {"uv": [0, 7, 0.75, 7.5], "texture": "#2"},
+				"up": {"uv": [3.75, 7, 3.75, 6.25], "texture": "#2"},
+				"down": {"uv": [4, 6.25, 4, 7], "texture": "#2"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"thirdperson_lefthand": {
+			"translation": [-0.25, -6.25, 2.25]
+		},
+		"firstperson_righthand": {
+			"rotation": [26, 21, -74],
+			"translation": [-10, -1.25, -1.5]
+		},
+		"firstperson_lefthand": {
+			"rotation": [20, -15, -75],
+			"translation": [-6, 1.25, -5.75]
+		},
+		"ground": {
+			"rotation": [40, 0, 0],
+			"translation": [0, 3.75, 0]
+		},
+		"gui": {
+			"rotation": [0, 90, 0],
+			"translation": [0, -3.75, 0]
+		},
+		"fixed": {
+			"rotation": [0, 90, 0],
+			"translation": [-0.75, -4.25, 0]
+		}
+	},
+	"groups": [
+		{
+			"name": "weakling_bow_3d",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1, 2, 3, 4, 5, 6, 7]
+		}
+	]
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\bettercombat\tags\items\axes.json
+CONTENT:
+{ "replace": false, "values": ["#grimfate:axes"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\bettercombat\tags\items\bows.json
+CONTENT:
+{ "replace": false, "values": ["#grimfate:bows"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\bettercombat\tags\items\crossbows.json
+CONTENT:
+{ "replace": false, "values": ["#grimfate:crossbows"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\bettercombat\tags\items\daggers.json
+CONTENT:
+{
+  "replace": false,
+  "values": [
+    "#grimfate:daggers"
+  ]
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\bettercombat\tags\items\greataxes.json
+CONTENT:
+{ "replace": false, "values": ["#grimfate:two_handed"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\bettercombat\tags\items\greatswords.json
+CONTENT:
+{ "replace": false, "values": ["#grimfate:two_handed"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\bettercombat\tags\items\hammers.json
+CONTENT:
+{ "replace": false, "values": ["#grimfate:hammers"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\bettercombat\tags\items\staves.json
+CONTENT:
+{ "replace": false, "values": ["#grimfate:staves"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\bettercombat\tags\items\swords.json
+CONTENT:
+{ "replace": false, "values": ["#grimfate:swords"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\curios\tags\item\belt.json
+CONTENT:
+{ "replace": false, "values": [] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\curios\tags\item\necklace.json
+CONTENT:
+{ "replace": false, "values": ["grimfate:copper_necklace","grimfate:bronze_necklace"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\curios\tags\item\ring.json
+CONTENT:
+{ "replace": false, "values": ["grimfate:copper_ring","grimfate:bronze_ring"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\defs\armor_flat.json
+CONTENT:
+{
+  "id": "grimfate:armor_flat",
+  "display_key": "affix.grimfate.armor_flat",
+  "unit": "FLAT",
+  "min": 1.0,
+  "max": 4.0,
+  "curve": { "type": "BIAS_LOW", "power": 2.0 },
+  "allow_sources": ["ARMOR","SHIELD"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\defs\attack_speed.json
+CONTENT:
+{
+  "id": "grimfate:attack_speed",
+  "display_key": "affix.grimfate.attack_speed",
+  "unit": "PERCENT",
+  "min": 0.02,
+  "max": 0.10,
+  "curve": { "type": "UNIFORM" },
+  "allow_sources": ["WEAPON","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\defs\crit_chance_percent.json
+CONTENT:
+{
+  "id": "grimfate:crit_chance_percent",
+  "display_key": "affix.grimfate.crit_chance_percent",
+  "unit": "PERCENT",
+  "min": 0.02,
+  "max": 0.10,
+  "curve": { "type": "BIAS_HIGH", "power": 2.0 },
+  "allow_sources": ["WEAPON","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\defs\phys_damage_percent.json
+CONTENT:
+{
+  "id": "grimfate:phys_damage_percent",
+  "display_key": "affix.grimfate.phys_damage_percent",
+  "unit": "PERCENT",
+  "min": 0.03,
+  "max": 0.12,
+  "curve": { "type": "GAUSSIAN", "spread": 1.0 },
+  "allow_sources": ["WEAPON"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\defs\plus_strenght.json
+CONTENT:
+{
+  "id": "grimfate:plus_strength",
+  "display_key": "affix.grimfate.plus_strength",
+  "unit": "FLAT",
+  "min": 2.0,
+  "max": 6.0,
+  "curve": { "type": "BIAS_LOW", "power": 2.0 },
+  "allow_sources": ["ARMOR","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\defs\plus_vitality.json
+CONTENT:
+{
+  "id": "grimfate:plus_vitality",
+  "display_key": "affix.grimfate.plus_vitality",
+  "unit": "FLAT",
+  "min": 2.0,
+  "max": 6.0,
+  "curve": { "type": "BIAS_LOW", "power": 2.0 },
+  "allow_sources": ["ARMOR","JEWELRY"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\defs\resist_all_percent.json
+CONTENT:
+{
+  "id": "grimfate:resist_all_percent",
+  "display_key": "affix.grimfate.resist_all_percent",
+  "unit": "PERCENT",
+  "min": 0.02,
+  "max": 0.08,
+  "curve": { "type": "GAUSSIAN", "spread": 0.8 },
+  "allow_sources": ["ARMOR","JEWELRY","SHIELD"],
+  "stackable": false,
+  "clamp_total": true
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\pools\armor_defensive.json
+CONTENT:
+{
+  "id": "grimfate:armor_defensive",
+  "entries": [
+    { "affix_id": "grimfate:plus_vitality",       "weight": 40, "min_item_level": 1 },
+    { "affix_id": "grimfate:armor_flat",          "weight": 35, "min_item_level": 1 },
+    { "affix_id": "grimfate:resist_all_percent",  "weight": 25, "min_item_level": 1 }
+  ],
+  "allow_sources": ["ARMOR","SHIELD"],
+  "required_item_tags": [],
+  "min_item_level": 1,
+  "max_item_level": 0,
+  "unique_types": true
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\pools\jewelry_support.json
+CONTENT:
+{
+  "id": "grimfate:jewelry_support",
+  "entries": [
+    { "affix_id": "grimfate:plus_strength",       "weight": 30, "min_item_level": 1 },
+    { "affix_id": "grimfate:plus_vitality",       "weight": 30, "min_item_level": 1 },
+    { "affix_id": "grimfate:attack_speed",        "weight": 20, "min_item_level": 1 },
+    { "affix_id": "grimfate:resist_all_percent",  "weight": 20, "min_item_level": 1 }
+  ],
+  "allow_sources": ["JEWELRY"],
+  "required_item_tags": [],
+  "min_item_level": 1,
+  "max_item_level": 0,
+  "unique_types": true
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\pools\weapon_primary.json
+CONTENT:
+{
+  "id": "grimfate:weapon_primary",
+  "entries": [
+    { "affix_id": "grimfate:phys_damage_percent", "weight": 50, "min_item_level": 1 },
+    { "affix_id": "grimfate:attack_speed",        "weight": 30, "min_item_level": 1 },
+    { "affix_id": "grimfate:crit_chance_percent",  "weight": 20, "min_item_level": 1 }
+  ],
+  "allow_sources": ["WEAPON"],
+  "required_item_tags": [],
+  "min_item_level": 1,
+  "max_item_level": 0,
+  "unique_types": true
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\rarities\common.json
+CONTENT:
+{
+  "id": "grimfate:common",
+  "weight": 60,
+  "max_affixes": { "type": "uniform", "min_inclusive": 0, "max_inclusive": 1 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.00,
+  "display_key": "rarity.grimfate.common",
+  "text_color": 11184810,
+  "allow_duplicates": false
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\rarities\epic.json
+CONTENT:
+{
+  "id": "grimfate:epic",
+  "weight": 15,
+  "max_affixes": { "type": "uniform", "min_inclusive": 3, "max_inclusive": 4 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.30,
+  "display_key": "rarity.grimfate.epic",
+  "text_color": 11141290,
+  "allow_duplicates": false
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\rarities\legendary.json
+CONTENT:
+{
+  "id": "grimfate:legendary",
+  "weight": 5,
+  "max_affixes": { "type": "uniform", "min_inclusive": 4, "max_inclusive": 5 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.50,
+  "display_key": "rarity.grimfate.legendary",
+  "text_color": 16737280,
+  "allow_duplicates": false
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\rarities\rare.json
+CONTENT:
+{
+  "id": "grimfate:rare",
+  "weight": 30,
+  "max_affixes": { "type": "uniform", "min_inclusive": 2, "max_inclusive": 3 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.15,
+  "display_key": "rarity.grimfate.rare",
+  "text_color": 65535,
+  "allow_duplicates": false
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\affixes\rarities\uncommon.json
+CONTENT:
+{
+  "id": "grimfate:uncommon",
+  "weight": 45,
+  "max_affixes": { "type": "uniform", "min_inclusive": 1, "max_inclusive": 2 },
+  "rolls_per_affix": { "type": "constant", "value": 1 },
+  "magnitude_scale": 1.05,
+  "display_key": "rarity.grimfate.uncommon",
+  "text_color": 5635925,
+  "allow_duplicates": false
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\balance\attributes.json
+CONTENT:
+{
+  "base": {
+    "max_health": 100.0,
+    "regen_health": 1.0,
+    "max_mana": 100.0,
+    "regen_mana": 1.0
+  },
+  "by_attr": {
+    "vitality": {
+      "cap": 99,
+      "max_health_per": 20.0,
+      "regen_hp_per": 1.0
+    },
+    "spirit": {
+      "cap": 99,
+      "max_mana_per": 10.0,
+      "regen_mp_per": 0.08,
+      "base_manasteal": 0.0
+    },
+    "dexterity": {
+      "cap": 99,
+      "phys_ranged_per": 0.03,
+      "move_speed_pct_per": 0.25,
+      "base_crit_chance": 0.00,
+      "base_crit_damage": 0.50
+    },
+    "strength": {
+      "cap": 99,
+      "phys_melee_per": 0.03,
+      "base_lifesteal": 0.00
+    },
+    "intelligence": {
+      "cap": 99,
+      "elem_damage_per": 0.02
+    },
+    "evasion": {
+      "cap": 99,
+      "evasion_chance_per": 0.01
+    }
+  }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\balance\levels.json
+CONTENT:
+{
+  "max_level": 99,
+  "base": 500.0,
+  "growth": 2.00
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\balance\spells.json
+CONTENT:
+{
+  "auto_bolt_staff": {
+    "type": "projectile",
+    "damage_type": "phys_ranged",
+    "base_damage": 22,
+    "mana_cost": 8,
+    "cooldown_ticks": 40,
+    "speed": 1.6,
+    "range": 32,
+    "requires_type": "STAFF",
+    "scaling": {
+      "INT": 0.25
+    }
+  },
+  "spells": {
+    "grimfate:knight_dash": {
+      "school": "TECHNIQUE",
+      "tags": ["MOVEMENT"],
+      "base_cost": 8,
+      "base_cooldown": 60,
+      "scaling": { "dexterity": 0.7 }
+    }
+  }
+}
+
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\curios\slots\belt.json
+CONTENT:
+{
+  "size": 1
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\curios\slots\necklace.json
+CONTENT:
+{
+  "size": 1
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\curios\slots\ring.json
+CONTENT:
+{
+  "size": 2
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_armors_to_simple_dungeon.json
+CONTENT:
+{
+  "type": "grimfate:add_tag_items",
+  "conditions": [
+    { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+    { "condition": "minecraft:random_chance", "chance": 1.0 }
+  ],
+  "tag": "grimfate:loot/armors",
+  "count": { "type": "minecraft:constant", "value": 1 }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_jewelry_to_simple_dungeon.json
+CONTENT:
+{
+  "type": "grimfate:add_tag_items",
+  "conditions": [
+    { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+    { "condition": "minecraft:random_chance", "chance": 1.0 }
+  ],
+  "tag": "grimfate:loot/jewelry",
+  "count": { "type": "minecraft:constant", "value": 1 }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\loot_modifiers\add_weapons_to_simple_dungeon.json
+CONTENT:
+{
+  "type": "grimfate:add_tag_items",
+  "conditions": [
+    { "condition": "neoforge:loot_table_id", "loot_table_id": "minecraft:chests/simple_dungeon" },
+    { "condition": "minecraft:random_chance", "chance": 1.0 }
+  ],
+  "tag": "grimfate:loot/weapons",
+  "count": { "type": "minecraft:constant", "value": 1 }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\loot_modifiers\fiber_from_grass.json
+CONTENT:
+{
+  "type": "grimfate:add_item",
+  "conditions": [
+    { "condition": "minecraft:block_state_property", "block": "minecraft:short_grass" },
+    { "condition": "minecraft:random_chance", "chance": 0.95 }
+  ],
+  "item": "grimfate:fiber",
+  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\loot_modifiers\pork_fat_from_pig.json
+CONTENT:
+{
+  "type": "grimfate:add_item",
+  "conditions": [
+    { "condition": "minecraft:entity_properties", "entity": "this", "predicate": { "type": "minecraft:pig" } },
+    { "condition": "minecraft:random_chance", "chance": 0.95 }
+  ],
+  "item": "grimfate:pork_fat",
+  "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\loot_modifiers\roll_affixes.json
+CONTENT:
+{
+  "type": "grimfate:roll_affixes",
+  "conditions": [],
+  "allow_sources": ["ALL"],
+  "replace_existing": false,
+  "default_item_level": 1
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\recipe\canvas_fabric.json
+CONTENT:
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "F": { "item": "grimfate:fiber" },
+    "P": {"item": "grimfate:pork_fat"}
+  },
+  "pattern": [
+    "FFF",
+    "FPF",
+    "FFF"
+  ],
+  "result": { "id": "grimfate:canvas_fabric", "count": 1 }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\recipe\copperforced_shield.json
+CONTENT:
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MPM",
+    "MCM",
+    "MRM"
+  ],
+  "key": {
+    "C": { "item": "minecraft:copper_ingot" },
+    "R": { "item": "grimfate:rawhide" },
+    "P": {"item": "grimfate:pork_fat"},
+    "M": {"tag": "minecraft:planks"}
+  },
+  "result": { "id": "grimfate:copperforced_shield", "count": 1 }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\recipe\copper_sword.json
+CONTENT:
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " I ",
+    " I ",
+    "PSC"
+  ],
+  "key": {
+    "I": { "item": "minecraft:copper_ingot" },
+    "C": { "item": "grimfate:canvas_fabric" },
+    "P": {"item": "grimfate:pork_fat"},
+    "S": {"item": "minecraft:stick"}
+  },
+  "result": { "id": "grimfate:copper_sword", "count": 1 }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\recipe\rawhide.json
+CONTENT:
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "LLF",
+    "FFF"
+  ],
+  "key": {
+    "F": { "item": "grimfate:pork_fat" },
+    "L": { "item": "minecraft:leather" }
+  },
+  "result": { "id": "grimfate:rawhide", "count": 1 }
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\recipe\scholar_staff.json
+CONTENT:
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PFP",
+    " S ",
+    " S "],
+  "key": {
+    "S": {"item": "minecraft:stick"},
+    "P": {"item": "grimfate:pork_fat"},
+    "F": {"item": "grimfate:fiber"}
+  },
+  "result": {"id": "grimfate:scholar_staff", "count": 1}
+}
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\recipe\weakling_bow.json
+CONTENT:
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GS ",
+    "GFC",
+    "GS "
+  ],
+  "key": {
+    "S": { "item": "minecraft:stick" },
+    "C": { "item": "grimfate:canvas_fabric" },
+    "F": {"item": "grimfate:pork_fat"},
+    "G": {"item": "grimfate:fiber"}
+  },
+  "result": { "id": "grimfate:weakling_bow", "count": 1 }
+}
+
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\axes.json
+CONTENT:
+{ "replace": false, "values": [
+
+] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\bows.json
+CONTENT:
+{ "replace": false, "values": [
+  "grimfate:weakling_bow"
+] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\crossbows.json
+CONTENT:
+{ "replace": false, "values": [
+
+] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\daggers.json
+CONTENT:
+{ "replace": false, "values": [
+
+] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\greataxes.json
+CONTENT:
+{ "replace": false, "values": [
+
+] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\greatswords.json
+CONTENT:
+{ "replace": false, "values": [
+
+] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\hammers.json
+CONTENT:
+{ "replace": false, "values": [
+
+] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\jewelry.json
+CONTENT:
+{
+  "replace": false,
+  "values": [
+    "grimfate:copper_ring",
+    "grimfate:bronze_ring",
+    "grimfate:copper_necklace",
+    "grimfate:bronze_necklace"
+  ]
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\shields.json
+CONTENT:
+{ "replace": false, "values": [
+  "grimfate:copperforced_shield"
+] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\staves.json
+CONTENT:
+{ "replace": false, "values": [
+  "grimfate:scholar_staff"
+] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\swords.json
+CONTENT:
+{ "replace": false, "values": [
+  "grimfate:copper_sword"
+] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\armor\boots.json
+CONTENT:
+{ "values": ["grimfate:copper_boots", "grimfate:linen_shoes", "grimfate:rawhide_boots"] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\armor\chest.json
+CONTENT:
+{ "values": ["grimfate:copper_chestplate", "grimfate:linen_cape", "grimfate:rawhide_jacket"] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\armor\cloth.json
+CONTENT:
+{ "values": ["grimfate:linen_shoes", "grimfate:linen_cape", "grimfate:linen_hat", "grimfate:linen_pants"] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\armor\helm.json
+CONTENT:
+{ "values": ["grimfate:copper_helmet", "grimfate:linen_hat", "grimfate:rawhide_hood"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\armor\leather.json
+CONTENT:
+{ "values": ["grimfate:rawhide_boots", "grimfate:rawhide_wraps", "grimfate:rawhide_jacket", "grimfate:rawhide_hood"] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\armor\legs.json
+CONTENT:
+{ "values": ["grimfate:copper_chestplate", "grimfate:linen_pants", "grimfate:rawhide_wraps"] }
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\armor\plate.json
+CONTENT:
+{ "values": ["grimfate:copper_helmet", "grimfate:copper_chestplate", "grimfate:copper_leggings", "grimfate:copper_boots"] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\loot\armors.json
+CONTENT:
+{
+  "replace": false,
+  "values": [
+    "grimfate:copper_helmet",
+    "grimfate:copper_chestplate",
+    "grimfate:copper_leggings",
+    "grimfate:copper_boots",
+    "grimfate:rawhide_hood",
+    "grimfate:rawhide_jacket",
+    "grimfate:rawhide_wraps",
+    "grimfate:rawhide_boots",
+    "grimfate:linen_hat",
+    "grimfate:linen_cape",
+    "grimfate:linen_pants",
+    "grimfate:linen_shoes"
+  ]
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\loot\fiber.json
+CONTENT:
+{
+  "replace": false,
+  "values": [
+    "grimfate:fiber"
+  ]
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\loot\jewelry.json
+CONTENT:
+{
+  "replace": false,
+  "values": [
+    "grimfate:copper_ring",
+    "grimfate:copper_necklace",
+    "grimfate:bronze_ring",
+    "grimfate:bronze_necklace"
+  ]
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\loot\pork_fat.json
+CONTENT:
+{
+  "replace": false,
+  "values": [
+    "grimfate:pork_fat"
+  ]
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\loot\weapons.json
+CONTENT:
+{
+  "replace": false,
+  "values": [
+    "grimfate:copper_sword",
+    "grimfate:weakling_bow",
+    "grimfate:scholar_staff"
+  ]
+}
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\role\archer.json
+CONTENT:
+{ "values": [] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\role\mage.json
+CONTENT:
+{ "values": [] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\tags\item\role\melee.json
+CONTENT:
+{ "values": [] }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\weapon_attributes\copper_sword.json
+CONTENT:
+{ "parent": "bettercombat:sword" }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\weapon_attributes\scholar_staff.json
+CONTENT:
+{ "parent": "bettercombat:staff" }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\grimfate\weapon_attributes\weakling_bow.json
+CONTENT:
+{ "parent": "bettercombat:bow_two_handed_heavy" }
+
+
+=========================================
+
+FILE: D:\doomspire\grimfate\src\main\resources\data\neoforge\loot_modifiers\global_loot_modifiers.json
+CONTENT:
+{
+  "replace": false,
+  "entries": [
+    "grimfate:fiber_from_grass",
+    "grimfate:pork_fat_from_pig",
+    "grimfate:add_weapons_to_simple_dungeon",
+    "grimfate:add_armors_to_simple_dungeon",
+    "grimfate:add_jewelry_to_simple_dungeon",
+    "grimfate:roll_affixes"
+  ]
+}
+
+
+=========================================
+
